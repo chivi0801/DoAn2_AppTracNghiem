@@ -25,6 +25,21 @@ def xoayAnh_veDoc(img):
 #----------------------------------------------------------------------
 
 # 2. Nhị phân hóa.============================================================================================================
+def QuyDoiNguongDienTichTheoChieuCao(img, nguong_duoi_goc, nguong_tren_goc, chieu_cao_tham_chieu=750):
+    # NOTE: Them moi trong Tinh_Gon_Code2.py
+    # Quy doi nguong dien tich contour theo ty le chieu cao anh.
+    # Neu nguong goc duoc tune tren anh cao ~750 px thi voi anh cao H,
+    # dien tich contour se bien thien xap xi theo (H / 750)^2.
+    chieu_cao_hien_tai = img.shape[0]
+    ti_le = chieu_cao_hien_tai / float(chieu_cao_tham_chieu)
+    he_so_dien_tich = ti_le * ti_le
+
+    nguong_duoi_moi = max(1, int(round(nguong_duoi_goc * he_so_dien_tich)))
+    nguong_tren_moi = max(nguong_duoi_moi + 1, int(round(nguong_tren_goc * he_so_dien_tich)))
+
+    return nguong_duoi_moi, nguong_tren_moi
+
+
 def DocVaTienXuLy(img, kernel_hang= 7, kernel_cot= 7):
     
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  ## độ chói
@@ -234,6 +249,15 @@ def Xoay_Anh_ve_thang_hang(daPhoiCanh_4MocDinhVi, gioihanduoi = 150, gioihantren
 
 # hàm tìm các mốc định vị chuẩn (đã update) --------------------------------------------------------------------------------------------
 def Tim_4_Moc_Dinh_Vi2(anhDaPhoiVienA4, gioihan_duoi=200, gioihan_tren=900):
+    # NOTE: Trong Tinh_Gon_Code2.py, gioihan_duoi/gioihan_tren la nguong tham chieu
+    # cho anh cao 750 px. Ben duoi se quy doi sang nguong thuc te theo kich thuoc anh.
+    gioihan_duoi_scale, gioihan_tren_scale = QuyDoiNguongDienTichTheoChieuCao(
+        anhDaPhoiVienA4,
+        gioihan_duoi,
+        gioihan_tren
+    )
+
+    print("NOTE - nguong dien tich da quy doi theo kich thuoc anh:", gioihan_duoi_scale, gioihan_tren_scale)
 
     gray = cv2.cvtColor(anhDaPhoiVienA4, cv2.COLOR_BGR2GRAY)
 
@@ -268,7 +292,8 @@ def Tim_4_Moc_Dinh_Vi2(anhDaPhoiVienA4, gioihan_duoi=200, gioihan_tren=900):
         area = cv2.contourArea(c)
 
         # 1. Lọc theo diện tích ---
-        if not (gioihan_duoi < area < gioihan_tren):
+        # NOTE: Da doi tu nguong tuyet doi sang nguong scale theo chieu cao anh.
+        if not (gioihan_duoi_scale < area < gioihan_tren_scale):
             continue
 
         # 2. Lọc theo độ đặc (solidity) ---
@@ -349,7 +374,7 @@ def KiemTraAnh_CoVien_KoVien_vaChayChuongTrinh(img):
 
     anhSuDung = img.copy()
 
-    nhi_phan = DocVaTienXuLy(anhSuDung) ## trả về canny
+    nhi_phan = DocVaTienXuLy(anhSuDung)
 
     # nhi_phan_copy = imutils.resize(nhi_phan.copy(), height=750)
     # cv2.imshow('tsss', nhi_phan_copy)
@@ -432,7 +457,7 @@ def DieuChinh_TuongPhan_SacNet(img):
    
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    tuongphan = cv2.convertScaleAbs(gray, alpha=1.6, beta=-150)
+    tuongphan = cv2.convertScaleAbs(gray, alpha=1.8, beta=-100)
 
     
     kernel_sharpening = np.array([[0, -0.5, 0], 
@@ -464,10 +489,12 @@ def XuLyAnh(img):
     return img
 
 
-
-# img = cv2.imread("tap2/chupdoc4_nguoc.jpg") 
-
 # XuLyAnh(img)
+
+
+img = cv2.imread("DO_AN1/tap2/chupdoc4_nguoc.jpg") 
+
+XuLyAnh(img)
 
 
 

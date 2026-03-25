@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Android_Python"
 include(":app")
- 

@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     void sendImage(){
 
         Request request = new Request.Builder()
-                .url("http://192.168.1.24:5000/scan")
+                .url("http://192.168.1.37:5000/scan")
                 .get()
                 .build();
 

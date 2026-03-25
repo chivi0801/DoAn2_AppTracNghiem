@@ -1,0 +1,208 @@
+package com.example.android_python;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.util.Log;
+import android.util.Rational;
+import android.widget.Button;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.AspectRatio;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.Preview;
+import androidx.camera.core.UseCaseGroup;
+import androidx.camera.core.ViewPort;
+import androidx.camera.core.resolutionselector.AspectRatioStrategy;
+import androidx.camera.core.resolutionselector.ResolutionSelector;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+public class CameraActivity extends AppCompatActivity {
+
+    private PreviewView previewView;
+    private ImageCapture imageCapture;
+    private Button btnChup;
+    
+    // 1. Khởi tạo OkHttpClient
+    private final OkHttpClient client = new OkHttpClient();
+
+    private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
+    private static final int REQUEST_CODE_PERMISSIONS = 1001;
+    
+    // 2. LƯU Ý: Thay đổi IP này thành IP máy tính đang chạy Flask của bạn (VD: 192.168.x.x)
+    private static final String SERVER_URL = "http://192.168.1.37:5000/predict";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_camera);
+
+        previewView = findViewById(R.id.previewView);
+        btnChup = findViewById(R.id.btn_chupVaCham);
+
+        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+
+        if (checkPermissions()) {
+            startCamera();
+        } else {
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        }
+
+        btnChup.setOnClickListener(v -> takePhoto());
+    }
+
+    private void takePhoto() {
+        if (imageCapture == null) return;
+
+        File storageDir = new File(getExternalFilesDir(null), "LuuAnh");
+        if (!storageDir.exists()) storageDir.mkdirs();
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis());
+        File photoFile = new File(storageDir, "IMG_" + timeStamp + ".jpg");
+
+        ImageCapture.OutputFileOptions options = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+
+        imageCapture.takePicture(options, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults results) {
+                runOnUiThread(() -> {
+                    Toast.makeText(CameraActivity.this, "Đang gửi ảnh lên server...", Toast.LENGTH_SHORT).show();
+                    // 3. Gọi hàm upload ảnh lên server
+                    uploadImageToServer(photoFile);
+                });
+            }
+
+            @Override
+            public void onError(@NonNull ImageCaptureException e) {
+                runOnUiThread(() -> Toast.makeText(CameraActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        });
+    }
+
+    private void uploadImageToServer(File file) {
+        // 4. Tạo MultipartBody để gửi file
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.getName(),
+                        RequestBody.create(file, MediaType.parse("image/jpeg")))
+                .build();
+
+        Request request = new Request.Builder()
+                .url(SERVER_URL)
+                .post(requestBody)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(CameraActivity.this, "Kết nối server thất bại!", Toast.LENGTH_SHORT).show();
+                    Log.e("CAMERA_HTTP", "Error: " + e.getMessage());
+                });
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    // 5. Lưu ảnh kết quả trả về từ Flask
+                    File processedFile = new File(getExternalFilesDir(null), "processed_result.jpg");
+                    try (InputStream is = response.body().byteStream();
+                         FileOutputStream fos = new FileOutputStream(processedFile)) {
+                        byte[] buffer = new byte[4096];
+                        int read;
+                        while ((read = is.read(buffer)) != -1) {
+                            fos.write(buffer, 0, read);
+                        }
+                    }
+
+                    // 6. Chuyển sang ResultActivity với đường dẫn ảnh đã xử lý
+                    runOnUiThread(() -> {
+                        Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
+                        intent.putExtra("PROCESSED_IMAGE_PATH", processedFile.getAbsolutePath());
+                        startActivity(intent);
+                    });
+                } else {
+                    runOnUiThread(() -> Toast.makeText(CameraActivity.this, "Server trả về lỗi!", Toast.LENGTH_SHORT).show());
+                }
+            }
+        });
+    }
+
+    private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
+                        .setAspectRatioStrategy(new AspectRatioStrategy(AspectRatio.RATIO_4_3, AspectRatioStrategy.FALLBACK_RULE_AUTO))
+                        .build();
+
+                Preview preview = new Preview.Builder()
+                        .setResolutionSelector(resolutionSelector)
+                        .build();
+                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+                imageCapture = new ImageCapture.Builder()
+                        .setResolutionSelector(resolutionSelector)
+                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                        .build();
+
+                ViewPort viewPort = new ViewPort.Builder(new Rational(3, 4), getWindowManager().getDefaultDisplay().getRotation()).build();
+
+                UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
+                        .addUseCase(preview)
+                        .addUseCase(imageCapture)
+                        .setViewPort(viewPort)
+                        .build();
+
+                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+
+                cameraProvider.unbindAll();
+                cameraProvider.bindToLifecycle(this, cameraSelector, useCaseGroup);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private boolean checkPermissions() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_PERMISSIONS && checkPermissions()) {
+            startCamera();
+        }
+    }
+}
