@@ -25,7 +25,7 @@ def chuanHoa_LeA4(pts):
     return rect
 
 
-def Tim_4_Moc_Dinh_Vi2(anhDaPhoiVienA4, gioihan_duoi=200, gioihan_tren=900):
+def Tim_4_Moc_Dinh_Vi2(anhDaPhoiVienA4, gioihan_duoi=200, gioihan_tren=900, tra_tam=False):
     gray = cv2.cvtColor(anhDaPhoiVienA4, cv2.COLOR_BGR2GRAY)
     tuongphan = cv2.convertScaleAbs(gray, alpha=1.6, beta=-80)
     blur = cv2.GaussianBlur(tuongphan, (5, 5), 0)
@@ -39,19 +39,18 @@ def Tim_4_Moc_Dinh_Vi2(anhDaPhoiVienA4, gioihan_duoi=200, gioihan_tren=900):
         10,
     )
 
-    preview = imutils.resize(thresh.copy(), height=750)
-    _show_debug_image("adaptive threshold", preview)
+    _show_debug_image("adaptive threshold", imutils.resize(thresh.copy(), height=750))
 
     cnts = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
-    markers = []
-    for c in cnts:
-        area = cv2.contourArea(c)
+    centers = []
+    for contour in cnts:
+        area = cv2.contourArea(contour)
         if not (gioihan_duoi < area < gioihan_tren):
             continue
 
-        hull = cv2.convexHull(c)
+        hull = cv2.convexHull(contour)
         hull_area = cv2.contourArea(hull)
         if hull_area == 0:
             continue
@@ -60,18 +59,18 @@ def Tim_4_Moc_Dinh_Vi2(anhDaPhoiVienA4, gioihan_duoi=200, gioihan_tren=900):
         if solidity < 0.8:
             continue
 
-        peri = cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-        if 4 <= len(approx) <= 5:
-            markers.append(approx)
+        peri = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
+        if not (4 <= len(approx) <= 5):
+            continue
 
-    centers = []
-    for m in markers:
-        moments = cv2.moments(m)
-        if moments["m00"] != 0:
-            cx = int(moments["m10"] / moments["m00"])
-            cy = int(moments["m01"] / moments["m00"])
-            centers.append((cx, cy))
+        moments = cv2.moments(approx)
+        if moments["m00"] == 0:
+            continue
+
+        cx = int(moments["m10"] / moments["m00"])
+        cy = int(moments["m01"] / moments["m00"])
+        centers.append((cx, cy))
 
     print("Toa do cac moc dinh vi tim duoc:")
     print(centers)
@@ -79,11 +78,13 @@ def Tim_4_Moc_Dinh_Vi2(anhDaPhoiVienA4, gioihan_duoi=200, gioihan_tren=900):
     output = anhDaPhoiVienA4.copy()
     for (cx, cy) in centers:
         cv2.circle(output, (cx, cy), 5, (0, 255, 255), -1)
-
     _show_debug_image("cac moc dinh vi", imutils.resize(output, height=750))
 
+    if tra_tam:
+        return centers
+
     pts_4 = np.array(centers, dtype="float32")
-    if len(pts_4) == 0:
+    if len(pts_4) < 4:
         print("KHONG DU CAC MOC 4 MOC DINH VI, CHI TIM DUOC", len(pts_4), "moc")
         return None
 
@@ -103,10 +104,10 @@ def PhoiCanh(pst, original_img):
 
     dst = np.array(
         [
-            [0 - 8, 0 - 8],
-            [maxWidth + 8, 0 - 8],
+            [-8, -8],
+            [maxWidth + 8, -8],
             [maxWidth + 8, maxHeight + 8],
-            [0 - 8, maxHeight + 8],
+            [-8, maxHeight + 8],
         ],
         dtype="float32",
     )
@@ -128,7 +129,11 @@ def XuLyAnh(img_path):
         raise ValueError("Khong tim duoc du 4 moc dinh vi tren anh.")
 
     warped = PhoiCanh(mocDinhVi, resized)
-    Tim_4_Moc_Dinh_Vi2(warped, gioihan_duoi=200, gioihan_tren=700)
+    cacMocNho = Tim_4_Moc_Dinh_Vi2(warped, gioihan_duoi=200, gioihan_tren=700, tra_tam=True)
+
+    # Ve cac moc nho tim duoc len anh da phoi canh
+    for (cx, cy) in cacMocNho:
+        cv2.circle(warped, (int(cx), int(cy)), 10, (0, 255, 255), -1)
 
     h, w = warped.shape[:2]
     sbd_x1 = int(0.1 * w)
@@ -136,18 +141,12 @@ def XuLyAnh(img_path):
     sbd_x2 = int(0.36 * w)
     sbd_y2 = int(0.6 * h)
 
-    cv2.rectangle(
-        warped,
-        (sbd_x1, sbd_y1),
-        (sbd_x2, sbd_y2),
-        (0, 255, 0),
-        2,
-    )
-
+    # Ve hinh chu nhat quanh vung SBD
+    cv2.rectangle(warped, (sbd_x1, sbd_y1), (sbd_x2, sbd_y2), (0, 255, 0), 2)
     _show_debug_image("SBD REGION", imutils.resize(warped, height=750))
     return warped
 
 
-if __name__ == "__main__":
-    ket_qua = XuLyAnh("now.jpg")
-    print(ket_qua.shape)
+# if __name__ == "__main__":
+#     ket_qua = XuLyAnh("now.jpg")
+#     print(ket_qua.shape)

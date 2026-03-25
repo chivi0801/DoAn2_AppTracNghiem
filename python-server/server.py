@@ -12,7 +12,7 @@ DO_AN1_DIR = BASE_DIR / "DO_AN1"
 if str(DO_AN1_DIR) not in sys.path:
     sys.path.insert(0, str(DO_AN1_DIR))
 
-from test import XuLyAnh
+from test import XuLyAnh # import ham xu ly anh tu file test.py trong thu muc DO_AN1
 
 app = Flask(__name__)
 
@@ -35,7 +35,7 @@ def predict():
         temp_input_path = temp_input.name
 
     try:
-        output_image = XuLyAnh(temp_input_path)
+        output_image = XuLyAnh(temp_input_path) 
         ok, encoded_image = cv2.imencode(".jpg", output_image)
         if not ok:
             return jsonify({"error": "Khong ma hoa duoc anh ket qua."}), 500
