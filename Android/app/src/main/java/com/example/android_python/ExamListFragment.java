@@ -11,12 +11,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Toast; // Nhớ thêm import này
+import android.widget.TextView; // Thêm import này
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity; // Thêm import này
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.ItemTouchHelper; // THÊM IMPORT NÀY
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -39,50 +41,69 @@ public class ExamListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_exam_list, container, false);
 
+        // --- BỔ SUNG: RESET TOOLBAR KHI QUAY LẠI ---
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity != null) {
+            // 1. Ẩn nút mũi tên quay lại
+            if (activity.getSupportActionBar() != null) {
+                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            }
+            // 2. Đổi lại tiêu đề thành "Kiểm Tra"
+            TextView toolbarTitle = activity.findViewById(R.id.toolbar_title);
+            if (toolbarTitle != null) {
+                toolbarTitle.setText("Kiểm Tra");
+            }
+        }
+        // ------------------------------------------
+
         rvExams = view.findViewById(R.id.rvExams);
         FloatingActionButton fabAdd = view.findViewById(R.id.fabAdd);
 
-        // 1. Cài đặt RecyclerView (Giữ nguyên)
         rvExams.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ExamAdapter(examList);
+
+        // Khởi tạo adapter và xử lý click chuyển trang
+        adapter = new ExamAdapter(examList, exam -> {
+            ExamDetailFragment detailFragment = new ExamDetailFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("EXAM_NAME", exam.getSubject());
+            detailFragment.setArguments(bundle);
+
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, detailFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         rvExams.setAdapter(adapter);
 
-        // --- 2. THÊM LOGIC VUỐT XÓA VÀO ĐÂY ---
+        // Logic Vuốt để xóa
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false; // Không dùng tính năng sắp xếp lại (kéo thả)
+                return false;
             }
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // Lấy vị trí item bị vuốt
                 int position = viewHolder.getAdapterPosition();
-
-                // Xóa khỏi danh sách dữ liệu
                 examList.remove(position);
-
-                // Thông báo cho adapter để xóa dòng đó kèm hiệu ứng
                 adapter.notifyItemRemoved(position);
-
                 Toast.makeText(getContext(), "Đã xóa kỳ thi", Toast.LENGTH_SHORT).show();
             }
         };
-
-        // Gắn bộ xử lý vuốt vào RecyclerView
         new ItemTouchHelper(simpleCallback).attachToRecyclerView(rvExams);
-        // --------------------------------------
 
         fabAdd.setOnClickListener(v -> showCreateExamDialog());
 
         return view;
     }
 
-    // Hàm showCreateExamDialog giữ nguyên như cũ...
     private void showCreateExamDialog() {
         Dialog dialog = new Dialog(getContext());
         dialog.setContentView(R.layout.dialog_create_exam);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
         dialog.setCancelable(true);
 
         EditText edtSubject = dialog.findViewById(R.id.edtSubject);
@@ -96,15 +117,17 @@ public class ExamListFragment extends Fragment {
         spnSheet.setAdapter(spinnerAdapter);
 
         btnCreate.setOnClickListener(v -> {
-            String subject = edtSubject.getText().toString();
-            String count = edtCount.getText().toString();
+            String subject = edtSubject.getText().toString().trim();
+            String countStr = edtCount.getText().toString().trim();
             String sheet = spnSheet.getSelectedItem().toString();
             String date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
 
-            if (!subject.isEmpty() && !count.isEmpty()) {
-                examList.add(new Exam(subject, date, sheet, Integer.parseInt(count)));
+            if (!subject.isEmpty() && !countStr.isEmpty()) {
+                examList.add(new Exam(subject, date, sheet, Integer.parseInt(countStr)));
                 adapter.notifyDataSetChanged();
                 dialog.dismiss();
+            } else {
+                Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
             }
         });
         dialog.show();

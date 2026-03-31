@@ -11,30 +11,37 @@ import java.util.List;
 public class ExamAdapter extends RecyclerView.Adapter<ExamAdapter.ExamViewHolder> {
 
     private List<Exam> examList;
+    private OnItemClickListener listener; // 1. THÊM BIẾN NÀY
 
-    // Constructor để nhận danh sách kỳ thi
-    public ExamAdapter(List<Exam> examList) {
+    // 2. ĐỊNH NGHĨA INTERFACE (Nên để ở đây cho dễ gọi)
+    public interface OnItemClickListener {
+        void onItemClick(Exam exam);
+    }
+
+    // 3. CẬP NHẬT CONSTRUCTOR ĐỂ NHẬN LISTENER
+    public ExamAdapter(List<Exam> examList, OnItemClickListener listener) {
         this.examList = examList;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public ExamViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Nạp giao diện item_exam.xml vào từng dòng của RecyclerView
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_exam, parent, false);
         return new ExamViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ExamViewHolder holder, int position) {
-        // Lấy dữ liệu kỳ thi tại vị trí hiện tại
         Exam exam = examList.get(position);
 
-        // Đổ dữ liệu vào các TextView
         holder.tvSubject.setText(exam.getSubject());
         holder.tvDate.setText(exam.getDate());
         holder.tvSheet.setText("Phiếu: " + exam.getSheetType());
         holder.tvCount.setText(String.valueOf(exam.getQuestionCount()));
+
+        // 4. GỌI HÀM BIND ĐÃ CÓ
+        holder.bind(exam, listener);
     }
 
     @Override
@@ -42,7 +49,6 @@ public class ExamAdapter extends RecyclerView.Adapter<ExamAdapter.ExamViewHolder
         return examList != null ? examList.size() : 0;
     }
 
-    // Lớp giữ các thành phần giao diện của mỗi dòng
     public static class ExamViewHolder extends RecyclerView.ViewHolder {
         TextView tvSubject, tvDate, tvSheet, tvCount;
 
@@ -52,6 +58,15 @@ public class ExamAdapter extends RecyclerView.Adapter<ExamAdapter.ExamViewHolder
             tvDate = itemView.findViewById(R.id.tvItemDate);
             tvSheet = itemView.findViewById(R.id.tvItemSheet);
             tvCount = itemView.findViewById(R.id.tvItemCount);
+        }
+
+        // 5. GIỮ NGUYÊN HÀM BIND NÀY
+        public void bind(final Exam exam, final OnItemClickListener listener) {
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onItemClick(exam);
+                }
+            });
         }
     }
 }
