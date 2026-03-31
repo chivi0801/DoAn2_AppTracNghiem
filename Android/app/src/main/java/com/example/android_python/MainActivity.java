@@ -1,58 +1,44 @@
 package com.example.android_python;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.TextView;
-
-import java.io.File;
-import java.io.IOException;
-
-import okhttp3.*;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 
 public class MainActivity extends AppCompatActivity {
-
-    TextView resultText;
-    OkHttpClient client = new OkHttpClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Kết nối với file XML có FragmentContainerView mà bạn vừa khoe lúc nãy
         setContentView(R.layout.activity_main);
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new ExamListFragment())
+                    .commit();
+        }
 
-        Button btn = findViewById(R.id.btnSend);
-        resultText = findViewById(R.id.resultText);
+        // 1. Cài đặt Toolbar (Thanh tiêu đề màu xanh)
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        btn.setOnClickListener(v -> sendImage());
+        if (getSupportActionBar() != null) {
+            // QUAN TRỌNG: Tắt tiêu đề mặc định của hệ thống
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+
+        // 2. Nạp Fragment đầu tiên (Trang danh sách kỳ thi) vào khung chứa
+        if (savedInstanceState == null) {
+            loadFragment(new ExamListFragment());
+        }
     }
 
-    void sendImage(){
-
-        Request request = new Request.Builder()
-                .url("http://192.168.1.24:5000/scan")
-                .get()
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-
-            @Override
-            public void onFailure(Call call, IOException e) {
-                runOnUiThread(() ->
-                        resultText.setText(e.toString())
-                );
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-
-                String res = response.body().string();
-
-                runOnUiThread(() ->
-                        resultText.setText(res)
-                );
-            }
-        });
+    /**
+     * Hàm dùng để chuyển đổi giữa các Fragment (Ví dụ: từ Danh sách sang Quét ảnh)
+     */
+    public void loadFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
-
 }

@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tạo Kỳ Thi" android:textColor="#000" android:textSize="18sp" android:textStyle="bold" />
+
+    <TableLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:stretchColumns="1">
+        <TableRow android:layout_marginBottom="10dp">
+            <TextView android:text="Môn" android:textSize="16sp" />
+            <EditText android:id="@+id/edtSubject" android:layout_marginStart="20dp" android:hint="Nhập tên môn" android:textSize="15sp" />
+        </TableRow>
+        <TableRow android:layout_marginBottom="10dp">
+            <TextView android:text="Số câu" android:textSize="16sp" />
+            <EditText android:id="@+id/edtCount" android:layout_marginStart="20dp" android:hint="Số lượng" android:inputType="number" android:textSize="15sp" />
+        </TableRow>
+        <TableRow>
+            <TextView android:text="Phiếu" android:textSize="16sp" />
+            <Spinner android:id="@+id/spnSheet" android:layout_marginStart="20dp" android:layout_height="40dp" />
+        </TableRow>
+    </TableLayout>
+
+    <Button android:id="@+id/btnConfirmCreate" android:layout_width="100dp" android:layout_height="wrap_content" android:layout_gravity="end" android:layout_marginTop="20dp" android:backgroundTint="#00CCFF" android:text="Tạo" android:textAllCaps="false" android:textColor="#FFF" />
+</LinearLayout>
