@@ -1,26 +1,20 @@
 package com.example.android_python;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.TextView;
+import android.view.*;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class ChoiceAdapter extends RecyclerView.Adapter<ChoiceAdapter.ViewHolder> {
+    private int rowCount, colCount;
+    private int[] data;
+    private boolean isMaDe;
 
-    private int rowCount;
-    private int columnCount;
-    private int[] selections; // Mảng dữ liệu dùng chung với Fragment
-    private boolean isMaDeMode;
-
-    public ChoiceAdapter(int rowCount, int columnCount, int[] selections, boolean isMaDeMode) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
-        this.selections = selections;
-        this.isMaDeMode = isMaDeMode;
+    public ChoiceAdapter(int row, int col, int[] data, boolean isMaDe) {
+        this.rowCount = row;
+        this.colCount = col;
+        this.data = data;
+        this.isMaDe = isMaDe;
     }
 
     @NonNull
@@ -32,81 +26,40 @@ public class ChoiceAdapter extends RecyclerView.Adapter<ChoiceAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // 1. Hiển thị số thứ tự (Mã đề: 0-9 | Đáp án: 1-N)
-        if (isMaDeMode) {
-            holder.tvNumber.setText(String.valueOf(position));
-        } else {
-            holder.tvNumber.setText(String.valueOf(position + 1));
-        }
-
-        // 2. Làm sạch hàng trước khi vẽ lại để tránh lỗi chồng View
-        holder.containerOptions.removeAllViews();
-
-        // 3. Kiểm tra an toàn: Nếu mảng bị null thì không vẽ ô tròn để tránh Crash
-        if (selections == null) return;
-
-        // 4. Vẽ các ô tròn (RadioButton)
-        for (int i = 0; i < columnCount; i++) {
+        holder.tvNumber.setText(String.valueOf(isMaDe ? position : position + 1));
+        holder.container.removeAllViews();
+        for (int i = 0; i < colCount; i++) {
             RadioButton rb = new RadioButton(holder.itemView.getContext());
-
-            // Cấu hình giao diện ô tròn
             rb.setButtonDrawable(null);
             rb.setBackgroundResource(R.drawable.custom_radio_button);
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(90, 90);
+            p.setMargins(20, 10, 20, 10);
+            rb.setLayoutParams(p);
 
-            // Đặt kích thước cố định (90x90)
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(90, 90);
-            params.setMargins(20, 10, 20, 10);
-            rb.setLayoutParams(params);
+            if (isMaDe) rb.setChecked(data[i] == position);
+            else rb.setChecked(data[position] == i);
 
-            // 5. LOGIC HIỂN THỊ TICK (Đây là phần quan trọng nhất)
-            if (isMaDeMode) {
-                // CHẾ ĐỘ MÃ ĐỀ: i là cột (0,1,2), position là hàng (0-9)
-                // Phải check độ dài mảng để tránh IndexOutOfBounds
-                if (i < selections.length) {
-                    rb.setChecked(selections[i] == position);
-                }
-            } else {
-                // CHẾ ĐỘ ĐÁP ÁN: position là hàng (câu hỏi), i là cột (A,B,C,D)
-                if (position < selections.length) {
-                    rb.setChecked(selections[position] == i);
-                }
-            }
-
-            final int columnIndex = i;
-            final int rowPosition = position;
-
-            // 6. XỬ LÝ SỰ KIỆN CLICK
+            final int col = i;
+            final int row = position;
             rb.setOnClickListener(v -> {
-                if (isMaDeMode) {
-                    // Nếu bấm lại ô cũ thì bỏ chọn (-1), nếu không thì chọn hàng đó
-                    if (selections[columnIndex] == rowPosition) selections[columnIndex] = -1;
-                    else selections[columnIndex] = rowPosition;
-                } else {
-                    // Tương tự cho Đáp án
-                    if (selections[rowPosition] == columnIndex) selections[rowPosition] = -1;
-                    else selections[rowPosition] = columnIndex;
-                }
-                // Vẽ lại giao diện để cập nhật dấu tick mới
+                if (isMaDe) data[col] = row;
+                else data[row] = col;
                 notifyDataSetChanged();
             });
-
-            holder.containerOptions.addView(rb);
+            holder.container.addView(rb);
         }
     }
 
     @Override
-    public int getItemCount() {
-        return rowCount;
-    }
+    public int getItemCount() { return rowCount; }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvNumber;
-        LinearLayout containerOptions;
-
-        public ViewHolder(View v) {
+        LinearLayout container;
+        ViewHolder(View v) {
             super(v);
             tvNumber = v.findViewById(R.id.tvRowNumber);
-            containerOptions = v.findViewById(R.id.rgOptions);
+            container = v.findViewById(R.id.rgOptions);
         }
     }
 }

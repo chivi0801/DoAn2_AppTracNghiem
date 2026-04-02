@@ -27,54 +27,50 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Arrays;
 
 public class AnswerKeyFragment extends Fragment {
-
     private RecyclerView rvChoices;
     private Button btnTabMaDe, btnTabDapAn;
     private TextView tvCurrentMode;
     private LinearLayout layoutHeaderLabels;
 
     private int questionCount = 30;
-    private boolean isMaDeMode = true;
-
-    // DỮ LIỆU GỐC - KHÔNG ĐƯỢC RESET LẠI Ở onCreateView
     private int[] maDeSelections = new int[3];
     private int[] dapAnSelections;
     private int editingPosition = -1;
+    private boolean isMaDeMode = true;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        // 1. Lấy số câu hỏi
+        // 1. Nhận số câu hỏi từ ExamDetail
         if (getArguments() != null) {
             questionCount = getArguments().getInt("QUESTION_COUNT", 30);
         }
 
-        // 2. KHỞI TẠO MẢNG TRỐNG (Chỉ chạy 1 lần duy nhất tại đây)
+        // 2. Khởi tạo mảng trống
         dapAnSelections = new int[questionCount];
         Arrays.fill(maDeSelections, -1);
         Arrays.fill(dapAnSelections, -1);
 
-        // 3. PHỤC HỒI DỮ LIỆU TỪ LỊCH SỬ
+        // 3. LOGIC PHỤC HỒI DỮ LIỆU (Kết nối với trang cũ)
         if (getArguments() != null && getArguments().containsKey("EXISTING_KEY")) {
             SavedKey existing = (SavedKey) getArguments().getSerializable("EXISTING_KEY");
             editingPosition = getArguments().getInt("EDIT_POSITION", -1);
 
             if (existing != null) {
-                // Phục hồi Mã đề (VD: "123" -> [1, 2, 3])
+                // Dịch chuỗi Mã đề: "123" -> [1, 2, 3]
                 String md = existing.getMaDe();
                 for (int i = 0; i < 3 && i < md.length(); i++) {
                     char c = md.charAt(i);
                     maDeSelections[i] = (c == '?') ? -1 : Character.getNumericValue(c);
                 }
 
-                // Phục hồi Đáp án (VD: "ABCD" -> [0, 1, 2, 3])
+                // Dịch chuỗi Đáp án: "ABCD" -> [0, 1, 2, 3]
                 String da = existing.getDapAn();
                 for (int i = 0; i < questionCount; i++) {
                     if (i < da.length()) {
                         char c = da.charAt(i);
-                        // Nếu là '?' thì giữ -1, nếu là 'A' thì thành 0, 'B' thành 1...
                         dapAnSelections[i] = (c == '?') ? -1 : (c - 'A');
                     }
                 }
@@ -86,18 +82,17 @@ public class AnswerKeyFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_answer_key, container, false);
-
         rvChoices = v.findViewById(R.id.rvChoices);
         btnTabMaDe = v.findViewById(R.id.btnTabMaDe);
         btnTabDapAn = v.findViewById(R.id.btnTabDapAn);
         tvCurrentMode = v.findViewById(R.id.tvCurrentMode);
         layoutHeaderLabels = v.findViewById(R.id.layoutHeaderLabels);
 
-        setupToolbar();
+        setupToolbar(v);
         rvChoices.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        btnTabMaDe.setOnClickListener(view -> { if (!isMaDeMode) { isMaDeMode = true; updateUI(); } });
-        btnTabDapAn.setOnClickListener(view -> { if (isMaDeMode) { isMaDeMode = false; updateUI(); } });
+        btnTabMaDe.setOnClickListener(view -> { isMaDeMode = true; updateUI(); });
+        btnTabDapAn.setOnClickListener(view -> { isMaDeMode = false; updateUI(); });
 
         updateUI();
         return v;
@@ -109,8 +104,6 @@ public class AnswerKeyFragment extends Fragment {
             btnTabDapAn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#CCCCCC")));
             tvCurrentMode.setText("Mã Đề");
             if (layoutHeaderLabels != null) layoutHeaderLabels.setVisibility(View.GONE);
-
-            // Dùng mảng maDeSelections đã phục hồi
             rvChoices.setAdapter(new ChoiceAdapter(10, 3, maDeSelections, true));
         } else {
             btnTabDapAn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#00CCFF")));
@@ -120,13 +113,9 @@ public class AnswerKeyFragment extends Fragment {
                 layoutHeaderLabels.setVisibility(View.VISIBLE);
                 updateHeaderLabels();
             }
-
-            // Dùng mảng dapAnSelections đã phục hồi (Lưu ý: Không được khởi tạo mới mảng ở đây!)
             rvChoices.setAdapter(new ChoiceAdapter(questionCount, 4, dapAnSelections, false));
         }
     }
-
-    // Các hàm setupToolbar, updateHeaderLabels, onCreateOptionsMenu giữ nguyên như bạn đã làm...
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
@@ -143,23 +132,14 @@ public class AnswerKeyFragment extends Fragment {
             result.putInt("EDIT_POSITION", editingPosition);
 
             getParentFragmentManager().setFragmentResult("requestKey", result);
-            Toast.makeText(getContext(), "Đã lưu bộ đáp án!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Đã lưu thay đổi!", Toast.LENGTH_SHORT).show();
             getParentFragmentManager().popBackStack();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private String formatResult(int[] arr, boolean isMd) {
-        StringBuilder sb = new StringBuilder();
-        for (int s : arr) {
-            if (s == -1) sb.append("?");
-            else sb.append(isMd ? s : (char)('A' + s));
-        }
-        return sb.toString();
-    }
-
-    private void setupToolbar() {
+    private void setupToolbar(View v) {
         Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
         AppCompatActivity activity = (AppCompatActivity) getActivity();
         if (activity != null && toolbar != null) {
@@ -171,6 +151,15 @@ public class AnswerKeyFragment extends Fragment {
             }
             toolbar.setNavigationOnClickListener(view -> getParentFragmentManager().popBackStack());
         }
+    }
+
+    private String formatResult(int[] arr, boolean isMd) {
+        StringBuilder sb = new StringBuilder();
+        for (int s : arr) {
+            if (s == -1) sb.append("?");
+            else sb.append(isMd ? s : (char)('A' + s));
+        }
+        return sb.toString();
     }
 
     private void updateHeaderLabels() {

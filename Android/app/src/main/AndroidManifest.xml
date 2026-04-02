@@ -4,6 +4,10 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera.any" />
+
     <application
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -14,6 +18,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Android_Python">
+
         <activity
             android:name=".LoginActivity"
             android:exported="true"
@@ -21,12 +26,13 @@
             android:theme="@style/Theme.Android_Python">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".MainActivity" />
         <activity android:name=".RegisterActivity" />
+
     </application>
 
 </manifest>
