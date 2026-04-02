@@ -292,7 +292,7 @@ def XuLySOBAODANH(cacMocNho, warped):
     sbd_str = "".join(str(num) for num in SBD)
     print("SBD (chuoi):", sbd_str)
 
-    cv2.putText(warped, f"SBD: {sbd_str}", (10, warped.shape[0] - 60), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+    cv2.putText(warped, f"SBD: {sbd_str}", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
     return sbd_str, warped, sbd_roi
 
 def XuLyMADE(cacMocNho, warped):
@@ -384,7 +384,7 @@ def XuLyMADE(cacMocNho, warped):
     made_str = "".join(str(num) for num in MADE)
     print("MA DE (chuoi):", made_str)
 
-    cv2.putText(warped, f"MA DE: {made_str}", (10, warped.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 0), 2)
+    cv2.putText(warped, f"MA DE: {made_str}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 0), 2)
     return made_str, warped, made_roi
 
 def XuLyDAPAN(cacMocNho, warped, cau1_10 = True, cau11_20 = False, cau21_30 = False, cau31_40 = False):
@@ -501,6 +501,25 @@ def XuLyDAPAN(cacMocNho, warped, cau1_10 = True, cau11_20 = False, cau21_30 = Fa
     # cv2.putText(warped, f"MA DE: {made_str}", (10, warped.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 0), 2)
     return  warped, dapan_roi
 
+def lay_HoTen(warped):
+    copy = warped.copy()
+
+    w = warped.shape[1]
+    h = warped.shape[0]
+
+    x1 = int(w * 0.29)
+    y1 = int(h * 0.006)
+
+    x2 = int(w * 0.66)
+    y2 = int(h * 0.067)
+
+    hoten_roi = copy[y1:y2, x1:x2]
+
+    cv2.rectangle(warped, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+    return hoten_roi, warped
+
+
 def XuLyAnh(img_path):
     img = cv2.imread(img_path) #đọc ảnh 
     if img is None:
@@ -525,7 +544,7 @@ def XuLyAnh(img_path):
     i = 0 
     for (cx, cy) in cacMocNho:
         cv2.circle(warped, (int(cx), int(cy)), 10, (0, 255, 255), -1)
-        cv2.putText(warped, str(i), (int(cx) -10, int(cy) - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0, 0), 2)
+        cv2.putText(warped, str(i), (int(cx) -10, int(cy) - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         i += 1
 
     #khoanh vùng SBD
@@ -533,11 +552,12 @@ def XuLyAnh(img_path):
     sbd_str, warped, sbd_roi= XuLySOBAODANH(cacMocNho, warped) 
     made_str, warped, made_roi= XuLyMADE(cacMocNho, warped) 
 
-    warped, dapan_roi = XuLyDAPAN(cacMocNho, warped, cau1_10=True)
-    warped, dapan_roi = XuLyDAPAN(cacMocNho, warped, cau11_20 =True)
-    warped, dapan_roi = XuLyDAPAN(cacMocNho, warped, cau21_30 =True)
-    warped, dapan_roi = XuLyDAPAN(cacMocNho, warped, cau31_40 =True)
+    warped, dapan_roi1_10 = XuLyDAPAN(cacMocNho, warped, cau1_10=True)
+    warped, dapan_roi11_20 = XuLyDAPAN(cacMocNho, warped, cau11_20 =True)
+    warped, dapan_roi21_30 = XuLyDAPAN(cacMocNho, warped, cau21_30 =True)
+    warped, dapan_roi31_40 = XuLyDAPAN(cacMocNho, warped, cau31_40 =True)
 
+    hoten_roi, warped = lay_HoTen(warped)
 
     # cv2.imshow("SBD", resize_keep_ratio(sbd_roi, height=750))
     # cv2.waitKey(0)
@@ -548,39 +568,8 @@ def XuLyAnh(img_path):
     # cv2.imshow("DAP AN", resize_keep_ratio(dapan_roi, height=750))
     # cv2.waitKey(0)
 
-    # top_left, top_right, mid_left, mid_right, bot_left, bot_right = cacMocNho
-
-    # # Tính khoảng cách giữa các mốc để xác định kích thước và vị trí vùng SBD
-    # col_gap = top_right[0] - top_left[0]
-    # row_gap = mid_left[1] - top_left[1]
-
-    # #
-    # dapan_x1 = int(mid_left[0] + 0.1 * col_gap)#
-    # dapan_y1 = int(mid_left[1] + 0.05 * row_gap)
-
-    # dapan_x2 = int(mid_left[0] + 0.77 * col_gap) #
-    # dapan_y2 = int(bot_left[1] - 0.048 * row_gap)
-
-
-    # h, w = warped.shape[:2]
-    # dapan_x1 = max(0, min(w - 1, dapan_x1)) #trên trái
-    # dapan_y1 = max(0, min(h - 1, dapan_y1))
-
-    # dapan_x2 = max(0, min(w - 1, dapan_x2)) # dưới phải
-    # dapan_y2 = max(0, min(h - 1, dapan_y2))
-
-    # dapan_roi = warped[dapan_y1:dapan_y2, dapan_x1:dapan_x2] #cắt vùng MA DE từ ảnh đã phối cảnh để xử lý riêng
-
-    # thresholded_dapan_roi = TienXuLyBanDau(dapan_roi) #đưa vùng MA DE về ảnh nhị phân 
-    # #resize vùng MA DE về chiều cao 1000 
-    # resized_dapan_roi = resize_keep_ratio(thresholded_dapan_roi, height=1000)
-
-    # # cv2.imshow("vung so bao danh nhi phan", resize_keep_ratio(resized_dapan_roi, height=750))
-    # # cv2.waitKey(0)  
-
-    # #vẽ hình chữ nhật vùng MA DE lên ảnh để debug
-    # cv2.rectangle(warped, (dapan_x1, dapan_y1), (dapan_x2, dapan_y2), (0, 255, 0), 2)
-
+    cv2.imshow("DAP AN", resize_keep_ratio(hoten_roi, width=750, height=200))
+    cv2.waitKey(0)
 
     cv2.imshow("anh da xu ly", resize_keep_ratio(warped, height=750))
     cv2.waitKey(0)
@@ -593,7 +582,7 @@ def XuLyAnh(img_path):
 
 
 
-xuly = XuLyAnh("DO_AN1/test4.jpg")
+xuly = XuLyAnh("DO_AN1/test1.jpg")
 
 
 
