@@ -56,7 +56,7 @@ public class CameraActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 1001;
     
     // 2. LƯU Ý: Thay đổi IP này thành IP máy tính đang chạy Flask của bạn (VD: 192.168.x.x)
-    private static final String SERVER_URL = "http://192.168.1.37:5000/predict";
+    private static final String SERVER_URL = "http://192.168.1.60:5000/predict";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

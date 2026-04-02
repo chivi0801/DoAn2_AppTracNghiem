@@ -15,7 +15,7 @@
       </SelectionState>
       <SelectionState runConfigName="CameraActivity">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-03-25T05:47:56.547166100Z">
+        <DropdownSelection timestamp="2026-03-31T12:43:50.722898800Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=VWF6FYRSHIVSJ7S4" />
@@ -26,6 +26,14 @@
       </SelectionState>
       <SelectionState runConfigName="MainActivity">
         <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-03-31T15:17:15.325233Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=VWF6FYRSHIVSJ7S4" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
       </SelectionState>
     </selectionStates>
   </component>

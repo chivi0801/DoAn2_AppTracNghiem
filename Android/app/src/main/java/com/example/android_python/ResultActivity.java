@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
 
 public class ResultActivity extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,14 +18,17 @@ public class ResultActivity extends AppCompatActivity {
         setContentView(imageView);
 
         String imagePath = getIntent().getStringExtra("PROCESSED_IMAGE_PATH");
+
         if (imagePath != null) {
             File imgFile = new File(imagePath);
+
             if (imgFile.exists()) {
                 Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
                 imageView.setImageBitmap(myBitmap);
             } else {
                 Toast.makeText(this, "File không tồn tại", Toast.LENGTH_SHORT).show();
             }
+
         }
     }
 }
