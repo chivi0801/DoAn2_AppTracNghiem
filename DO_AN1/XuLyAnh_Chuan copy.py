@@ -119,7 +119,6 @@ def Tim_4_Moc_Dinh_Vi2(anh, gioihan_duoi=200, gioihan_tren=900, tra_tam=False):
         if not (gioihan_duoi < area < gioihan_tren):
             continue
 
-
         hull = cv2.convexHull(contour)
         hull_area = cv2.contourArea(hull)
         if hull_area == 0:
@@ -232,9 +231,69 @@ def tinh_score_o(cell):
     score = cv2.countNonZero(cell)
     return score
 
-def XuLyAnh(img_path):
-    img = cv2.imread(img_path)
+def XuLySOBAODANH(sbd_roi, warped):
+    thresholded_sbd_roi = TienXuLyBanDau(sbd_roi) #đưa vùng SBD về ảnh nhị phân 
+    #resize vùng SBD về chiều cao 1000 
+    resized_sbd_roi = resize_keep_ratio(thresholded_sbd_roi, height=1000)
 
+    cv2.imshow("vung so bao danh nhi phan", resize_keep_ratio(resized_sbd_roi, height=750))
+    cv2.waitKey(0)  
+
+    chia_6_cot = resized_sbd_roi.shape[1] // 6 #chia làm 6 
+    # cắt từng cột SBD để xử lý riêng
+    ds_cot = []
+    for j in range(6):
+        cot_j = resized_sbd_roi[0:resized_sbd_roi.shape[0], chia_6_cot * j:chia_6_cot * (j + 1)] #cắt 
+        ds_cot.append(cot_j) #thêm vào ds
+        # cv2.imshow(f"cot{j+1}",(resize_keep_ratio(cot_j, height=750)) )
+        # cv2.waitKey(0)
+
+    #cắt mỗi và XỬ LÝ mỗi hàng 
+    chia_10_hang = resized_sbd_roi.shape[0] // 10
+    SBD = [] # lưu SBD thực
+    for j, cot in enumerate(ds_cot): #dung enumerate để có cả chỉ số cột và dữ liệu cột (j:index, cot: ảnh cột)
+        score_theoHang = []
+
+        for i in range(10):
+            hang_i = cot[chia_10_hang * i : chia_10_hang * (i+1),  0:cot.shape[1]] #cắt hàng i của cột hiện tại
+
+            score = tinh_score_o(hang_i) #tính điểm số của hang i hiện tại
+            # print(f"cot {j+1} - hang {i+1}: score = {score}")
+            score_theoHang.append(score) #thêm điểm vào mảng lưu tạm
+
+            # cv2.imshow(f"cot {j+1} - hang{i}", resize_keep_ratio(hang_i, height=750))
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
+        #XỬ LÝ TIẾP CÁC TRƯỜNG HỢP: KO TÔ, TÔ 2 Ô. ############
+        score_theoHang_copy = sorted(score_theoHang, reverse=True) #sắp xếp điểm số theo thứ tự giảm dần để tìm max dễ hơn
+        max1 = score_theoHang_copy[0] #lấy phần tử đầu tiên
+        max2 = score_theoHang_copy[1] #lấy phần tử thứ hai
+
+        if max1 == 0:
+            print(f"COT {j+1}: KHONG CO O NAO DUOC TO")
+            SBD.append("X") #thêm "X" vào SBD thực nếu không có ô nào được tô
+        else:
+            if max1 - max2 < max1 - 1.25 * max2:
+                print(f"COT {j+1}: CO 2 O DUOC TO, CAN XET TIEP")
+                SBD.append("X") #thêm "X" vào SBD thực nếu có 2 ô được tô vì không thể xác định chắc chắn ô nào được tô hơn
+            else:
+                sbd = score_theoHang.index(max1)  #lấy index của điểm max coi như đã tô
+                SBD.append(sbd) #thêm index vào mảng SBD thực
+        ##############
+
+        # sbd = score_theoHang.index(max(score_theoHang)) # lấy index của điểm max coi như đã tô
+       
+    print("SBD:", SBD)
+    sbd_str = "".join(str(num) for num in SBD)
+    print("SBD (chuoi):", sbd_str)
+
+    cv2.putText(warped, f"SBD: {sbd_str}", (10, warped.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+    return sbd_str, warped
+
+
+def XuLyAnh(img_path):
+    img = cv2.imread(img_path) #đọc ảnh 
     if img is None:
         raise ValueError(f"Khong doc duoc anh: {img_path}")
 
@@ -246,7 +305,8 @@ def XuLyAnh(img_path):
 
     warped = PhoiCanh(moc, resized) #cắt vào 4 mốc lớn
 
-    cacMocNho = Tim_4_Moc_Dinh_Vi2( warped, gioihan_duoi=200, gioihan_tren=700, tra_tam=True) #tìm 6 mốc nhỏ
+    #tìm 6 mốc nhỏ
+    cacMocNho = Tim_4_Moc_Dinh_Vi2( warped, gioihan_duoi=200, gioihan_tren=700, tra_tam=True) 
 
     cacMocNho = chuanHoa_6_MocNho(cacMocNho) # sắp xếp 6 mốc nhỏ: TL, TR, ML, MR, BL, BR
     if cacMocNho is None:
@@ -259,84 +319,24 @@ def XuLyAnh(img_path):
         cv2.putText(warped, str(i), (int(cx) + 10, int(cy) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0, 0), 2)
         i += 1
 
-    #khoanh vung SBD
-    sbd_roi = KhoanhVungSBD(cacMocNho, warped)
-    # print("Kich thuoc vung SBD roi:", sbd_roi.shape) #in kích thước vùng SBD để debug
-    # # print(sbd_roi.shape)
+    #khoanh vùng SBD
+    sbd_roi = KhoanhVungSBD(cacMocNho, warped) #phải được chuẩn hóa 6 mốc nhỏ trước
 
-    thresholded_sbd_roi = TienXuLyBanDau(sbd_roi)
-
-    #resize vùng SBD về chiều cao 1000 để dễ dàng chia 10 hàng và 6 cột, đồng thời giữ nguyên tỷ lệ để tránh biến dạng ảnh
-    resized_sbd_roi = resize_keep_ratio(thresholded_sbd_roi, height=1000)
-    
-
-    #vẽ 10 hàng SBD
-    # chia_10_hang = resized_sbd_roi.shape[0] // 10
-    # for i in range(10):
-    #     cv2.line(resized_sbd_roi, (0, chia_10_hang * (i + 1)), (resized_sbd_roi.shape[1], chia_10_hang * (i + 1)), (255, 0, 0), 2)
-
-    #vẽ 6 cột SBD
-    chia_6_cot = resized_sbd_roi.shape[1] // 6 #chia làm 6 
-    # for j in range(6):
-    #     cv2.line(resized_sbd_roi, (chia_6_cot * (j + 1), 0), (chia_6_cot * (j + 1), resized_sbd_roi.shape[0]), (255, 0, 0), 2)
+    sbd_str, warped = XuLySOBAODANH(sbd_roi, warped) 
 
 
-    # cắt từng cột SBD để xử lý riêng
-    ds_cot = []
-    for j in range(6):
+    cv2.imshow("anh da xu ly", resize_keep_ratio(warped, height=750))
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-        cot_j = resized_sbd_roi[0:resized_sbd_roi.shape[0], chia_6_cot * j:chia_6_cot * (j + 1)] #cắt 
-        ds_cot.append(cot_j) #thêm vào ds
-        # cv2.imshow(f"cot{j+1}",(resize_keep_ratio(cot_j, height=750)) )
-        # cv2.waitKey(0)
-
-    print(len(ds_cot))
-
-    chia_10_hang = resized_sbd_roi.shape[0] // 10
-
-    SBD = []
-    #cắt mỗi hàng của từng cột để xử lý riêng
-    for j, cot in enumerate(ds_cot): #dung enumerate để có cả chỉ số cột và dữ liệu cột (j:index, cot: ảnh cột)
-        score_theoHang = []
-
-        for i in range(10):
-            hang_i = cot[chia_10_hang * i : chia_10_hang * (i+1),  0:cot.shape[1]] #cắt hàng i của cột hiện tại
-            # ds_hang.append(hang_i) #thêm vào ds
-
-            score = tinh_score_o(hang_i) #tính điểm số của cell hiện tại
-            print(f"cot {j+1} - hang {i}: {score} diem") #in kích thước hàng i của cột j để debug
-
-
-            score_theoHang.append(score) #thêm điểm 
-
-
-
-            # cv2.imshow(f"cot {j+1} - hang{i}", resize_keep_ratio(hang_i, height=750))
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
-
-        sbd = score_theoHang.index(max(score_theoHang))
-
-        SBD.append(sbd) #thêm điểm số của cột hiện tại vào SBD
-
-    print("SBD:", SBD)
-    sbd_str = "".join(str(num) for num in SBD)
-    print("SBD (chuoi):", sbd_str)
-
-    cv2.putText(warped, f"SBD: {sbd_str}", (10, warped.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
-
-    # cv2.imshow("anh da xu ly", resize_keep_ratio(warped, height=750))
-    # cv2.waitKey(0)
-   
-    # cv2.imshow("vung so bao danh", resize_keep_ratio(resized_sbd_roi, height=750))
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    # for i, (cx, cy) in enumerate(cacMocNho):
+    #     print("toa do moc nho:", i, ":", int(cx), int(cy))
 
     return warped
 
 
 
-# xuly = XuLyAnh("DO_AN1/test3.jpg")
+xuly = XuLyAnh("DO_AN1/test1.jpg")
 
 
 # sbd_roi = warped[sbd_y1:sbd_y2, sbd_x1:sbd_x2]
@@ -346,3 +346,17 @@ def XuLyAnh(img_path):
 # cv2.destroyAllWindows()
 
 
+# mang = [0, 0, 3506, 0, 0]
+
+# mangCopy = sorted(mang, reverse=True) #sắp xếp mảng theo thứ tự giảm dần để tìm max dễ hơn
+# max1 = mangCopy[0] #lấy phần tử đầu tiên sau khi sắp xếp là max
+# max2 = mangCopy[1] #lấy phần tử thứ hai sau khi sắp xếp là max thứ hai
+# if max1 == 0:
+#     print("Khong co o nao duoc to")
+#     #output = "Khong co o nao duoc to"
+
+# if max1 - max2 < max1 - 1.25 * max2:
+#     print("Co 2 o duoc to, can xet tiep")
+#     #output = "Co 2 o duoc to, can xet tiep"
+
+# print(mangCopy)
