@@ -81,11 +81,12 @@ def chuanHoa_6_MocNho(pts):
     return rect6
 
 # Tìm 4 mốc định vị trên ảnh, trả về tọa độ của chúng hoặc đã chuẩn hóa nếu tra_tam=False
-def Tim_4_Moc_Dinh_Vi2(anh, gioihan_duoi=200, gioihan_tren=900, tra_tam=False):
+def Tim_4_Moc_Dinh_Vi2(anh, gioihan_duoi=200, gioihan_tren=1000, tra_tam=False):
 
     gray = cv2.cvtColor(anh, cv2.COLOR_BGR2GRAY)
     tuongphan = cv2.convertScaleAbs(gray, alpha=1.6, beta=-80)
     # cv2.imshow("tuong phan", resize_keep_ratio(tuongphan.copy(), height=750))
+    # cv2.waitKey(0)
 
     blur = cv2.GaussianBlur(tuongphan, (5, 5), 0)
 
@@ -95,12 +96,12 @@ def Tim_4_Moc_Dinh_Vi2(anh, gioihan_duoi=200, gioihan_tren=900, tra_tam=False):
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
         81,
-        15,
+        30,
     )
 
     # tạm tắt
-    # cv2.imshow("adaptive threshold", resize_keep_ratio(thresh.copy(), height=750))
-    # cv2.waitKey(0)
+    cv2.imshow("adaptive threshold", resize_keep_ratio(thresh.copy(), height=750))
+    cv2.waitKey(0)
 
     cnts = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
@@ -113,8 +114,9 @@ def Tim_4_Moc_Dinh_Vi2(anh, gioihan_duoi=200, gioihan_tren=900, tra_tam=False):
         if not (gioihan_duoi < area < gioihan_tren):
             continue
 
-        hull = cv2.convexHull(contour)
-        hull_area = cv2.contourArea(hull)
+        hull = cv2.convexHull(contour) #
+        hull_area = cv2.contourArea(hull) #
+         
         if hull_area == 0:
             continue
 
@@ -353,7 +355,6 @@ def XuLyMADE(cacMocNho, warped):
 
     cv2.circle(warped, (x1_goc, y1_goc), 12, (0, 0, 255), 2)
 ###--------------------------------------------------------------
-
     # cv2.imshow("vung so bao danh nhi phan", resize_keep_ratio(resized_made_roi, height=750))
     # cv2.waitKey(0)
 
@@ -573,7 +574,7 @@ def XuLyAnh(img_path):
     warped = PhoiCanh(moc, resized) #cắt vào 4 mốc lớn
 
     #tìm 6 mốc nhỏ
-    cacMocNho = Tim_4_Moc_Dinh_Vi2( warped, gioihan_duoi=200, gioihan_tren=700, tra_tam=True)
+    cacMocNho = Tim_4_Moc_Dinh_Vi2( warped, gioihan_duoi=300, gioihan_tren=600, tra_tam=True)
 
     cacMocNho = chuanHoa_6_MocNho(cacMocNho) # sắp xếp 6 mốc nhỏ: TL, TR, ML, MR, BL, BR
     if cacMocNho is None:
@@ -610,9 +611,9 @@ def XuLyAnh(img_path):
     # cv2.imshow("DAP AN", resize_keep_ratio(hoten_roi, width=750, height=200))
     # cv2.waitKey(0)
 
-    cv2.imshow("anh da xu ly", resize_keep_ratio(warped, height=750))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("anh da xu ly", resize_keep_ratio(warped, height=750))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     return warped
 
