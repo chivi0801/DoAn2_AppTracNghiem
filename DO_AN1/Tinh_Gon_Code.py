@@ -349,7 +349,7 @@ def KiemTraAnh_CoVien_KoVien_vaChayChuongTrinh(img):
 
     anhSuDung = img.copy()
 
-    nhi_phan = DocVaTienXuLy(anhSuDung)
+    nhi_phan = DocVaTienXuLy(anhSuDung) ## trả về canny
 
     # nhi_phan_copy = imutils.resize(nhi_phan.copy(), height=750)
     # cv2.imshow('tsss', nhi_phan_copy)
@@ -432,7 +432,7 @@ def DieuChinh_TuongPhan_SacNet(img):
    
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    tuongphan = cv2.convertScaleAbs(gray, alpha=1.8, beta=-100)
+    tuongphan = cv2.convertScaleAbs(gray, alpha=1.6, beta=-150)
 
     
     kernel_sharpening = np.array([[0, -0.5, 0], 
@@ -464,12 +464,10 @@ def XuLyAnh(img):
     return img
 
 
+
+# img = cv2.imread("tap2/chupdoc4_nguoc.jpg") 
+
 # XuLyAnh(img)
-
-
-img = cv2.imread("tap2/chupdoc4_nguoc.jpg") 
-
-XuLyAnh(img)
 
 
 
