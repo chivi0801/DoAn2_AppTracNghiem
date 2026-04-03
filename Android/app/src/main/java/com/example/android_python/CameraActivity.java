@@ -25,38 +25,23 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.chaquo.python.PyException;
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class CameraActivity extends AppCompatActivity {
 
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private Button btnChup;
-    
-    // 1. Khởi tạo OkHttpClient
-    private final OkHttpClient client = new OkHttpClient();
 
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
     private static final int REQUEST_CODE_PERMISSIONS = 1001;
-    
-    // 2. LƯU Ý: Thay đổi IP này thành IP máy tính đang chạy Flask của bạn (VD: 192.168.x.x)
-    private static final String SERVER_URL = "http://192.168.1.60:5000/predict";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,66 +77,47 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults results) {
                 runOnUiThread(() -> {
-                    Toast.makeText(CameraActivity.this, "Đang gửi ảnh lên server...", Toast.LENGTH_SHORT).show();
-                    // 3. Gọi hàm upload ảnh lên server
-                    uploadImageToServer(photoFile);
+                    Toast.makeText(CameraActivity.this, "Đang xử lý ảnh bằng Python...", Toast.LENGTH_SHORT).show();
+                    // Gọi hàm xử lý ảnh cục bộ bằng Chaquopy
+                    processImageWithPython(photoFile);
                 });
             }
 
             @Override
             public void onError(@NonNull ImageCaptureException e) {
-                runOnUiThread(() -> Toast.makeText(CameraActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(CameraActivity.this, "Lỗi chụp ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
     }
 
-    private void uploadImageToServer(File file) {
-        // 4. Tạo MultipartBody để gửi file
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.getName(),
-                        RequestBody.create(file, MediaType.parse("image/jpeg")))
-                .build();
+    private void processImageWithPython(File inputFile) {
+        try {
+            Python py = Python.getInstance();
+            // Lấy module xuLyAnh.py
+            PyObject pyModule = py.getModule("xuLyAnh");
 
-        Request request = new Request.Builder()
-                .url(SERVER_URL)
-                .post(requestBody)
-                .build();
+            // Gọi hàm XuLyAnh(img_path) từ Python
+            // Hàm này trả về một mảng numpy (ảnh đã xử lý)
+            PyObject processedImageArray = pyModule.callAttr("XuLyAnh", inputFile.getAbsolutePath());
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                runOnUiThread(() -> {
-                    Toast.makeText(CameraActivity.this, "Kết nối server thất bại!", Toast.LENGTH_SHORT).show();
-                    Log.e("CAMERA_HTTP", "Error: " + e.getMessage());
-                });
-            }
+            // Lưu ảnh đã xử lý xuống file để ResultActivity có thể đọc
+            File processedFile = new File(getExternalFilesDir(null), "processed_result.jpg");
 
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    // 5. Lưu ảnh kết quả trả về từ Flask
-                    File processedFile = new File(getExternalFilesDir(null), "processed_result.jpg");
-                    try (InputStream is = response.body().byteStream();
-                         FileOutputStream fos = new FileOutputStream(processedFile)) {
-                        byte[] buffer = new byte[4096];
-                        int read;
-                        while ((read = is.read(buffer)) != -1) {
-                            fos.write(buffer, 0, read);
-                        }
-                    }
+            // Sử dụng cv2 của Python để lưu kết quả
+            PyObject cv2 = py.getModule("cv2");
+            cv2.callAttr("imwrite", processedFile.getAbsolutePath(), processedImageArray);
 
-                    // 6. Chuyển sang ResultActivity với đường dẫn ảnh đã xử lý
-                    runOnUiThread(() -> {
-                        Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
-                        intent.putExtra("PROCESSED_IMAGE_PATH", processedFile.getAbsolutePath());
-                        startActivity(intent);
-                    });
-                } else {
-                    runOnUiThread(() -> Toast.makeText(CameraActivity.this, "Server trả về lỗi!", Toast.LENGTH_SHORT).show());
-                }
-            }
-        });
+            // Chuyển sang ResultActivity
+            Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
+            intent.putExtra("PROCESSED_IMAGE_PATH", processedFile.getAbsolutePath());
+            startActivity(intent);
+
+        } catch (PyException e) {
+            Toast.makeText(this, "Lỗi Python: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("PYTHON_ERROR", e.getMessage());
+        } catch (Exception e) {
+            Toast.makeText(this, "Lỗi hệ thống: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void startCamera() {
@@ -189,7 +155,7 @@ public class CameraActivity extends AppCompatActivity {
                 cameraProvider.bindToLifecycle(this, cameraSelector, useCaseGroup);
 
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("CAMERA_X", "Camera binding failed", e);
             }
         }, ContextCompat.getMainExecutor(this));
     }

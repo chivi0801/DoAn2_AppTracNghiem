@@ -13,7 +13,7 @@ public class ResultActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         ImageView imageView = new ImageView(this);
         setContentView(imageView);
 

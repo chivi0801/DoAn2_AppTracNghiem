@@ -8,6 +8,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
+        android:name=".MyApplication"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -29,23 +30,9 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:label="Chụp ảnh">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:name=".ResultActivity"
             android:exported="false"
             android:label="Kết quả xử lý" />
-
-        <activity
-            android:name=".Main_Camera"
-            android:exported="true" />
 
     </application>
 

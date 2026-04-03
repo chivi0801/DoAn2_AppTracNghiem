@@ -11,7 +11,7 @@ public class OverlayView extends View {
 
     private Paint paint;
     private float strokeWidth = 8f;
-    private float boxSizePercent = 0.15f; // Kích thước ô vuông là 15% chiều rộng/cao
+    private float boxSizePercent = 0.2f; // Kích thước ô vuông là 15% chiều rộng/cao
 
     public OverlayView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -27,12 +27,12 @@ public class OverlayView extends View {
 
         int w = getWidth();
         int h = getHeight();
-        
+
         // Tính toán kích thước ô vuông dựa trên kích thước View thực tế
         float size = w * boxSizePercent;
 
         // Vẽ 4 ô vuông tại 4 góc của View (lúc này View đã khớp 3:4)
-        
+
         // Góc trái trên
         canvas.drawRect(strokeWidth, strokeWidth, size, size, paint);
 
