@@ -1,5 +1,6 @@
 package com.example.android_python;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -90,16 +91,11 @@ public class ExamDetailFragment extends Fragment {
         return v;
     }
 
-    // --- THÊM HÀM MỞ TRANG CHẤM ĐIỂM (KHÔNG XÓA CODE CŨ) ---
+    // --- THÊM HÀM MỞ TRANG CHẤM ĐIỂM (CHUYỂN QUA CAMERA ACTIVITY) ---
     private void openGradeFragment() {
-        GradeFragment fragment = new GradeFragment();
-        Bundle b = new Bundle();
-        b.putString("EXAM_NAME", examName);
-        fragment.setArguments(b);
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(null)
-                .commit();
+        Intent intent = new Intent(getActivity(), CameraActivity.class);
+        intent.putExtra("EXAM_NAME", examName);
+        startActivity(intent);
     }
 
     // --- HÀM XỬ LÝ VUỐT SANG TRÁI ĐỂ XÓA (GIỮ NGUYÊN) ---
