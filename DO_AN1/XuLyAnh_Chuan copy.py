@@ -37,15 +37,6 @@ def TienXuLyBanDau(image): # chủ yếu để khoanh vùng và chấm điểm
     return thresh
 
 
-#hiển thị ảnh debug nếu DEBUG_WINDOWS = True
-def _show_debug_image(title, image):
-    if not DEBUG_WINDOWS:
-        return
-    cv2.imshow(title, image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
 # sắp xếp 4 điểm: TL, TR, BR, BL
 def chuanHoa_LeA4(pts):
 
@@ -94,6 +85,8 @@ def Tim_4_Moc_Dinh_Vi2(anh, gioihan_duoi=200, gioihan_tren=900, tra_tam=False):
 
     gray = cv2.cvtColor(anh, cv2.COLOR_BGR2GRAY)
     tuongphan = cv2.convertScaleAbs(gray, alpha=1.6, beta=-80)
+    # cv2.imshow("tuong phan", resize_keep_ratio(tuongphan.copy(), height=750))
+
     blur = cv2.GaussianBlur(tuongphan, (5, 5), 0)
 
     thresh = cv2.adaptiveThreshold(
@@ -101,12 +94,13 @@ def Tim_4_Moc_Dinh_Vi2(anh, gioihan_duoi=200, gioihan_tren=900, tra_tam=False):
         255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
-        31,
-        10,
+        81,
+        15,
     )
 
     # tạm tắt
-    # _show_debug_image("adaptive threshold", resize_keep_ratio(thresh.copy(), height=750))
+    # cv2.imshow("adaptive threshold", resize_keep_ratio(thresh.copy(), height=750))
+    # cv2.waitKey(0)
 
     cnts = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
@@ -280,7 +274,7 @@ def XuLySOBAODANH(cacMocNho, warped):
         print(f"COT {j+1}: max1 = {max1}, max2 = {max2}")
 
         if max1 < 500:
-            print(f"COT {j+1} ==> KHONG CO O NAO DUOC TO") 
+            print(f"COT {j+1} ==> KHONG CO O NAO DUOC TO")
             SBD.append("X") #thêm "X" vào SBD thực nếu không có ô nào được tô
             continue
 
@@ -293,7 +287,7 @@ def XuLySOBAODANH(cacMocNho, warped):
             print(f"COT {j+1} ==> O DUOC TO LA: {sbd}")
         ##############
 
-    
+
 
     print("SBD:", SBD)
     sbd_str = "".join(str(num) for num in SBD)
@@ -325,7 +319,7 @@ def XuLyMADE(cacMocNho, warped):
     made_x2 = int(top_left[0] + 0.61 * col_gap) #
     made_y2 = int(mid_left[1] - 0.048 * row_gap)
 
-
+    #(bỏ cũng đc)
     h, w = warped.shape[:2]
     made_x1 = max(0, min(w - 1, made_x1)) #trên trái
     made_y1 = max(0, min(h - 1, made_y1))
@@ -334,10 +328,31 @@ def XuLyMADE(cacMocNho, warped):
     made_y2 = max(0, min(h - 1, made_y2))
 
     made_roi = copy[made_y1:made_y2, made_x1:made_x2] #cắt vùng MA DE từ ảnh đã phối cảnh để xử lý riêng
+    print ("kich thuoc MA DE _ ROI:", made_roi.shape)
 
     thresholded_made_roi = TienXuLyBanDau(made_roi) #đưa vùng MA DE về ảnh nhị phân
+    
     #resize vùng MA DE về chiều cao 1000
     resized_made_roi = resize_keep_ratio(thresholded_made_roi, height=1000)
+
+#### XỬ LÝ VẼ LẠI LÊN GIẤY
+    print ("kich thuoc MA DE _ ROI sau khi xu ly:", resized_made_roi.shape) 
+
+    #tính tỉ lệ từ ảnh resize về ảnh crop
+    ti_le_x = made_roi.shape[1] / resized_made_roi.shape[1] 
+    ti_le_y = made_roi.shape[0] / resized_made_roi.shape[0]
+
+    test = resize_keep_ratio(resized_made_roi, height=made_roi.shape[0])
+    print ("kich thuoc MA DE _ ROI sau khi xu ly resize ve chieu cao ban dau:", test.shape)
+
+    #tính vị trí đúng trên ảnh gốc (ảnh chưa crop) 
+    #nguyên tắc: x1_goc = made_x1(vị trí crop gốc trái trên) + x_resized(vị trí ô có TÔ trong resize) * ti_le_x
+
+    x1_goc = int(made_x1 + 0 * ti_le_x) #chưa đưa dữ liệu thật
+    y1_goc = int(made_y1 + 0 * ti_le_y)
+
+    cv2.circle(warped, (x1_goc, y1_goc), 12, (0, 0, 255), 2)
+###--------------------------------------------------------------
 
     # cv2.imshow("vung so bao danh nhi phan", resize_keep_ratio(resized_made_roi, height=750))
     # cv2.waitKey(0)
@@ -389,7 +404,7 @@ def XuLyMADE(cacMocNho, warped):
             sbd = score_theoHang.index(max1)  #lấy index của điểm max coi như đã tô
             MADE.append(sbd) #thêm index vào mảng MA DE thực
         ##############
-    
+
 
 
     print("MA DE:", MADE)
