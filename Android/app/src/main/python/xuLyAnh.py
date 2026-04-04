@@ -417,6 +417,8 @@ def Debug_DapAn(
         roi_x1,
         roi_y1,
         ds_score_theo_hang,
+        dap_an_thi_sinh=None,
+        dap_an_dung=None,
         nguong_khong_to=500,
         nguong_to_nhieu=400,
 ):
@@ -424,8 +426,9 @@ def Debug_DapAn(
     Ve debug cho vung Dap An len anh warped.
 
     Cach ve:
-    - Neu 1 hang co duy nhat 1 o to hop le: ve hinh tron xanh la vao o do.
-    - Neu hang khong to hoac to nhieu o: ve hinh chu nhat do quanh ca hang.
+    - Neu thi sinh to dung: khoanh xanh o duoc chon.
+    - Neu thi sinh to sai: khoanh do o thi sinh to va khoanh xanh o dap an dung.
+    - Neu bo trong / to nhieu o: ve khung do quanh ca hang va khoanh xanh o dap an dung.
 
     NOTE cho newbie:
     - Vung dap an duoc chia thanh 10 hang cau hoi va 4 cot dap an A/B/C/D.
@@ -447,6 +450,20 @@ def Debug_DapAn(
     chieu_rong_cot_resize = roi_w_resize / 4.0
     chieu_cao_hang_resize = roi_h_resize / float(so_hang)
 
+    map_dap_an = {"A": 0, "B": 1, "C": 2, "D": 3}
+
+    def lay_tam_o(chi_so_hang, chi_so_cot):
+        tam_x_resize = (chi_so_cot + 0.5) * chieu_rong_cot_resize
+        tam_y_resize = (chi_so_hang + 0.5) * chieu_cao_hang_resize
+
+        tam_x_goc = int(round(roi_x1 + tam_x_resize * ti_le_x))
+        tam_y_goc = int(round(roi_y1 + tam_y_resize * ti_le_y))
+        return tam_x_goc, tam_y_goc
+
+    def ve_vong_tron(chi_so_hang, chi_so_cot, mau, do_day=3):
+        tam_x_goc, tam_y_goc = lay_tam_o(chi_so_hang, chi_so_cot)
+        cv2.circle(warped, (tam_x_goc, tam_y_goc), 12, mau, do_day)
+
     for chi_so_hang, score_theo_cot in enumerate(ds_score_theo_hang):
         trang_thai, chi_so_cot = PhanLoaiHangTo_DapAn(
             score_theo_cot,
@@ -454,16 +471,7 @@ def Debug_DapAn(
             nguong_to_nhieu=nguong_to_nhieu,
         )
 
-        if trang_thai == "single":
-            tam_x_resize = (chi_so_cot + 0.5) * chieu_rong_cot_resize
-            tam_y_resize = (chi_so_hang + 0.5) * chieu_cao_hang_resize
-
-            tam_x_goc = int(round(roi_x1 + tam_x_resize * ti_le_x))
-            tam_y_goc = int(round(roi_y1 + tam_y_resize * ti_le_y))
-
-            #tạm tắt ko vẽ lên câu tô vì chưa so với đáp án gốc nên chưa biết câu nào đúng sai
-            # cv2.circle(warped, (tam_x_goc, tam_y_goc), 12, (0, 255, 0), 3)
-        else:
+        if trang_thai != "single":
             x1_resize = 0
             x2_resize = roi_w_resize
             y1_resize = chi_so_hang * chieu_cao_hang_resize
@@ -475,6 +483,27 @@ def Debug_DapAn(
             y2_goc = int(round(roi_y1 + y2_resize * ti_le_y))
 
             cv2.rectangle(warped, (x1_goc, y1_goc), (x2_goc, y2_goc), (0, 0, 255), 2)
+
+        dap_an_thi_sinh_hang = None
+        if dap_an_thi_sinh is not None and chi_so_hang < len(dap_an_thi_sinh):
+            dap_an_thi_sinh_hang = str(dap_an_thi_sinh[chi_so_hang]).upper()
+
+        dap_an_dung_hang = None
+        if dap_an_dung is not None and chi_so_hang < len(dap_an_dung):
+            dap_an_dung_hang = str(dap_an_dung[chi_so_hang]).upper()
+
+        cot_thi_sinh = map_dap_an.get(dap_an_thi_sinh_hang)
+        cot_dap_an_dung = map_dap_an.get(dap_an_dung_hang)
+
+        if cot_thi_sinh is not None and cot_thi_sinh == cot_dap_an_dung:
+            ve_vong_tron(chi_so_hang, cot_thi_sinh, (0, 255, 0), 3)
+            continue
+
+        if cot_thi_sinh is not None:
+            ve_vong_tron(chi_so_hang, cot_thi_sinh, (0, 0, 255), 3)
+
+        if cot_dap_an_dung is not None:
+            ve_vong_tron(chi_so_hang, cot_dap_an_dung, (0, 255, 0), 3)
 
     return warped
 
@@ -1013,21 +1042,21 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
     score = 0
 
     if cau1_10 == True:
-        list_dap_an_1_10 = dapAnDung_list[0:10] #lấy đáp án của 10 câu đầu
+        dap_an_dung_nhom = dapAnDung_list[0:10] #lấy đáp án của 10 câu đầu
         #gọi hàm chấm điểm mỗi 10 câu
-        diemThiSinh = ChamDiem(DAPAN, list_dap_an_1_10) #chấm điểm 10 câu
+        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom) #chấm điểm 10 câu
 
     elif cau11_20 == True:
-        list_dap_an_11_20 = dapAnDung_list[10:20]
-        diemThiSinh = ChamDiem(DAPAN, list_dap_an_11_20)
+        dap_an_dung_nhom = dapAnDung_list[10:20]
+        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
 
     elif cau21_30 == True:
-        list_dap_an_21_30 = dapAnDung_list[20:30]
-        diemThiSinh = ChamDiem(DAPAN, list_dap_an_21_30)
+        dap_an_dung_nhom = dapAnDung_list[20:30]
+        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
 
     elif cau31_40 == True:
-        list_dap_an_31_40 = dapAnDung_list[30:40]
-        diemThiSinh = ChamDiem(DAPAN, list_dap_an_31_40)
+        dap_an_dung_nhom = dapAnDung_list[30:40]
+        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
         # --------------------------------------------
 
     warped = Debug_DapAn(
@@ -1037,6 +1066,8 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
         roi_x1=dapan_x1,
         roi_y1=dapan_y1,
         ds_score_theo_hang=ds_score_theo_hang,
+        dap_an_thi_sinh=DAPAN,
+        dap_an_dung=dap_an_dung_nhom,
     )
 
     return diemThiSinh, warped
@@ -1048,6 +1079,10 @@ def ChamDiem(dapAn_ThiSinh_10cau, list_dap_an_dung):
     for i in range(len(dapAn_ThiSinh_10cau)):
         if dapAn_ThiSinh_10cau[i] == list_dap_an_dung[i]:
             score += 0.25
+
+
+
+
     print(f"Diem: {score}/10")
 
     return score
