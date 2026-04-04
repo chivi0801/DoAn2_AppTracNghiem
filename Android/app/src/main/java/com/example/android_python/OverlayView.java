@@ -11,7 +11,7 @@ public class OverlayView extends View {
 
     private Paint paint;
     private float strokeWidth = 8f;
-    private float boxSizePercent = 0.2f; // Kích thước ô vuông là 15% chiều rộng/cao
+    private float boxSizePercent = 0.17f; // Kích thước ô vuông là 15% chiều rộng/cao
 
     public OverlayView(Context context, AttributeSet attrs) {
         super(context, attrs);

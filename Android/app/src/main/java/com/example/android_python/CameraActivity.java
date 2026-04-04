@@ -32,10 +32,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class CameraActivity extends AppCompatActivity {
 
+    private Map<String, String> boDapAn = new HashMap<>();
+    
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private Button btnChup;
@@ -47,6 +51,12 @@ public class CameraActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        // Khởi tạo bộ đáp án
+        boDapAn.put("001", "ABCBACBCABCABDBCABDBCABACBDADCADCABDABCA");
+        boDapAn.put("002", "BCABCABDBCABDBCABACBDADCADCABDABCACCCABC");
+        boDapAn.put("003", "CABDABCAABCBACBCABCABDBCABDBCABACBDADCAD");
+        boDapAn.put("004", "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
 
         previewView = findViewById(R.id.previewView);
         btnChup = findViewById(R.id.btn_chupVaCham);
@@ -98,7 +108,7 @@ public class CameraActivity extends AppCompatActivity {
 
             // Gọi hàm XuLyAnh(img_path) từ Python
             // Hàm này trả về một mảng numpy (ảnh đã xử lý)
-            PyObject processedImageArray = pyModule.callAttr("XuLyAnh", inputFile.getAbsolutePath());
+            PyObject processedImageArray = pyModule.callAttr("XuLyAnh", inputFile.getAbsolutePath(), boDapAn);
 
             // Lưu ảnh đã xử lý xuống file để ResultActivity có thể đọc
             File processedFile = new File(getExternalFilesDir(null), "processed_result.jpg");
