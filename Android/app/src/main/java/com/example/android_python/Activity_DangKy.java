@@ -10,12 +10,12 @@ public class Activity_DangKy extends AppCompatActivity {
 
     EditText edtTenTaiKhoan, edtHoTen, edtMatKhau, edtXacNhanMatKhau;
     Button btnDoRegister;
-    DatabaseHelper dbHelper;
+    TaoCSDL dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
+        setContentView(R.layout.activity_dangky);
 
         // 2. Ánh xạ giao diện (NHỚ ĐỔI ID CHO KHỚP VỚI FILE XML CỦA BẠN NHÉ)
         edtTenTaiKhoan = findViewById(R.id.edtTenTaiKhoan);
@@ -24,7 +24,7 @@ public class Activity_DangKy extends AppCompatActivity {
         edtXacNhanMatKhau = findViewById(R.id.edtXacNhanMatKhau);
         btnDoRegister = findViewById(R.id.btnDoRegister);
 
-        dbHelper = new DatabaseHelper(this);
+        dbHelper = new TaoCSDL(this);
 
         // 3. Xử lý logic đăng ký
         btnDoRegister.setOnClickListener(v -> {

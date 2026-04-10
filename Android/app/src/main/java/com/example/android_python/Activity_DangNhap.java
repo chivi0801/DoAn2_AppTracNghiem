@@ -14,12 +14,12 @@ public class Activity_DangNhap extends AppCompatActivity {
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
     private TextView tvRegister;
-    DatabaseHelper dbHelper;
+    TaoCSDL dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_dangnhap);
 
         // Ánh xạ View
         edtUsername = findViewById(R.id.edtUsername);
@@ -27,7 +27,7 @@ public class Activity_DangNhap extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
         tvRegister = findViewById(R.id.tvRegister);
 
-        dbHelper = new DatabaseHelper(this);
+        dbHelper = new TaoCSDL(this);
 
 
         // 3. XỬ LÝ SỰ KIỆN KHI BẤM VÀO CHỮ "ĐĂNG KÝ"

@@ -34,17 +34,19 @@
         android:inputType="text"
         android:textColorHint="#A8A8A8" />
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CCCCCC" />
+
     <EditText
         android:id="@+id/edtTenTaiKhoan"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginTop="40dp"
         android:background="@null"
-        android:hint="Tên đăng nhập"
         android:gravity="start|center_vertical"
-        android:paddingStart="12dp"
+        android:hint="Tên đăng nhập"
         android:inputType="text"
+        android:paddingStart="12dp"
         android:textColorHint="#A8A8A8" />
+
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CCCCCC" />
 
     <EditText
