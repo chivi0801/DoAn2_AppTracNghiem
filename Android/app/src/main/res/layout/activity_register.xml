@@ -23,7 +23,19 @@
         android:textStyle="bold" />
 
     <EditText
-        android:id="@+id/edtRegUser"
+        android:id="@+id/edtHoTen"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="40dp"
+        android:background="@null"
+        android:hint="Họ và Tên"
+        android:gravity="start|center_vertical"
+        android:paddingStart="12dp"
+        android:inputType="text"
+        android:textColorHint="#A8A8A8" />
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CCCCCC" />
+    <EditText
+        android:id="@+id/edtTenTaiKhoan"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginTop="40dp"
@@ -36,7 +48,7 @@
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CCCCCC" />
 
     <EditText
-        android:id="@+id/edtRegPass"
+        android:id="@+id/edtMatKhau"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
@@ -48,6 +60,18 @@
         android:textColorHint="#A8A8A8" />
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CCCCCC" />
 
+    <EditText
+        android:id="@+id/edtXacNhanMatKhau"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:background="@null"
+        android:hint="Xác Nhận Mật khẩu"
+        android:gravity="start|center_vertical"
+        android:paddingStart="12dp"
+        android:inputType="textPassword"
+        android:textColorHint="#A8A8A8" />
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#CCCCCC" />
     <Button
         android:id="@+id/btnDoRegister"
         android:layout_width="200dp"
