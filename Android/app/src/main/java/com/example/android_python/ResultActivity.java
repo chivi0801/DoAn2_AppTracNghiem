@@ -1,5 +1,7 @@
 package com.example.android_python;
 
+import static android.content.Intent.getIntent;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;

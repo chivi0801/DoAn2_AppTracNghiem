@@ -20,9 +20,24 @@
         android:theme="@style/Theme.Android_Python">
 
         <activity
+            android:name=".Activity_DangNhap"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Android_Python">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".MainActivity" />
+        <activity android:name=".Activity_DangKy" />
+
+        <activity
             android:name=".CameraActivity"
             android:exported="true"
-            android:label="Chụp ảnh">
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Android_Python">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

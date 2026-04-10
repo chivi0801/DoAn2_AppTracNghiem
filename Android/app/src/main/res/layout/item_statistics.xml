@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <TextView android:id="@+id/tvMaTS" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="TS001" android:textColor="#333333" />
+    <TextView android:id="@+id/tvMaDe" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="101" android:textColor="#333333" />
+    <TextView android:id="@+id/tvCauDung" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:gravity="center" android:text="25/30" android:textColor="#333333" />
+    <TextView android:id="@+id/tvDiem" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:gravity="end" android:text="8.5" android:textColor="#FF0000" android:textStyle="bold" />
+</LinearLayout>

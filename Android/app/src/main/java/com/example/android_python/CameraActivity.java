@@ -32,21 +32,34 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class CameraActivity extends AppCompatActivity {
 
+    private Map<String, String> boDapAn = new HashMap<>();
+    
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private Button btnChup;
+    private boolean isProcessing = false;
+    private boolean stopScanning = false;
 
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
     private static final int REQUEST_CODE_PERMISSIONS = 1001;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        // Khởi tạo bộ đáp án
+        boDapAn.put("001", "ABCBACBCABCABDBCABDBCABACBDADCADCABDABCA");
+        boDapAn.put("002", "BCABCABDBCABDBCABACBDADCADCABDABCACCCABC");
+        boDapAn.put("003", "CABDABCAABCBACBCABCABDBCABDBCABACBDADCAD");
+        boDapAn.put("004", "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
 
         previewView = findViewById(R.id.previewView);
         btnChup = findViewById(R.id.btn_chupVaCham);
@@ -59,10 +72,19 @@ public class CameraActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
 
-        btnChup.setOnClickListener(v -> takePhoto());
+        btnChup.setOnClickListener(v -> takePhoto()); // nút chụp
+    }
+    //--------------------------------------------------------------------------------------------------
+
+    //
+    @Override
+    protected void onResume() {
+        super.onResume();
+        stopScanning = false;
+        isProcessing = false;
     }
 
-    private void takePhoto() {
+    private void takePhoto() { // dành cho nút chụp tay
         if (imageCapture == null) return;
 
         File storageDir = new File(getExternalFilesDir(null), "LuuAnh");
@@ -90,36 +112,56 @@ public class CameraActivity extends AppCompatActivity {
         });
     }
 
+    //hàm gọi xử lý ảnh bằng Chaquopy
     private void processImageWithPython(File inputFile) {
-        try {
-            Python py = Python.getInstance();
-            // Lấy module xuLyAnh.py
-            PyObject pyModule = py.getModule("xuLyAnh");
+        if (stopScanning) return;
+        isProcessing = true;
+        
+        new Thread(() -> {
+            try {
+                Python py = Python.getInstance();
+                // Lấy module xuLyAnh.py
+                PyObject pyModule = py.getModule("xuLyAnh");
 
-            // Gọi hàm XuLyAnh(img_path) từ Python
-            // Hàm này trả về một mảng numpy (ảnh đã xử lý)
-            PyObject processedImageArray = pyModule.callAttr("XuLyAnh", inputFile.getAbsolutePath());
+                // Gọi hàm XuLyAnh(img_path) từ Python--------------------------
+                // trả về một mảng numpy (ảnh đã xử lý)
+                PyObject processedImageArray = pyModule.callAttr("XuLyAnh", inputFile.getAbsolutePath(), boDapAn);
 
-            // Lưu ảnh đã xử lý xuống file để ResultActivity có thể đọc
-            File processedFile = new File(getExternalFilesDir(null), "processed_result.jpg");
+                //--------------------------------------------------------------
 
-            // Sử dụng cv2 của Python để lưu kết quả
-            PyObject cv2 = py.getModule("cv2");
-            cv2.callAttr("imwrite", processedFile.getAbsolutePath(), processedImageArray);
+                // Nếu chạy đến đây mà không quăng Exception nghĩa là đã tìm thấy bài và xử lý thành công
+                stopScanning = true;
 
-            // Chuyển sang ResultActivity
-            Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
-            intent.putExtra("PROCESSED_IMAGE_PATH", processedFile.getAbsolutePath());
-            startActivity(intent);
+                // Lưu ảnh đã xử lý xuống file để ResultActivity có thể đọc
+                File processedFile = new File(getExternalFilesDir(null), "processed_result.jpg");
 
-        } catch (PyException e) {
-            Toast.makeText(this, "Lỗi Python: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            Log.e("PYTHON_ERROR", e.getMessage());
-        } catch (Exception e) {
-            Toast.makeText(this, "Lỗi hệ thống: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
+                // Sử dụng cv2 của Python để lưu kết quả
+                PyObject cv2 = py.getModule("cv2");
+                cv2.callAttr("imwrite", processedFile.getAbsolutePath(), processedImageArray);
+
+                runOnUiThread(() -> {
+                    // Chuyển sang ResultActivity
+                    Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
+                    intent.putExtra("PROCESSED_IMAGE_PATH", processedFile.getAbsolutePath());
+                    startActivity(intent);
+                });
+
+            } catch (PyException e) {
+                // Lỗi Python (thường là do không tìm thấy đủ mốc định vị trong frame này)
+                Log.d("SCAN_INFO", "Chưa tìm thấy bài: " + e.getMessage());
+            } catch (Exception e) {
+                Log.e("SYSTEM_ERROR", "Lỗi: " + e.getMessage());
+            } finally {
+                isProcessing = false;
+                // Xóa file tạm sau khi xử lý xong frame này
+                if (inputFile.exists()) {
+                    inputFile.delete();
+                }
+            }
+        }).start();
     }
 
+    //hàm khởi tạo camera
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
@@ -141,11 +183,43 @@ public class CameraActivity extends AppCompatActivity {
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                         .build();
 
+                // Cấu hình ImageAnalysis để quét liên tục
+                androidx.camera.core.ImageAnalysis imageAnalysis = new androidx.camera.core.ImageAnalysis.Builder()
+                        .setResolutionSelector(resolutionSelector)
+                        .setBackpressureStrategy(androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+
+                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), image -> {
+                    if (isProcessing || stopScanning) {
+                        image.close();
+                        return;
+                    }
+
+                    // Chuyển frame thành file tạm để Python xử lý
+                    try {
+                        android.graphics.Bitmap bitmap = previewView.getBitmap();
+                        if (bitmap != null) {
+                            File cacheFile = new File(getCacheDir(), "temp_frame.jpg");
+                            java.io.FileOutputStream out = new java.io.FileOutputStream(cacheFile);
+                            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, out);
+                            out.flush();
+                            out.close();
+
+                            processImageWithPython(cacheFile);
+                        }
+                    } catch (Exception e) {
+                        Log.e("ANALYSIS_ERROR", "Error saving frame", e);
+                    } finally {
+                        image.close();
+                    }
+                });
+
                 ViewPort viewPort = new ViewPort.Builder(new Rational(3, 4), getWindowManager().getDefaultDisplay().getRotation()).build();
 
                 UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
                         .addUseCase(preview)
                         .addUseCase(imageCapture)
+                        .addUseCase(imageAnalysis)
                         .setViewPort(viewPort)
                         .build();
 
@@ -160,10 +234,12 @@ public class CameraActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
+    // hàm kiểm tra quyền truy cập camera
     private boolean checkPermissions() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }
 
+    //hàm xử lý kết quả trả về khi yêu cầu cấp quyền
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
