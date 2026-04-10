@@ -1225,4 +1225,3 @@ def XuLyAnh(img_path, BoDapAn):
 
 
 
-
