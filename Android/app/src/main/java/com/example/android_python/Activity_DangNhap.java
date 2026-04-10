@@ -9,7 +9,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class LoginActivity extends AppCompatActivity {
+public class Activity_DangNhap extends AppCompatActivity {
 
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
         // 3. XỬ LÝ SỰ KIỆN KHI BẤM VÀO CHỮ "ĐĂNG KÝ"
         tvRegister.setOnClickListener(v -> {
             // Lệnh chuyển từ Login sang Register
-            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            Intent intent = new Intent(Activity_DangNhap.this, Activity_DangKy.class);
             startActivity(intent);
         });
         btnLogin.setOnClickListener(v -> {
@@ -57,7 +57,7 @@ public class LoginActivity extends AppCompatActivity {
                 editor.apply(); // Xác nhận lưu
 
                 // Chuyển sang màn hình chính (MainActivity)
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                Intent intent = new Intent(Activity_DangNhap.this, MainActivity.class);
                 startActivity(intent);
                 finish(); // Đóng luôn màn hình Login để người dùng ấn nút "Back" trên điện thoại không bị quay lại đây nữa
             } else {

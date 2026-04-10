@@ -27,7 +27,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-public class ExamListFragment extends Fragment {
+public class Fragment_DsKyThi extends Fragment {
     private RecyclerView rvExams;
     private ExamAdapter adapter;
     private List<Exam> examList = new ArrayList<>();
@@ -35,7 +35,7 @@ public class ExamListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_exam_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_ds_kythi, container, false);
 
         // 1. Cấu hình Toolbar cho trang chủ
         AppCompatActivity activity = (AppCompatActivity) getActivity();
@@ -53,7 +53,7 @@ public class ExamListFragment extends Fragment {
 
         adapter = new ExamAdapter(examList, exam -> {
             // Chuyển sang trang chi tiết môn học
-            ExamDetailFragment detailFragment = new ExamDetailFragment();
+            Fragment_ChiTietKyThi detailFragment = new Fragment_ChiTietKyThi();
             Bundle bundle = new Bundle();
             bundle.putString("EXAM_NAME", exam.getSubject());
             bundle.putInt("QUESTION_COUNT", exam.getQuestionCount());

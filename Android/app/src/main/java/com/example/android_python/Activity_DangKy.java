@@ -6,7 +6,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class RegisterActivity extends AppCompatActivity {
+public class Activity_DangKy extends AppCompatActivity {
 
     EditText edtTenTaiKhoan, edtHoTen, edtMatKhau, edtXacNhanMatKhau;
     Button btnDoRegister;

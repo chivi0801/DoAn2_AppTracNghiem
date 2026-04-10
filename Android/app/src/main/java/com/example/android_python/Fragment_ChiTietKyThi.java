@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExamDetailFragment extends Fragment {
+public class Fragment_ChiTietKyThi extends Fragment {
     private String examName;
     private int questionCount;
     private RecyclerView rvSavedKeys;
@@ -53,7 +53,7 @@ public class ExamDetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_exam_detail, container, false);
+        View v = inflater.inflate(R.layout.fragment_chitiet_kythi, container, false);
         rvSavedKeys = v.findViewById(R.id.layoutSavedKeys);
         rvSavedKeys.setLayoutManager(new LinearLayoutManager(getContext()));
 

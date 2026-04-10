@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new ExamListFragment())
+                    .replace(R.id.fragment_container, new Fragment_DsKyThi())
                     .commit();
         }
 
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 2. Nạp Fragment đầu tiên (Trang danh sách kỳ thi) vào khung chứa
         if (savedInstanceState == null) {
-            loadFragment(new ExamListFragment());
+            loadFragment(new Fragment_DsKyThi());
         }
     }
 
