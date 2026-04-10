@@ -7,10 +7,10 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import java.util.ArrayList;
 
-public class DatabaseHelper extends SQLiteOpenHelper{
+public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
     private static final int DATABASE_VERSION = 1;
-    public DatabaseHelper(Context context) {
+    public TaoCSDL(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
     @Override
@@ -19,7 +19,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         // 1. Bảng GiangVien (Đã sửa Email thành TenTaiKhoan)
         db.execSQL("CREATE TABLE GiangVien (" +
                 "GV_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "TenTaiKhoan TEXT UNIQUE, " + // Dùng Tên tài khoản làm duy nhất
+                "TenTaiKhoan TEXT UNIQUE, " +
                 "HoTenGV TEXT, " +
                 "MatKhau TEXT)");
 
@@ -56,11 +56,10 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         // 7. Bảng BaiThi (Đã sửa lại các khóa ngoại cho khớp)
         db.execSQL("CREATE TABLE BaiThi (" +
                 "BaiThi_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "KyThi_ID INTEGER, Lop_ID INTEGER, " +
+                "KyThi_ID INTEGER, " +
                 "MaDe TEXT, ThiSinh_ID TEXT, " +
                 "AnhBaiLam TEXT, AnhBaiLam_TenThiSinh TEXT, TongDiem REAL, " +
                 "FOREIGN KEY(KyThi_ID) REFERENCES KyThi(KyThi_ID), " +
-                "FOREIGN KEY(Lop_ID) REFERENCES Lop(Lop_ID), " +
                 "FOREIGN KEY(MaDe, KyThi_ID) REFERENCES BoDapAn(MaDe, KyThi_ID), " +
                 "FOREIGN KEY(ThiSinh_ID) REFERENCES ThiSinh(ThiSinh_ID))");
 
@@ -123,7 +122,7 @@ public class DatabaseHelper extends SQLiteOpenHelper{
     }
 
     // 2. Hàm lấy danh sách TÊN các kỳ thi của một giáo viên cụ thể
-    public ArrayList<String> layDanhSachKyThi(int gvId) {
+    public ArrayList<String> LayDanhSachKyThi(int gvId) {
         ArrayList<String> dsKyThi = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -138,5 +137,17 @@ public class DatabaseHelper extends SQLiteOpenHelper{
         }
         cursor.close();
         return dsKyThi;
+    }
+    public boolean ThemKyThi(int gvId, String tenKyThi, String loaiPhieu, int soCau) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+
+        cv.put("GV_ID", gvId);
+        cv.put("TenKyThi", tenKyThi);
+        cv.put("LoaiPhieu", loaiPhieu);
+        cv.put("SoCau", soCau);
+
+        long result = db.insert("KyThi", null, cv);
+        return result != -1;
     }
 }
