@@ -189,6 +189,7 @@ public class TaoCSDL extends SQLiteOpenHelper{
         long result = db.delete("Lop", "Lop_ID=?", new String[]{String.valueOf(lopId)});
         return result > 0; // Trả về true nếu xóa thành công
     }
+
     // Hàm lấy toàn bộ danh sách Kỳ Thi để hiển thị lên RecyclerView
     public ArrayList<Exam> layDanhSachKyThiDayDu() {
         ArrayList<Exam> danhSach = new ArrayList<>();
@@ -214,5 +215,49 @@ public class TaoCSDL extends SQLiteOpenHelper{
         }
         cursor.close();
         return danhSach;
+    }
+    public boolean themMaDe(int kyThiId, String maDe, String dapAn) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        android.content.ContentValues cv = new android.content.ContentValues();
+        cv.put("KyThi_ID", kyThiId);
+        cv.put("MaDe", maDe);
+        cv.put("DapAn", dapAn);
+        long result = db.insert("BoDapAn", null, cv);
+        return result != -1;
+    }
+
+    public boolean suaMaDe(int kyThiId, String maDeCu, String maDeMoi, String dapAnMoi) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        android.content.ContentValues cv = new android.content.ContentValues();
+        cv.put("MaDe", maDeMoi);
+        cv.put("DapAn", dapAnMoi);
+        // Sửa theo KyThi_ID và MaDe cũ
+        int result = db.update("BoDapAn", cv, "KyThi_ID=? AND MaDe=?",
+                new String[]{String.valueOf(kyThiId), maDeCu});
+        return result > 0;
+    }
+
+    public boolean xoaMaDe(int kyThiId, String maDe) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int result = db.delete("BoDapAn", "KyThi_ID=? AND MaDe=?",
+                new String[]{String.valueOf(kyThiId), maDe});
+        return result > 0;
+    }
+
+    public java.util.List<SavedKey> layDanhSachMaDe(int kyThiId) {
+        java.util.List<SavedKey> list = new java.util.ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        android.database.Cursor cursor = db.rawQuery("SELECT * FROM BoDapAn WHERE KyThi_ID=?",
+                new String[]{String.valueOf(kyThiId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String maDe = cursor.getString(cursor.getColumnIndexOrThrow("MaDe"));
+                String dapAn = cursor.getString(cursor.getColumnIndexOrThrow("DapAn"));
+                list.add(new SavedKey(maDe, dapAn));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return list;
     }
 }
