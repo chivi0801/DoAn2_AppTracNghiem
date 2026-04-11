@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -23,7 +22,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,19 +32,16 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private String examName;
     private int kyThiId = -1;
     private int questionCount;
-    private RecyclerView rvSavedKeys;
+    private int gvId = -1;
+
     private RecyclerView rvThongKeList;
     private LopAdapter lopAdapter;
-    private SavedKeyAdapter adapter;
-    public static List<SavedKey> savedKeyList = new ArrayList<>();
 
     private TaoCSDL dbHelper;
     private ArrayList<Lop> danhSachLop;
     private Spinner spinnerThongKe;
     private ArrayAdapter<String> spinnerAdapter;
     private List<String> listTenLop;
-
-    private int gvId = -1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,23 +59,6 @@ public class Fragment_ChiTietKyThi extends Fragment {
             kyThiId = getArguments().getInt("KYTHI_ID", -1);
             questionCount = getArguments().getInt("QUESTION_COUNT", 30);
         }
-
-        getParentFragmentManager().setFragmentResultListener("requestKey", this, (requestKey, bundle) -> {
-            String maDe = bundle.getString("MA_DE");
-            String dapAn = bundle.getString("DAP_AN");
-            int editPos = bundle.getInt("EDIT_POSITION", -1);
-            if (maDe != null && dapAn != null && kyThiId != -1) {
-                if (editPos != -1 && editPos < savedKeyList.size()) {
-                    SavedKey oldKey = savedKeyList.get(editPos);
-                    dbHelper.suaMaDe(kyThiId, oldKey.getMaDe(), maDe, dapAn);
-                    savedKeyList.set(editPos, new SavedKey(maDe, dapAn));
-                } else {
-                    dbHelper.themMaDe(kyThiId, maDe, dapAn);
-                    savedKeyList.add(new SavedKey(maDe, dapAn));
-                }
-                if (adapter != null) adapter.notifyDataSetChanged();
-            }
-        });
     }
 
     @Override
@@ -105,26 +83,13 @@ public class Fragment_ChiTietKyThi extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_chitiet_kythi, container, false);
 
-        savedKeyList.clear();
-        if (kyThiId != -1) {
-            savedKeyList.addAll(dbHelper.layDanhSachMaDe(kyThiId));
-        }
-
-        rvSavedKeys = v.findViewById(R.id.layoutSavedKeys);
-        rvSavedKeys.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new SavedKeyAdapter(savedKeyList, position -> {
-            openAnswerKey(savedKeyList.get(position), position);
-        });
-        rvSavedKeys.setAdapter(adapter);
-
-        setupSwipeToDelete();
         setupToolbar(v);
 
-        //nút đáp án
-        // Sửa nút Đáp án: Chuyển qua trang Fragment_Ds_MaDe
+        // Nút Đáp án: Chuyển qua trang Danh sách Mã Đề
         v.findViewById(R.id.cardAnswers).setOnClickListener(view -> {
             Fragment_Ds_MaDe fragment = new Fragment_Ds_MaDe();
             Bundle b = new Bundle();
+            b.putInt("KYTHI_ID", kyThiId); // BẮT BUỘC PHẢI CÓ DÒNG NÀY ĐỂ BÊN KIA NHẬN DIỆN
             b.putInt("QUESTION_COUNT", questionCount);
             b.putString("EXAM_NAME", examName);
             fragment.setArguments(b);
@@ -135,14 +100,18 @@ public class Fragment_ChiTietKyThi extends Fragment {
                     .commit();
         });
 
+        // Nút Chấm Điểm
         v.findViewById(R.id.btnGrade).setOnClickListener(view -> {
-            if (savedKeyList.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng nhập Đáp Án trước khi chấm điểm!", Toast.LENGTH_SHORT).show();
+            // Kiểm tra trực tiếp từ CSDL xem kỳ thi này đã có mã đề nào chưa
+            List<SavedKey> checkList = dbHelper.layDanhSachMaDe(kyThiId);
+            if (checkList.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng thêm Đáp Án trước khi chấm điểm!", Toast.LENGTH_SHORT).show();
             } else {
                 openGradeFragment();
             }
         });
 
+        // --- XỬ LÝ DANH SÁCH LỚP BÊN DƯỚI ---
         danhSachLop = dbHelper.layDanhSachLop(gvId);
 
         spinnerThongKe = v.findViewById(R.id.spinnerThongKe);
@@ -155,19 +124,6 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
         spinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, listTenLop);
         spinnerThongKe.setAdapter(spinnerAdapter);
-
-        spinnerThongKe.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0) {
-                    Lop lopDuocChon = danhSachLop.get(position - 1);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
 
         rvThongKeList = v.findViewById(R.id.rvThongKeList);
         rvThongKeList.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -254,45 +210,8 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private void openGradeFragment() {
         Intent intent = new Intent(getActivity(), CameraActivity.class);
         intent.putExtra("EXAM_NAME", examName);
+        intent.putExtra("KYTHI_ID", kyThiId);
         startActivity(intent);
-    }
-
-    private void setupSwipeToDelete() {
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                int position = viewHolder.getAdapterPosition();
-                SavedKey deletedKey = savedKeyList.get(position);
-                if (kyThiId != -1) {
-                    dbHelper.xoaMaDe(kyThiId, deletedKey.getMaDe());
-                }
-                savedKeyList.remove(position);
-                adapter.notifyItemRemoved(position);
-            }
-        };
-        new ItemTouchHelper(simpleCallback).attachToRecyclerView(rvSavedKeys);
-    }
-
-    private void openAnswerKey(SavedKey item, int pos) {
-        Fragment_ChiTiet_DapAn fragment = new Fragment_ChiTiet_DapAn();
-
-        Bundle b = new Bundle();
-        b.putInt("QUESTION_COUNT", questionCount);
-        if (item != null) {
-            b.putSerializable("EXISTING_KEY", item);
-            b.putInt("EDIT_POSITION", pos);
-        }
-        fragment.setArguments(b);
-
-        requireActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(null)
-                .commit();
     }
 
     private void setupToolbar(View v) {

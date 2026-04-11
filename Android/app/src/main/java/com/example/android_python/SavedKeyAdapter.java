@@ -1,23 +1,30 @@
 package com.example.android_python;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import android.widget.TextView;
+import android.widget.ImageView;
 import java.util.List;
 
 public class SavedKeyAdapter extends RecyclerView.Adapter<SavedKeyAdapter.ViewHolder> {
-    private List<SavedKey> list;
-    private OnItemClickListener listener;
 
-    // 1. SỬA INTERFACE: Truyền vào "int position" thay vì "SavedKey item"
-    public interface OnItemClickListener {
-        void onItemClick(int position);
+    private List<SavedKey> list;
+    private OnMaDeActionListener listener;
+
+    // Interface để gửi lệnh Xóa và Sửa về Fragment
+    public interface OnMaDeActionListener {
+        void onItemClick(SavedKey item, int position); // Bấm vào để Sửa
+        void onDeleteClick(SavedKey item, int position); // Bấm vào Xóa
     }
 
-    public SavedKeyAdapter(List<SavedKey> list, OnItemClickListener listener) {
+    public SavedKeyAdapter(List<SavedKey> list, OnMaDeActionListener listener) {
         this.list = list;
         this.listener = listener;
     }
@@ -33,27 +40,43 @@ public class SavedKeyAdapter extends RecyclerView.Adapter<SavedKeyAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         SavedKey item = list.get(position);
 
-        // Hiển thị mã đề vào TextView tvMaDe
-        holder.tvMaDe.setText(item.getMaDe());
+        // Gán mã đề vào TextView có ID là tvMaDe
+        holder.tvMaDe.setText(item.getMaDe()); // Vì trong XML bạn đã có chữ "Mã đề" riêng rồi nên ở đây chỉ cần in con số ra thôi
 
-        // Bắt sự kiện click vào item
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onItemClick(position);
-            }
+        // Bấm vào cả thẻ để chỉnh sửa
+        holder.itemView.setOnClickListener(v -> listener.onItemClick(item, position));
+
+        // Xử lý nút 3 chấm với ID là ivMoreOptions
+        holder.ivMoreOptions.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(v.getContext(), holder.ivMoreOptions);
+            popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Xóa");
+
+            popup.setOnMenuItemClickListener(menuItem -> {
+                if (menuItem.getItemId() == 1) {
+                    listener.onDeleteClick(item, position);
+                    return true;
+                }
+                return false;
+            });
+            popup.show();
         });
     }
 
     @Override
     public int getItemCount() {
-        return list != null ? list.size() : 0;
+        return list.size();
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        // Khai báo biến
         TextView tvMaDe;
-        ViewHolder(View v) {
-            super(v);
-            tvMaDe = v.findViewById(R.id.tvMaDe);
+        ImageView ivMoreOptions;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            // Ánh xạ ĐÚNG tên ID trong file XML bạn vừa gửi
+            tvMaDe = itemView.findViewById(R.id.tvMaDe);
+            ivMoreOptions = itemView.findViewById(R.id.ivMoreOptions);
         }
     }
 }
