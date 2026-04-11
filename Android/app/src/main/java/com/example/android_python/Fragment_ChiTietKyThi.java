@@ -8,7 +8,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -280,7 +279,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
     }
 
     private void openGradeFragment() {
-        Intent intent = new Intent(getActivity(), CameraActivity.class);
+        Intent intent = new Intent(getActivity(), Activity_Camera.class);
         intent.putExtra("EXAM_NAME", examName);
         intent.putExtra("KYTHI_ID", kyThiId);
         startActivity(intent);
