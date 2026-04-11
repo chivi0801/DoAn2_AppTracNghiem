@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.PopupMenu;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -72,7 +73,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == 1001) {
-            hienThiDialogThemLop();
+            hienThiMenuChonCachThemLop();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -132,10 +133,13 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
         lopAdapter.setOnItemClickListener((lop, position) -> {
             new AlertDialog.Builder(requireContext())
-                    .setTitle("Xóa Lớp")
-                    .setMessage("Bạn có chắc chắn muốn xóa lớp " + lop.getTenLop() + " không?")
-                    .setPositiveButton("Xóa", (dialog, which) -> {
-                        if (dbHelper.xoaLop(lop.getLopId())) {
+                    .setTitle("Gỡ Lớp") // Đổi tiêu đề cho rõ nghĩa
+                    .setMessage("Bạn có chắc chắn muốn gỡ lớp " + lop.getTenLop() + " khỏi kỳ thi này không?")
+                    .setPositiveButton("Gỡ", (dialog, which) -> {
+
+                        // SỬA DÒNG NÀY: Dùng hàm gỡ liên kết thay vì xóa thẳng lớp
+                        if (dbHelper.goLopKhoiKyThi(kyThiId, lop.getLopId())) {
+
                             danhSachLop.remove(position);
                             lopAdapter.notifyItemRemoved(position);
                             lopAdapter.notifyItemRangeChanged(position, danhSachLop.size());
@@ -143,7 +147,9 @@ public class Fragment_ChiTietKyThi extends Fragment {
                             listTenLop.remove(position + 1);
                             spinnerAdapter.notifyDataSetChanged();
 
-                            Toast.makeText(getContext(), "Đã xóa lớp " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Đã gỡ lớp " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Lỗi khi gỡ lớp!", Toast.LENGTH_SHORT).show();
                         }
                     })
                     .setNegativeButton("Hủy", null)
@@ -153,7 +159,28 @@ public class Fragment_ChiTietKyThi extends Fragment {
         return v;
     }
 
-    private void hienThiDialogThemLop() {
+    // --- MENU XỔ XUỐNG ---
+    private void hienThiMenuChonCachThemLop() {
+        View anchorView = getActivity().findViewById(R.id.toolbar);
+        if (anchorView == null) return;
+
+        PopupMenu popup = new PopupMenu(requireContext(), anchorView, android.view.Gravity.END);
+        popup.getMenu().add(Menu.NONE, 0, Menu.NONE, "Tạo lớp mới");
+        popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Sử dụng lớp đã có");
+
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 0) {
+                hienThiDialogThemLopMoi();
+            } else if (item.getItemId() == 1) {
+                hienThiDialogChonLopCu();
+            }
+            return true;
+        });
+        popup.show();
+    }
+
+    // --- CÁCH 1: TẠO LỚP MỚI HOÀN TOÀN ---
+    private void hienThiDialogThemLopMoi() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Thêm Lớp Mới");
 
@@ -170,41 +197,19 @@ public class Fragment_ChiTietKyThi extends Fragment {
         layout.addView(edtNienKhoa);
 
         builder.setView(layout);
-
         builder.setPositiveButton("Lưu", (dialog, which) -> {
             String tenLop = edtTenLop.getText().toString().trim();
             String nienKhoa = edtNienKhoa.getText().toString().trim();
 
-            if (!tenLop.isEmpty() && !nienKhoa.isEmpty()) {
-                if (gvId == -1) {
-                    Toast.makeText(getContext(), "Lỗi xác thực người dùng!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                // 1. Thêm lớp mới và lấy ID của lớp đó
-                long lopId = dbHelper.themLop(gvId, tenLop, nienKhoa);
+            if (!tenLop.isEmpty() && !nienKhoa.isEmpty() && gvId != -1 && kyThiId != -1) {
+                // 1. Lưu lớp vào bảng Lớp -> Lấy ra ID của lớp vừa tạo
+                long newLopId = dbHelper.themLop(gvId, tenLop, nienKhoa);
 
-                if (lopId != -1) {
-                    // 2. Liên kết lớp vừa tạo với kỳ thi hiện tại trong bảng KyThi_Lop
-                    boolean isLinked = dbHelper.themKyThiLop(kyThiId, (int) lopId);
-
-                    if (isLinked) {
-                        Toast.makeText(getContext(), "Thêm lớp và gán vào kỳ thi thành công!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Lớp đã tạo nhưng lỗi khi gán vào kỳ thi!", Toast.LENGTH_SHORT).show();
-                    }
-
-                    // Cập nhật lại giao diện
-                    danhSachLop.clear();
-                    danhSachLop.addAll(dbHelper.layDanhSachLopTheoKyThi(kyThiId));
-
-                    listTenLop.clear();
-                    listTenLop.add("Thống kê");
-                    for (Lop lop : danhSachLop) {
-                        listTenLop.add(lop.getTenLop() + " (" + lop.getNienKhoa() + ")");
-                    }
-                    spinnerAdapter.notifyDataSetChanged();
-                    spinnerThongKe.setSelection(listTenLop.size() - 1);
-                    lopAdapter.notifyDataSetChanged();
+                if (newLopId != -1) {
+                    // 2. Liên kết Lớp đó với Kỳ Thi hiện tại trong bảng trung gian
+                    dbHelper.themKyThiLop(kyThiId, (int) newLopId);
+                    capNhatDanhSachLop();
+                    Toast.makeText(getContext(), "Tạo lớp mới thành công!", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getContext(), "Lỗi khi thêm lớp", Toast.LENGTH_SHORT).show();
                 }
@@ -212,9 +217,66 @@ public class Fragment_ChiTietKyThi extends Fragment {
                 Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
             }
         });
+        builder.setNegativeButton("Hủy", null).show();
+    }
 
-        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
-        builder.show();
+    // --- CÁCH 2: CHỌN LỚP ĐÃ CÓ CỦA GIÁO VIÊN ---
+    private void hienThiDialogChonLopCu() {
+        if (gvId == -1) return;
+
+        ArrayList<Lop> danhSachLopCu = dbHelper.layDanhSachLopCuaGV(gvId);
+
+        if (danhSachLopCu.isEmpty()) {
+            Toast.makeText(getContext(), "Bạn chưa tạo lớp nào trước đây!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] arrLopCu = new String[danhSachLopCu.size()];
+        for (int i = 0; i < danhSachLopCu.size(); i++) {
+            arrLopCu[i] = danhSachLopCu.get(i).getTenLop() + " (" + danhSachLopCu.get(i).getNienKhoa() + ")";
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Chọn lớp đã có");
+
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setPadding(50, 40, 50, 40);
+
+        Spinner spinnerLopCu = new Spinner(getContext());
+        ArrayAdapter<String> spinAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, arrLopCu);
+        spinnerLopCu.setAdapter(spinAdapter);
+        layout.addView(spinnerLopCu);
+
+        builder.setView(layout);
+        builder.setPositiveButton("Thêm vào kỳ thi", (dialog, which) -> {
+            int pos = spinnerLopCu.getSelectedItemPosition();
+            Lop lopDuocChon = danhSachLopCu.get(pos);
+
+            // Vì lớp đã có sẵn ID, ta chỉ cần nhét nó vào bảng trung gian KyThi_Lop
+            if (kyThiId != -1 && dbHelper.themKyThiLop(kyThiId, lopDuocChon.getLopId())) {
+                capNhatDanhSachLop();
+                Toast.makeText(getContext(), "Đã thêm lớp " + lopDuocChon.getTenLop(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Lớp này có thể đã được thêm rồi!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Hủy", null).show();
+    }
+
+    // --- HÀM CẬP NHẬT GIAO DIỆN CHUNG ---
+    private void capNhatDanhSachLop() {
+        danhSachLop.clear();
+        // Lấy danh sách lớp thuộc Kỳ thi thông qua bảng trung gian (Hàm bạn vừa thêm)
+        danhSachLop.addAll(dbHelper.layDanhSachLopTheoKyThi(kyThiId));
+        lopAdapter.notifyDataSetChanged();
+
+        listTenLop.clear();
+        listTenLop.add("Thống kê");
+        for (Lop lop : danhSachLop) {
+            listTenLop.add(lop.getTenLop() + " (" + lop.getNienKhoa() + ")");
+        }
+        spinnerAdapter.notifyDataSetChanged();
+        spinnerThongKe.setSelection(listTenLop.size() - 1);
     }
 
     private void openGradeFragment() {

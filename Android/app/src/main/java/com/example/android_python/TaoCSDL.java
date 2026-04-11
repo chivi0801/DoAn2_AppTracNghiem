@@ -210,12 +210,6 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cursor.close();
         return danhSach;
     }
-    public boolean xoaLop(int lopId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        // Xóa dòng có Lop_ID tương ứng
-        long result = db.delete("Lop", "Lop_ID=?", new String[]{String.valueOf(lopId)});
-        return result > 0; // Trả về true nếu xóa thành công
-    }
 
     // Hàm lấy toàn bộ danh sách Kỳ Thi để hiển thị lên RecyclerView
     public boolean themMaDe(int kyThiId, String maDe, String dapAn) {
@@ -261,5 +255,29 @@ public class TaoCSDL extends SQLiteOpenHelper{
         }
         cursor.close();
         return list;
+    }
+    public ArrayList<Lop> layDanhSachLopCuaGV(int gvId) {
+        ArrayList<Lop> danhSach = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM Lop WHERE GV_ID = ?", new String[]{String.valueOf(gvId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(0);
+                String tenLop = cursor.getString(2);
+                String nienKhoa = cursor.getString(3);
+                danhSach.add(new Lop(id, tenLop, nienKhoa));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return danhSach;
+    }
+    // Gỡ lớp khỏi kỳ thi (không xóa lớp gốc)
+    public boolean goLopKhoiKyThi(int kyThiId, int lopId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        long result = db.delete("KyThi_Lop", "KyThi_ID=? AND Lop_ID=?",
+                new String[]{String.valueOf(kyThiId), String.valueOf(lopId)});
+        return result > 0;
     }
 }
