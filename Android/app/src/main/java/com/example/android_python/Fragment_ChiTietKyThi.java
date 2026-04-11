@@ -32,7 +32,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private int questionCount;
     private RecyclerView rvSavedKeys;
     private SavedKeyAdapter adapter;
-    private static List<SavedKey> savedKeyList = new ArrayList<>();
+    public  static List<SavedKey> savedKeyList = new ArrayList<>();
 
     // Các biến cho Thống kê Lớp
     private TaoCSDL dbHelper;
@@ -103,7 +103,20 @@ public class Fragment_ChiTietKyThi extends Fragment {
         setupSwipeToDelete();
         setupToolbar(v);
 
-        v.findViewById(R.id.cardAnswers).setOnClickListener(view -> openAnswerKey(null, -1));
+        //nút đáp án
+        // Sửa nút Đáp án: Chuyển qua trang Fragment_Ds_MaDe
+        v.findViewById(R.id.cardAnswers).setOnClickListener(view -> {
+            Fragment_Ds_MaDe fragment = new Fragment_Ds_MaDe();
+            Bundle b = new Bundle();
+            b.putInt("QUESTION_COUNT", questionCount);
+            b.putString("EXAM_NAME", examName);
+            fragment.setArguments(b);
+
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         v.findViewById(R.id.btnGrade).setOnClickListener(view -> {
             if (savedKeyList.isEmpty()) {
@@ -238,8 +251,9 @@ public class Fragment_ChiTietKyThi extends Fragment {
         new ItemTouchHelper(simpleCallback).attachToRecyclerView(rvSavedKeys);
     }
 
+    // hàm mở màn hình Thống kê mã đề
     private void openAnswerKey(SavedKey item, int pos) {
-        AnswerKeyFragment fragment = new AnswerKeyFragment();
+        Fragment_ChiTiet_DapAn fragment = new Fragment_ChiTiet_DapAn();
         Bundle b = new Bundle();
         b.putInt("QUESTION_COUNT", questionCount);
         if (item != null) {

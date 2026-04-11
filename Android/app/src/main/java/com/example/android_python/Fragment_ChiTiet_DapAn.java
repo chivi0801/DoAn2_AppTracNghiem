@@ -21,7 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class AnswerKeyFragment extends Fragment {
+public class Fragment_ChiTiet_DapAn extends Fragment {
     private RecyclerView rvChoices;
     private Button btnTabMaDe, btnTabDapAn, btnSave; // Thêm khai báo nút Lưu
     private TextView tvCurrentMode;
@@ -66,7 +66,7 @@ public class AnswerKeyFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // LƯU Ý MÀU ĐỎ: Nếu dòng dưới báo đỏ, bạn đổi "fragment_answer_key" thành "fragment_dap_an" nhé
-        View v = inflater.inflate(R.layout.fragment_dap_an, container, false);
+        View v = inflater.inflate(R.layout.fragment_chitiet_dap_an, container, false);
 
         rvChoices = v.findViewById(R.id.rvChoices);
         btnTabMaDe = v.findViewById(R.id.btnTabMaDe);

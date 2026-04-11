@@ -25,8 +25,7 @@ public class SavedKeyAdapter extends RecyclerView.Adapter<SavedKeyAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Sử dụng layout mặc định của Android cho nhanh và sạch
-        View v = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_made, parent, false);
         return new ViewHolder(v);
     }
 
@@ -34,15 +33,10 @@ public class SavedKeyAdapter extends RecyclerView.Adapter<SavedKeyAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         SavedKey item = list.get(position);
 
-        // Hiển thị mã đề
-        holder.textView.setText("Mã đề: " + item.getMaDe());
+        // Hiển thị mã đề vào TextView tvMaDe
+        holder.tvMaDe.setText(item.getMaDe());
 
-        // Trang trí một chút cho giống bản cũ của bạn
-        holder.textView.setPadding(45, 45, 45, 45);
-        holder.textView.setTextSize(18);
-        holder.textView.setBackgroundResource(android.R.drawable.dialog_holo_light_frame);
-
-        // 2. SỬA SỰ KIỆN CLICK: Truyền cái "position" này vào listener
+        // Bắt sự kiện click vào item
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(position);
@@ -52,15 +46,14 @@ public class SavedKeyAdapter extends RecyclerView.Adapter<SavedKeyAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return list != null ? list.size() : 0;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+        TextView tvMaDe;
         ViewHolder(View v) {
             super(v);
-            // simple_list_item_1 của Android có ID mặc định là text1
-            textView = v.findViewById(android.R.id.text1);
+            tvMaDe = v.findViewById(R.id.tvMaDe);
         }
     }
 }
