@@ -12,10 +12,10 @@
             <TextView android:text="Môn" android:textSize="16sp" />
             <EditText android:id="@+id/edtSubject" android:layout_marginStart="20dp" android:hint="Nhập tên môn" android:textSize="15sp" />
         </TableRow>
-        <TableRow android:layout_marginBottom="10dp">
-            <TextView android:text="Số câu" android:textSize="16sp" />
-            <EditText android:id="@+id/edtCount" android:layout_marginStart="20dp" android:hint="Số lượng" android:inputType="number" android:textSize="15sp" />
-        </TableRow>
+<!--        <TableRow android:layout_marginBottom="10dp">-->
+<!--            <TextView android:text="Số câu" android:textSize="16sp" />-->
+<!--            <EditText android:id="@+id/edtCount" android:layout_marginStart="20dp" android:hint="Số lượng" android:inputType="number" android:textSize="15sp" />-->
+<!--        </TableRow>-->
         <TableRow>
             <TextView android:text="Phiếu" android:textSize="16sp" />
             <Spinner android:id="@+id/spnSheet" android:layout_marginStart="20dp" android:layout_height="40dp" />

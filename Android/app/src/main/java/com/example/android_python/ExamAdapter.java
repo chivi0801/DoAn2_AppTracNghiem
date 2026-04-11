@@ -38,7 +38,7 @@ public class ExamAdapter extends RecyclerView.Adapter<ExamAdapter.ExamViewHolder
         holder.tvSubject.setText(exam.getSubject());
         holder.tvDate.setText(exam.getDate());
         holder.tvSheet.setText("Phiếu: " + exam.getSheetType());
-        holder.tvCount.setText(String.valueOf(exam.getQuestionCount()));
+//
 
         // 4. GỌI HÀM BIND ĐÃ CÓ
         holder.bind(exam, listener);

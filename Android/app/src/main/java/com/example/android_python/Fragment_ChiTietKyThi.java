@@ -46,12 +46,18 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private ArrayAdapter<String> spinnerAdapter;
     private List<String> listTenLop;
 
+    private int gvId = -1;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
         dbHelper = new TaoCSDL(getContext());
+
+        // Lấy gvId từ SharedPreferences
+        android.content.SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE);
+        gvId = sharedPreferences.getInt("GV_ID", -1);
 
         if (getArguments() != null) {
             examName = getArguments().getString("EXAM_NAME");
@@ -137,7 +143,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
             }
         });
 
-        danhSachLop = dbHelper.layDanhSachLop();
+        danhSachLop = dbHelper.layDanhSachLop(gvId);
 
         spinnerThongKe = v.findViewById(R.id.spinnerThongKe);
         listTenLop = new ArrayList<>();
@@ -214,11 +220,15 @@ public class Fragment_ChiTietKyThi extends Fragment {
             String nienKhoa = edtNienKhoa.getText().toString().trim();
 
             if (!tenLop.isEmpty() && !nienKhoa.isEmpty()) {
-                boolean isInserted = dbHelper.themLop(tenLop, nienKhoa);
+                if (gvId == -1) {
+                    Toast.makeText(getContext(), "Lỗi xác thực người dùng!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                boolean isInserted = dbHelper.themLop(gvId, tenLop, nienKhoa);
                 if (isInserted) {
                     Toast.makeText(getContext(), "Thêm lớp thành công!", Toast.LENGTH_SHORT).show();
                     danhSachLop.clear();
-                    danhSachLop.addAll(dbHelper.layDanhSachLop());
+                    danhSachLop.addAll(dbHelper.layDanhSachLop(gvId));
 
                     listTenLop.clear();
                     listTenLop.add("Thống kê");

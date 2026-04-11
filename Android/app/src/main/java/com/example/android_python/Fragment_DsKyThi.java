@@ -56,7 +56,7 @@ public class Fragment_DsKyThi extends Fragment {
             Fragment_ChiTietKyThi detailFragment = new Fragment_ChiTietKyThi();
             Bundle bundle = new Bundle();
             bundle.putString("EXAM_NAME", exam.getSubject());
-            bundle.putInt("QUESTION_COUNT", exam.getQuestionCount());
+
             // QUAN TRỌNG: Truyền thêm KYTHI_ID sang trang chi tiết
             bundle.putInt("KYTHI_ID", exam.getExamId());
 
@@ -123,7 +123,6 @@ public class Fragment_DsKyThi extends Fragment {
         }
 
         EditText edtSubject = dialog.findViewById(R.id.edtSubject);
-        EditText edtSoCau = dialog.findViewById(R.id.edtCount);
         Spinner spnSheet = dialog.findViewById(R.id.spnSheet);
 
         String[] sheets = {"30", "40", "50"};
@@ -132,19 +131,16 @@ public class Fragment_DsKyThi extends Fragment {
 
         dialog.findViewById(R.id.btnConfirmCreate).setOnClickListener(v -> {
             String subject = edtSubject.getText().toString().trim();
-            String soCauStr = edtSoCau.getText().toString().trim();
             String loaiPhieu = spnSheet.getSelectedItem().toString();
 
-            if (subject.isEmpty() || soCauStr.isEmpty()) {
+            if (subject.isEmpty()) {
                 Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             try {
-                int qCount = Integer.parseInt(soCauStr);
-
-                // GHI VÀO CSDL VỚI currentGvId THẬT
-                boolean isInserted = dbHelper.ThemKyThi(currentGvId, subject, loaiPhieu, qCount);
+                // GHI VÀO CSDL VỚI currentGvId THẬT (Đã bỏ qCount)
+                boolean isInserted = dbHelper.ThemKyThi(currentGvId, subject, loaiPhieu);
 
                 if (isInserted) {
                     loadExamsFromDatabase(); // Tải lại danh sách

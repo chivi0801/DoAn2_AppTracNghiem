@@ -40,7 +40,7 @@ public class TaoCSDL extends SQLiteOpenHelper{
         // 4. Bảng KyThi
         db.execSQL("CREATE TABLE KyThi (" +
                 "KyThi_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "GV_ID INTEGER, TenKyThi TEXT, LoaiPhieu TEXT, SoCau INTEGER, " +
+                "GV_ID INTEGER, TenKyThi TEXT, LoaiPhieu TEXT, " +
                 "FOREIGN KEY(GV_ID) REFERENCES GiangVien(GV_ID))");
 
         // 5. Bảng KyThi_Lop (Quan hệ n-n)
@@ -137,13 +137,12 @@ public class TaoCSDL extends SQLiteOpenHelper{
                 int kyThiId = cursor.getInt(0);         // KyThi_ID
                 String tenKyThi = cursor.getString(2);  // TenKyThi
                 String loaiPhieu = cursor.getString(3); // LoaiPhieu
-                int soCau = cursor.getInt(4);           // SoCau
 
                 String date = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
                         .format(java.util.Calendar.getInstance().getTime());
 
-                // Đưa ID vào đối tượng Exam
-                danhSach.add(new Exam(kyThiId, tenKyThi, date, loaiPhieu, soCau));
+                // Đưa ID vào đối tượng Exam (Đã bỏ soCau)
+                danhSach.add(new Exam(kyThiId, tenKyThi, date, loaiPhieu));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -158,41 +157,41 @@ public class TaoCSDL extends SQLiteOpenHelper{
         long result = db.delete("KyThi", "KyThi_ID=?", new String[]{String.valueOf(kyThiId)});
         return result > 0;
     }
-    public boolean ThemKyThi(int gvId, String tenKyThi, String loaiPhieu, int soCau) {
+    public boolean ThemKyThi(int gvId, String tenKyThi, String loaiPhieu) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
         cv.put("GV_ID", gvId);
         cv.put("TenKyThi", tenKyThi);
         cv.put("LoaiPhieu", loaiPhieu);
-        cv.put("SoCau", soCau);
 
         long result = db.insert("KyThi", null, cv);
         return result != -1;
     }
-    public boolean themLop(String tenLop, String nienKhoa) {
+    public boolean themLop(int gvId, String tenLop, String nienKhoa) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
+        cv.put("GV_ID", gvId);
         cv.put("TenLop", tenLop);
         cv.put("NienKhoa", nienKhoa);
 
         long result = db.insert("Lop", null, cv);
         return result != -1; // Trả về true nếu thêm thành công
     }
-    public ArrayList<Lop> layDanhSachLop() {
+    public ArrayList<Lop> layDanhSachLop(int gvId) {
         ArrayList<Lop> danhSach = new ArrayList<>();
 
         SQLiteDatabase db = this.getReadableDatabase();
 
-        String query = "SELECT * FROM Lop";
-        Cursor cursor = db.rawQuery(query, null);
+        String query = "SELECT * FROM Lop WHERE GV_ID = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(gvId)});
 
         if (cursor.moveToFirst()) {
             do {
                 int id = cursor.getInt(0);
-                String tenLop = cursor.getString(1);
-                String nienKhoa = cursor.getString(2);
+                String tenLop = cursor.getString(2); // Vị trí 2 vì 0:Lop_ID, 1:GV_ID, 2:TenLop, 3:NienKhoa
+                String nienKhoa = cursor.getString(3);
 
                 // Thêm vào danh sách
                 danhSach.add(new Lop(id, tenLop, nienKhoa));
