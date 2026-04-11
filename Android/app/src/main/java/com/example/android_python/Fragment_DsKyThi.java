@@ -1,6 +1,8 @@
 package com.example.android_python;
 
 import android.app.Dialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -21,42 +23,42 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 public class Fragment_DsKyThi extends Fragment {
     private RecyclerView rvExams;
     private ExamAdapter adapter;
     private List<Exam> examList = new ArrayList<>();
+    private TaoCSDL dbHelper;
+    private int currentGvId; // Biến lưu ID giảng viên hiện tại
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ds_kythi, container, false);
 
-        // 1. Cấu hình Toolbar cho trang chủ
-        AppCompatActivity activity = (AppCompatActivity) getActivity();
-        if (activity != null) {
-            if (activity.getSupportActionBar() != null) {
-                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(false); // Không hiện nút quay lại ở trang chủ
-            }
-            TextView toolbarTitle = activity.findViewById(R.id.toolbar_title);
-            if (toolbarTitle != null) toolbarTitle.setText("Kiểm Tra");
-        }
+        dbHelper = new TaoCSDL(getContext());
 
-        // 2. Thiết lập RecyclerView
+        // LẤY GV_ID TỪ SHAREDPREFERENCES
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE);
+        currentGvId = sharedPreferences.getInt("GV_ID", -1);
+
+        setupToolbar();
+
         rvExams = view.findViewById(R.id.rvExams);
         rvExams.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        // TẢI DỮ LIỆU THEO GV_ID
+        loadExamsFromDatabase();
+
         adapter = new ExamAdapter(examList, exam -> {
-            // Chuyển sang trang chi tiết môn học
             Fragment_ChiTietKyThi detailFragment = new Fragment_ChiTietKyThi();
             Bundle bundle = new Bundle();
             bundle.putString("EXAM_NAME", exam.getSubject());
-            bundle.putInt("QUESTION_COUNT", exam.getQuestionCount());
+
+            // QUAN TRỌNG: Truyền thêm KYTHI_ID sang trang chi tiết
+            bundle.putInt("KYTHI_ID", exam.getExamId());
 
             detailFragment.setArguments(bundle);
             getParentFragmentManager().beginTransaction()
@@ -65,46 +67,57 @@ public class Fragment_DsKyThi extends Fragment {
         });
         rvExams.setAdapter(adapter);
 
-        // 3. Kích hoạt tính năng vuốt để xóa
         setupSwipeToDelete();
-
-        // 4. Sự kiện bấm nút (+) để tạo kỳ thi mới
         view.findViewById(R.id.fabAdd).setOnClickListener(v -> showCreateExamDialog());
 
         return view;
     }
 
-    // --- HÀM XỬ LÝ VUỐT SANG TRÁI ĐỂ XÓA KỲ THI ---
+    private void loadExamsFromDatabase() {
+        if (currentGvId != -1) {
+            examList.clear();
+            // Bạn cần đảm bảo hàm này trong TaoCSDL nhận tham số gvId
+            examList.addAll(dbHelper.layDanhSachKyThiTheoGV(currentGvId));
+        }
+    }
+
+    private void setupToolbar() {
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity != null) {
+            TextView toolbarTitle = activity.findViewById(R.id.toolbar_title);
+            if (toolbarTitle != null) toolbarTitle.setText("Kiểm Tra");
+        }
+    }
+
     private void setupSwipeToDelete() {
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false; // Không dùng tính năng kéo thả đổi vị trí
+                return false;
             }
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // Lấy vị trí item bị vuốt
                 int position = viewHolder.getAdapterPosition();
+                Exam examToDelete = examList.get(position);
 
-                // Xóa khỏi danh sách dữ liệu
-                examList.remove(position);
-
-                // Thông báo adapter để xóa kèm hiệu ứng trượt mượt mà
-                adapter.notifyItemRemoved(position);
-
-                Toast.makeText(getContext(), "Đã xóa kỳ thi thành công", Toast.LENGTH_SHORT).show();
+                // Xóa trong CSDL
+                if (dbHelper.xoaKyThi(examToDelete.getExamId())) {
+                    examList.remove(position);
+                    adapter.notifyItemRemoved(position);
+                    Toast.makeText(getContext(), "Đã xóa kỳ thi", Toast.LENGTH_SHORT).show();
+                } else {
+                    adapter.notifyItemChanged(position); // Trả lại item nếu xóa lỗi
+                    Toast.makeText(getContext(), "Lỗi khi xóa kỳ thi!", Toast.LENGTH_SHORT).show();
+                }
             }
         };
-
-        // Gắn bộ điều khiển vuốt vào RecyclerView
         new ItemTouchHelper(simpleCallback).attachToRecyclerView(rvExams);
     }
 
-    // --- HÀM HIỂN THỊ DIALOG TẠO KỲ THI ---
     private void showCreateExamDialog() {
         Dialog dialog = new Dialog(getContext());
-        dialog.setContentView(R.layout.dialog_create_exam);
+        dialog.setContentView(R.layout.dialog_tao_kythi);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
@@ -112,32 +125,31 @@ public class Fragment_DsKyThi extends Fragment {
         EditText edtSubject = dialog.findViewById(R.id.edtSubject);
         Spinner spnSheet = dialog.findViewById(R.id.spnSheet);
 
-        // Danh sách số câu hỏi
         String[] sheets = {"30", "40", "50"};
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, sheets);
         spnSheet.setAdapter(spinnerAdapter);
 
         dialog.findViewById(R.id.btnConfirmCreate).setOnClickListener(v -> {
             String subject = edtSubject.getText().toString().trim();
-            String sheetValue = spnSheet.getSelectedItem().toString(); // Ví dụ: "40"
-            String date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
+            String loaiPhieu = spnSheet.getSelectedItem().toString();
 
-            if (!subject.isEmpty()) {
-                try {
-                    // LỌC SỐ: Loại bỏ chữ "Phiếu" nếu có để tránh lỗi NumberFormatException
-                    int qCount = Integer.parseInt(sheetValue.replaceAll("[^0-9]", ""));
+            if (subject.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                    // Thêm vào danh sách (Lưu sheetValue là "40" để hiển thị gọn gàng)
-                    examList.add(new Exam(subject, date, sheetValue, qCount));
+            try {
+                // GHI VÀO CSDL VỚI currentGvId THẬT (Đã bỏ qCount)
+                boolean isInserted = dbHelper.ThemKyThi(currentGvId, subject, loaiPhieu);
 
+                if (isInserted) {
+                    loadExamsFromDatabase(); // Tải lại danh sách
                     adapter.notifyDataSetChanged();
                     dialog.dismiss();
-                    Toast.makeText(getContext(), "Đã tạo kỳ thi mới!", Toast.LENGTH_SHORT).show();
-                } catch (NumberFormatException e) {
-                    Toast.makeText(getContext(), "Lỗi định dạng số câu!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Tạo kỳ thi thành công!", Toast.LENGTH_SHORT).show();
                 }
-            } else {
-                Toast.makeText(getContext(), "Vui lòng nhập tên môn học!", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Lỗi dữ liệu!", Toast.LENGTH_SHORT).show();
             }
         });
         dialog.show();

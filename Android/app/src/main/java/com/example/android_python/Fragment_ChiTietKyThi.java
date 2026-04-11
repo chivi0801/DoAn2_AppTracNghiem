@@ -3,17 +3,25 @@ package com.example.android_python;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.PopupMenu;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,137 +30,281 @@ import java.util.List;
 
 public class Fragment_ChiTietKyThi extends Fragment {
     private String examName;
+    private int kyThiId = -1;
     private int questionCount;
-    private RecyclerView rvSavedKeys;
-    private SavedKeyAdapter adapter;
-    private static List<SavedKey> savedKeyList = new ArrayList<>();
+    private int gvId = -1;
+
+    private RecyclerView rvThongKeList;
+    private LopAdapter lopAdapter;
+
+    private TaoCSDL dbHelper;
+    private ArrayList<Lop> danhSachLop;
+    private Spinner spinnerThongKe;
+    private ArrayAdapter<String> spinnerAdapter;
+    private List<String> listTenLop;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+
+        dbHelper = new TaoCSDL(getContext());
+
+        // Lấy gvId từ SharedPreferences
+        android.content.SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE);
+        gvId = sharedPreferences.getInt("GV_ID", -1);
+
         if (getArguments() != null) {
             examName = getArguments().getString("EXAM_NAME");
+            kyThiId = getArguments().getInt("KYTHI_ID", -1);
             questionCount = getArguments().getInt("QUESTION_COUNT", 30);
         }
+    }
 
-        getParentFragmentManager().setFragmentResultListener("requestKey", this, (requestKey, bundle) -> {
-            String maDe = bundle.getString("MA_DE");
-            String dapAn = bundle.getString("DAP_AN");
-            int editPos = bundle.getInt("EDIT_POSITION", -1);
-            if (maDe != null && dapAn != null) {
-                if (editPos != -1 && editPos < savedKeyList.size()) {
-                    savedKeyList.set(editPos, new SavedKey(maDe, dapAn));
-                } else {
-                    savedKeyList.add(new SavedKey(maDe, dapAn));
-                }
-                if (adapter != null) adapter.notifyDataSetChanged();
-            }
-        });
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        MenuItem addItem = menu.add(Menu.NONE, 1001, Menu.NONE, "Thêm Lớp");
+        addItem.setIcon(R.drawable.group_add);
+        addItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == 1001) {
+            hienThiMenuChonCachThemLop();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_chitiet_kythi, container, false);
-        rvSavedKeys = v.findViewById(R.id.layoutSavedKeys);
-        rvSavedKeys.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        adapter = new SavedKeyAdapter(savedKeyList, position -> {
-            openAnswerKey(savedKeyList.get(position), position);
-        });
-        rvSavedKeys.setAdapter(adapter);
-
-        // --- GỌI LẠI HÀM VUỐT ĐỂ XÓA TẠI ĐÂY ---
-        setupSwipeToDelete();
 
         setupToolbar(v);
 
-        // GIỮ NGUYÊN CODE CŨ
-        v.findViewById(R.id.cardAnswers).setOnClickListener(view -> openAnswerKey(null, -1));
+        // Nút Đáp án: Chuyển qua trang Danh sách Mã Đề
+        v.findViewById(R.id.cardAnswers).setOnClickListener(view -> {
+            Fragment_Ds_MaDe fragment = new Fragment_Ds_MaDe();
+            Bundle b = new Bundle();
+            b.putInt("KYTHI_ID", kyThiId); // BẮT BUỘC PHẢI CÓ DÒNG NÀY ĐỂ BÊN KIA NHẬN DIỆN
+            b.putInt("QUESTION_COUNT", questionCount);
+            b.putString("EXAM_NAME", examName);
+            fragment.setArguments(b);
 
-        // --- THÊM TÁC VỤ NÚT CHẤM ĐIỂM TẠI ĐÂY ---
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        // Nút Chấm Điểm
         v.findViewById(R.id.btnGrade).setOnClickListener(view -> {
-            if (savedKeyList.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng nhập Đáp Án trước khi chấm điểm!", Toast.LENGTH_SHORT).show();
+            // Kiểm tra trực tiếp từ CSDL xem kỳ thi này đã có mã đề nào chưa
+            List<SavedKey> checkList = dbHelper.layDanhSachMaDe(kyThiId);
+            if (checkList.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng thêm Đáp Án trước khi chấm điểm!", Toast.LENGTH_SHORT).show();
             } else {
                 openGradeFragment();
             }
         });
-        v.findViewById(R.id.cardStats).setOnClickListener(view -> {
-            StatisticsFragment fragment = new StatisticsFragment();
-            Bundle b = new Bundle();
-            b.putString("EXAM_NAME", examName);
-            fragment.setArguments(b);
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, fragment)
-                    .addToBackStack(null).commit();
+
+        // --- XỬ LÝ DANH SÁCH LỚP BÊN DƯỚI ---
+        danhSachLop = dbHelper.layDanhSachLopTheoKyThi(kyThiId);
+
+        spinnerThongKe = v.findViewById(R.id.spinnerThongKe);
+        listTenLop = new ArrayList<>();
+        listTenLop.add("Thống kê");
+
+        for (Lop lop : danhSachLop) {
+            listTenLop.add(lop.getTenLop() + " (" + lop.getNienKhoa() + ")");
+        }
+
+        spinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, listTenLop);
+        spinnerThongKe.setAdapter(spinnerAdapter);
+
+        rvThongKeList = v.findViewById(R.id.rvThongKeList);
+        rvThongKeList.setLayoutManager(new LinearLayoutManager(getContext()));
+        lopAdapter = new LopAdapter(danhSachLop);
+        rvThongKeList.setAdapter(lopAdapter);
+
+        lopAdapter.setOnItemClickListener((lop, position) -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Gỡ Lớp") // Đổi tiêu đề cho rõ nghĩa
+                    .setMessage("Bạn có chắc chắn muốn gỡ lớp " + lop.getTenLop() + " khỏi kỳ thi này không?")
+                    .setPositiveButton("Gỡ", (dialog, which) -> {
+
+                        // SỬA DÒNG NÀY: Dùng hàm gỡ liên kết thay vì xóa thẳng lớp
+                        if (dbHelper.goLopKhoiKyThi(kyThiId, lop.getLopId())) {
+
+                            danhSachLop.remove(position);
+                            lopAdapter.notifyItemRemoved(position);
+                            lopAdapter.notifyItemRangeChanged(position, danhSachLop.size());
+
+                            listTenLop.remove(position + 1);
+                            spinnerAdapter.notifyDataSetChanged();
+
+                            Toast.makeText(getContext(), "Đã gỡ lớp " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Lỗi khi gỡ lớp!", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
         });
 
         return v;
     }
 
-    // --- THÊM HÀM MỞ TRANG CHẤM ĐIỂM (CHUYỂN QUA CAMERA ACTIVITY) ---
+    // --- MENU XỔ XUỐNG ---
+    private void hienThiMenuChonCachThemLop() {
+        View anchorView = getActivity().findViewById(R.id.toolbar);
+        if (anchorView == null) return;
+
+        PopupMenu popup = new PopupMenu(requireContext(), anchorView, android.view.Gravity.END);
+        popup.getMenu().add(Menu.NONE, 0, Menu.NONE, "Tạo lớp mới");
+        popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Sử dụng lớp đã có");
+
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 0) {
+                hienThiDialogThemLopMoi();
+            } else if (item.getItemId() == 1) {
+                hienThiDialogChonLopCu();
+            }
+            return true;
+        });
+        popup.show();
+    }
+
+    // --- CÁCH 1: TẠO LỚP MỚI HOÀN TOÀN ---
+    private void hienThiDialogThemLopMoi() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Thêm Lớp Mới");
+
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 20, 50, 20);
+
+        final EditText edtTenLop = new EditText(getContext());
+        edtTenLop.setHint("Nhập tên lớp (VD: 12A1)");
+        layout.addView(edtTenLop);
+
+        final EditText edtNienKhoa = new EditText(getContext());
+        edtNienKhoa.setHint("Nhập niên khóa (VD: 2023)");
+        layout.addView(edtNienKhoa);
+
+        builder.setView(layout);
+        builder.setPositiveButton("Lưu", (dialog, which) -> {
+            String tenLop = edtTenLop.getText().toString().trim();
+            String nienKhoa = edtNienKhoa.getText().toString().trim();
+
+            if (!tenLop.isEmpty() && !nienKhoa.isEmpty() && gvId != -1 && kyThiId != -1) {
+                // 1. Lưu lớp vào bảng Lớp -> Lấy ra ID của lớp vừa tạo
+                long newLopId = dbHelper.themLop(gvId, tenLop, nienKhoa);
+
+                if (newLopId != -1) {
+                    // 2. Liên kết Lớp đó với Kỳ Thi hiện tại trong bảng trung gian
+                    dbHelper.themKyThiLop(kyThiId, (int) newLopId);
+                    capNhatDanhSachLop();
+                    Toast.makeText(getContext(), "Tạo lớp mới thành công!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Lỗi khi thêm lớp", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Hủy", null).show();
+    }
+
+    // --- CÁCH 2: CHỌN LỚP ĐÃ CÓ CỦA GIÁO VIÊN ---
+    private void hienThiDialogChonLopCu() {
+        if (gvId == -1) return;
+
+        ArrayList<Lop> danhSachLopCu = dbHelper.layDanhSachLopCuaGV(gvId);
+
+        if (danhSachLopCu.isEmpty()) {
+            Toast.makeText(getContext(), "Bạn chưa tạo lớp nào trước đây!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] arrLopCu = new String[danhSachLopCu.size()];
+        for (int i = 0; i < danhSachLopCu.size(); i++) {
+            arrLopCu[i] = danhSachLopCu.get(i).getTenLop() + " (" + danhSachLopCu.get(i).getNienKhoa() + ")";
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Chọn lớp đã có");
+
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setPadding(50, 40, 50, 40);
+
+        Spinner spinnerLopCu = new Spinner(getContext());
+        ArrayAdapter<String> spinAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, arrLopCu);
+        spinnerLopCu.setAdapter(spinAdapter);
+        layout.addView(spinnerLopCu);
+
+        builder.setView(layout);
+        builder.setPositiveButton("Thêm vào kỳ thi", (dialog, which) -> {
+            int pos = spinnerLopCu.getSelectedItemPosition();
+            Lop lopDuocChon = danhSachLopCu.get(pos);
+
+            // Vì lớp đã có sẵn ID, ta chỉ cần nhét nó vào bảng trung gian KyThi_Lop
+            if (kyThiId != -1 && dbHelper.themKyThiLop(kyThiId, lopDuocChon.getLopId())) {
+                capNhatDanhSachLop();
+                Toast.makeText(getContext(), "Đã thêm lớp " + lopDuocChon.getTenLop(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Lớp này có thể đã được thêm rồi!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Hủy", null).show();
+    }
+
+    // --- HÀM CẬP NHẬT GIAO DIỆN CHUNG ---
+    private void capNhatDanhSachLop() {
+        danhSachLop.clear();
+        // Lấy danh sách lớp thuộc Kỳ thi thông qua bảng trung gian (Hàm bạn vừa thêm)
+        danhSachLop.addAll(dbHelper.layDanhSachLopTheoKyThi(kyThiId));
+        lopAdapter.notifyDataSetChanged();
+
+        listTenLop.clear();
+        listTenLop.add("Thống kê");
+        for (Lop lop : danhSachLop) {
+            listTenLop.add(lop.getTenLop() + " (" + lop.getNienKhoa() + ")");
+        }
+        spinnerAdapter.notifyDataSetChanged();
+        spinnerThongKe.setSelection(listTenLop.size() - 1);
+    }
+
     private void openGradeFragment() {
-        Intent intent = new Intent(getActivity(), CameraActivity.class);
+        Intent intent = new Intent(getActivity(), Activity_Camera.class);
         intent.putExtra("EXAM_NAME", examName);
+        intent.putExtra("KYTHI_ID", kyThiId);
         startActivity(intent);
     }
 
-    // --- HÀM XỬ LÝ VUỐT SANG TRÁI ĐỂ XÓA (GIỮ NGUYÊN) ---
-    private void setupSwipeToDelete() {
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false; // Không dùng kéo thả đổi vị trí
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // Lấy vị trí phần tử bị vuốt
-                int position = viewHolder.getAdapterPosition();
-
-                // Xóa khỏi danh sách dữ liệu
-                savedKeyList.remove(position);
-
-                // Thông báo adapter xóa item kèm hiệu ứng
-                adapter.notifyItemRemoved(position);
-
-                Toast.makeText(getContext(), "Đã xóa bộ mã đề", Toast.LENGTH_SHORT).show();
-            }
-        };
-
-        // Gắn vào RecyclerView
-        new ItemTouchHelper(simpleCallback).attachToRecyclerView(rvSavedKeys);
-    }
-
-    // GIỮ NGUYÊN HÀM openAnswerKey
-    private void openAnswerKey(SavedKey item, int pos) {
-        AnswerKeyFragment fragment = new AnswerKeyFragment();
-        Bundle b = new Bundle();
-        b.putInt("QUESTION_COUNT", questionCount);
-        if (item != null) {
-            b.putSerializable("EXISTING_KEY", item);
-            b.putInt("EDIT_POSITION", pos);
-        }
-        fragment.setArguments(b);
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(null)
-                .commit();
-    }
-
-    // GIỮ NGUYÊN HÀM setupToolbar
     private void setupToolbar(View v) {
-        Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
         AppCompatActivity activity = (AppCompatActivity) getActivity();
-        if (activity != null && toolbar != null) {
-            activity.setSupportActionBar(toolbar);
+        if (activity != null) {
+            // KHÔNG gọi setSupportActionBar(toolbar) ở đây nữa vì nó đã được set ở MainActivity
+            // Chỉ cần lấy ActionBar đã có để tùy chỉnh nút quay về
             if (activity.getSupportActionBar() != null) {
                 activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                 activity.getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back_white);
                 activity.getSupportActionBar().setDisplayShowTitleEnabled(false);
             }
-            toolbar.setNavigationOnClickListener(view -> getParentFragmentManager().popBackStack());
+
+            Toolbar toolbar = activity.findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                // Xử lý sự kiện nút back trên Toolbar
+                toolbar.setNavigationOnClickListener(view -> {
+                    if (isAdded()) {
+                        getParentFragmentManager().popBackStack();
+                    }
+                });
+            }
         }
         TextView title = getActivity().findViewById(R.id.toolbar_title);
         if (title != null) title.setText(examName);

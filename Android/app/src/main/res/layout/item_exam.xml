@@ -27,7 +27,7 @@
                 android:id="@+id/tvItemSubject"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đồ án 2"
+                android:text="Lớp 12a"
                 android:textColor="#000000"
                 android:textSize="17sp"
                 android:textStyle="bold" />

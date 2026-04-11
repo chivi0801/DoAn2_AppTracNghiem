@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class CameraActivity extends AppCompatActivity {
+public class Activity_Camera extends AppCompatActivity {
 
     private Map<String, String> boDapAn = new HashMap<>();
     
@@ -99,7 +99,7 @@ public class CameraActivity extends AppCompatActivity {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults results) {
                 runOnUiThread(() -> {
-                    Toast.makeText(CameraActivity.this, "Đang xử lý ảnh bằng Python...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Activity_Camera.this, "Đang xử lý ảnh bằng Python...", Toast.LENGTH_SHORT).show();
                     // Gọi hàm xử lý ảnh cục bộ bằng Chaquopy
                     processImageWithPython(photoFile);
                 });
@@ -107,7 +107,7 @@ public class CameraActivity extends AppCompatActivity {
 
             @Override
             public void onError(@NonNull ImageCaptureException e) {
-                runOnUiThread(() -> Toast.makeText(CameraActivity.this, "Lỗi chụp ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(Activity_Camera.this, "Lỗi chụp ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
     }
@@ -141,7 +141,7 @@ public class CameraActivity extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     // Chuyển sang ResultActivity
-                    Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
+                    Intent intent = new Intent(Activity_Camera.this, ResultActivity.class);
                     intent.putExtra("PROCESSED_IMAGE_PATH", processedFile.getAbsolutePath());
                     startActivity(intent);
                 });

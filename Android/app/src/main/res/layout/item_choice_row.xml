@@ -3,25 +3,56 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingVertical="8dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:paddingVertical="8dp">
 
     <TextView
         android:id="@+id/tvRowNumber"
         android:layout_width="40dp"
         android:layout_height="wrap_content"
         android:text="1"
-        android:gravity="center"
-        android:textColor="#003366"
+        android:textColor="#000"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:textSize="16sp" />
+        android:gravity="center"/>
 
     <LinearLayout
-        android:id="@+id/rgOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:gravity="center"
-        android:orientation="horizontal">
-    </LinearLayout>
+        android:weightSum="4">
 
+        <CheckBox
+            android:id="@+id/cbA"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="A"
+            android:gravity="center"/>
+
+        <CheckBox
+            android:id="@+id/cbB"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="B"
+            android:gravity="center"/>
+
+        <CheckBox
+            android:id="@+id/cbC"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="C"
+            android:gravity="center"/>
+
+        <CheckBox
+            android:id="@+id/cbD"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="D"
+            android:gravity="center"/>
+    </LinearLayout>
 </LinearLayout>
