@@ -67,7 +67,7 @@ public class Fragment_DsKyThi extends Fragment {
         });
         rvExams.setAdapter(adapter);
 
-        setupSwipeToDelete();
+//        setupSwipeToDelete();
         view.findViewById(R.id.fabAdd).setOnClickListener(v -> showCreateExamDialog());
 
         return view;
