@@ -24,9 +24,12 @@ public class TaoCSDL extends SQLiteOpenHelper{
                 "MatKhau TEXT)");
 
         // 2. Bảng Lop
-        db.execSQL("CREATE TABLE Lop (" +
+                db.execSQL("CREATE TABLE Lop (" +
                 "Lop_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "TenLop TEXT, NienKhoa TEXT)");
+                "GV_ID INTEGER, " +
+                "TenLop TEXT, " +
+                "NienKhoa TEXT, " +
+                "FOREIGN KEY(GV_ID) REFERENCES GiangVien(GV_ID))");
 
         // 3. Bảng ThiSinh (Dùng TEXT cho ThiSinh_ID vì mã HS thường có cả chữ và số)
         db.execSQL("CREATE TABLE ThiSinh (" +
@@ -121,21 +124,39 @@ public class TaoCSDL extends SQLiteOpenHelper{
     }
 
     // 2. Hàm lấy danh sách TÊN các kỳ thi của một giáo viên cụ thể
-    public ArrayList<String> LayDanhSachKyThi(int gvId) {
-        ArrayList<String> dsKyThi = new ArrayList<>();
+    // 1. Hàm lấy danh sách đầy đủ THEO GIẢNG VIÊN
+    public ArrayList<Exam> layDanhSachKyThiTheoGV(int gvId) {
+        ArrayList<Exam> danhSach = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Chỉ lấy những kỳ thi có GV_ID khớp với giáo viên đang đăng nhập
-        Cursor cursor = db.rawQuery("SELECT TenKyThi FROM KyThi WHERE GV_ID = ?", new String[]{String.valueOf(gvId)});
+        // Lọc theo GV_ID để không bị lẫn lộn dữ liệu giữa các tài khoản
+        Cursor cursor = db.rawQuery("SELECT * FROM KyThi WHERE GV_ID = ?", new String[]{String.valueOf(gvId)});
 
         if (cursor.moveToFirst()) {
             do {
-                // Cột TenKyThi nằm ở vị trí số 0 trong kết quả SELECT
-                dsKyThi.add(cursor.getString(0));
+                int kyThiId = cursor.getInt(0);         // KyThi_ID
+                String tenKyThi = cursor.getString(2);  // TenKyThi
+                String loaiPhieu = cursor.getString(3); // LoaiPhieu
+                int soCau = cursor.getInt(4);           // SoCau
+
+                String date = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                        .format(java.util.Calendar.getInstance().getTime());
+
+                // Đưa ID vào đối tượng Exam
+                danhSach.add(new Exam(kyThiId, tenKyThi, date, loaiPhieu, soCau));
             } while (cursor.moveToNext());
         }
         cursor.close();
-        return dsKyThi;
+        return danhSach;
+    }
+
+    // 2. Hàm xóa kỳ thi khỏi CSDL
+    public boolean xoaKyThi(int kyThiId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        // Xóa luôn các dữ liệu liên quan để tránh rác database (Mã đề, bài thi...)
+        db.delete("BoDapAn", "KyThi_ID=?", new String[]{String.valueOf(kyThiId)});
+        long result = db.delete("KyThi", "KyThi_ID=?", new String[]{String.valueOf(kyThiId)});
+        return result > 0;
     }
     public boolean ThemKyThi(int gvId, String tenKyThi, String loaiPhieu, int soCau) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -191,31 +212,6 @@ public class TaoCSDL extends SQLiteOpenHelper{
     }
 
     // Hàm lấy toàn bộ danh sách Kỳ Thi để hiển thị lên RecyclerView
-    public ArrayList<Exam> layDanhSachKyThiDayDu() {
-        ArrayList<Exam> danhSach = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        // Tạm thời lấy hết. Sau này có tính năng Đăng Nhập thì bạn thêm WHERE GV_ID = ?
-        Cursor cursor = db.rawQuery("SELECT * FROM KyThi", null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                int kyThiId = cursor.getInt(0);         // KyThi_ID
-                String tenKyThi = cursor.getString(2);  // TenKyThi
-                String loaiPhieu = cursor.getString(3); // LoaiPhieu
-                int soCau = cursor.getInt(4);           // SoCau
-
-                // Vì CSDL của bạn chưa lưu Ngày Tạo, ta tạm lấy ngày hiện tại để hiển thị cho đẹp
-                String date = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Calendar.getInstance().getTime());
-
-                // Tạo đối tượng Exam (Đảm bảo class Exam của bạn khớp tham số này)
-                Exam exam = new Exam(tenKyThi, date, loaiPhieu, soCau);
-                danhSach.add(exam);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return danhSach;
-    }
     public boolean themMaDe(int kyThiId, String maDe, String dapAn) {
         SQLiteDatabase db = this.getWritableDatabase();
         android.content.ContentValues cv = new android.content.ContentValues();
