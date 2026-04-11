@@ -3,56 +3,60 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
+    android:paddingVertical="10dp"
+    android:paddingHorizontal="16dp"
     android:gravity="center_vertical"
-    android:paddingVertical="8dp">
-
-    <TextView
-        android:id="@+id/tvRowNumber"
-        android:layout_width="40dp"
-        android:layout_height="wrap_content"
-        android:text="1"
-        android:textColor="#000"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:gravity="center"/>
+    android:background="?android:attr/selectableItemBackground"> <TextView
+    android:id="@+id/tvQuestionNumber"
+    android:layout_width="50dp"
+    android:layout_height="wrap_content"
+    android:text="1"
+    android:textColor="#333333"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:gravity="center" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:orientation="horizontal"
-        android:gravity="center"
         android:weightSum="4">
 
-        <CheckBox
-            android:id="@+id/cbA"
+        <RadioButton
+            android:id="@+id/rbA"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="A"
-            android:gravity="center"/>
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:buttonTint="#00ACC1" />
 
-        <CheckBox
-            android:id="@+id/cbB"
+        <RadioButton
+            android:id="@+id/rbB"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="B"
-            android:gravity="center"/>
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:buttonTint="#00ACC1" />
 
-        <CheckBox
-            android:id="@+id/cbC"
+        <RadioButton
+            android:id="@+id/rbC"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="C"
-            android:gravity="center"/>
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:buttonTint="#00ACC1" />
 
-        <CheckBox
-            android:id="@+id/cbD"
+        <RadioButton
+            android:id="@+id/rbD"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="D"
-            android:gravity="center"/>
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:buttonTint="#00ACC1" />
     </LinearLayout>
 </LinearLayout>

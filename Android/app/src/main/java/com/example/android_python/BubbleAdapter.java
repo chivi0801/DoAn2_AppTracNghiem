@@ -3,27 +3,40 @@ package com.example.android_python;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder> {
 
     private int questionCount;
-    private String[] arrDapAn;
+    // Bỏ mảng arrDapAn đi, CHỈ DÙNG 1 biến listAnswers cho đồng bộ
+    private List<String> listAnswers;
 
-    // CHÍNH LÀ HÀM NÀY ĐÂY: Hàm tạo nhận 2 tham số để hết báo đỏ!
+    // CONSTRUCTOR ĐÃ ĐƯỢC SỬA LỖI
     public BubbleAdapter(int questionCount, String existingData) {
         this.questionCount = questionCount;
-        this.arrDapAn = new String[questionCount];
+
+        // BẮT BUỘC PHẢI KHỞI TẠO LIST Ở ĐÂY ĐỂ TRÁNH LỖI VĂNG APP (NullPointerException)
+        this.listAnswers = new ArrayList<>();
 
         for (int i = 0; i < questionCount; i++) {
-            // Nếu có dữ liệu cũ thì load ra, không có thì mặc định là X
+            // Nếu có dữ liệu cũ thì load ra
             if (existingData != null && i < existingData.length()) {
-                arrDapAn[i] = String.valueOf(existingData.charAt(i));
+                String ans = String.valueOf(existingData.charAt(i));
+                // Nếu dữ liệu cũ là "X" (chưa chọn) thì đưa về chuỗi rỗng "" để UI xử lý
+                if (ans.equals("X") || ans.equals("M")) {
+                    listAnswers.add("");
+                } else {
+                    listAnswers.add(ans);
+                }
             } else {
-                arrDapAn[i] = "X";
+                // Mặc định ban đầu chưa chọn gì cả là chuỗi rỗng
+                listAnswers.add("");
             }
         }
     }
@@ -39,46 +52,51 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.tvRowNumber.setText(String.valueOf(position + 1));
 
-        holder.cbA.setOnCheckedChangeListener(null);
-        holder.cbB.setOnCheckedChangeListener(null);
-        holder.cbC.setOnCheckedChangeListener(null);
-        holder.cbD.setOnCheckedChangeListener(null);
+        // Lúc này listAnswers đã có dữ liệu nên không bị crash nữa
+        String currentAnswer = listAnswers.get(position);
 
-        // Hiển thị trạng thái
-        holder.cbA.setChecked(arrDapAn[position].equals("A") || arrDapAn[position].equals("M"));
-        holder.cbB.setChecked(arrDapAn[position].equals("B") || arrDapAn[position].equals("M"));
-        holder.cbC.setChecked(arrDapAn[position].equals("C") || arrDapAn[position].equals("M"));
-        holder.cbD.setChecked(arrDapAn[position].equals("D") || arrDapAn[position].equals("M"));
+        holder.rbA.setOnCheckedChangeListener(null);
+        holder.rbB.setOnCheckedChangeListener(null);
+        holder.rbC.setOnCheckedChangeListener(null);
+        holder.rbD.setOnCheckedChangeListener(null);
 
-        // Lắng nghe sự kiện
-        android.widget.CompoundButton.OnCheckedChangeListener listener = (buttonView, isChecked) -> {
-            arrDapAn[position] = kiemTraDapAn(holder);
+        holder.rbA.setChecked("A".equals(currentAnswer));
+        holder.rbB.setChecked("B".equals(currentAnswer));
+        holder.rbC.setChecked("C".equals(currentAnswer));
+        holder.rbD.setChecked("D".equals(currentAnswer));
+
+        holder.rbD.setVisibility(View.VISIBLE);
+
+        View.OnClickListener clickListener = v -> {
+            String clickedAnswer = "";
+            if (v == holder.rbA) clickedAnswer = "A";
+            else if (v == holder.rbB) clickedAnswer = "B";
+            else if (v == holder.rbC) clickedAnswer = "C";
+            else if (v == holder.rbD) clickedAnswer = "D";
+
+            if (currentAnswer.equals(clickedAnswer)) {
+                listAnswers.set(position, ""); // Hủy chọn
+            } else {
+                listAnswers.set(position, clickedAnswer); // Chọn mới
+            }
+            holder.itemView.post(() -> notifyItemChanged(position));
         };
 
-        holder.cbA.setOnCheckedChangeListener(listener);
-        holder.cbB.setOnCheckedChangeListener(listener);
-        holder.cbC.setOnCheckedChangeListener(listener);
-        holder.cbD.setOnCheckedChangeListener(listener);
+        holder.rbA.setOnClickListener(clickListener);
+        holder.rbB.setOnClickListener(clickListener);
+        holder.rbC.setOnClickListener(clickListener);
+        holder.rbD.setOnClickListener(clickListener);
     }
 
-    private String kiemTraDapAn(ViewHolder holder) {
-        int count = 0;
-        String answer = "";
-
-        if (holder.cbA.isChecked()) { count++; answer = "A"; }
-        if (holder.cbB.isChecked()) { count++; answer = "B"; }
-        if (holder.cbC.isChecked()) { count++; answer = "C"; }
-        if (holder.cbD.isChecked()) { count++; answer = "D"; }
-
-        if (count == 0) return "X";
-        if (count > 1) return "M";
-        return answer;
-    }
-
+    // Hàm xuất chuỗi đáp án ra để lưu vào CSDL (VD: "ABCDX...")
     public String layChuoiDapAn() {
         StringBuilder builder = new StringBuilder();
-        for (String ans : arrDapAn) {
-            builder.append(ans);
+        for (String ans : listAnswers) {
+            if (ans.isEmpty()) {
+                builder.append("X"); // Nếu chuỗi rỗng (chưa chọn) thì lưu là X
+            } else {
+                builder.append(ans);
+            }
         }
         return builder.toString();
     }
@@ -89,16 +107,21 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+
         TextView tvRowNumber;
-        CheckBox cbA, cbB, cbC, cbD;
+        RadioButton rbA, rbB, rbC, rbD;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvRowNumber = itemView.findViewById(R.id.tvRowNumber);
-            cbA = itemView.findViewById(R.id.cbA);
-            cbB = itemView.findViewById(R.id.cbB);
-            cbC = itemView.findViewById(R.id.cbC);
-            cbD = itemView.findViewById(R.id.cbD);
+            tvRowNumber = itemView.findViewById(R.id.tvQuestionNumber);
+            rbA = itemView.findViewById(R.id.rbA);
+            rbB = itemView.findViewById(R.id.rbB);
+            rbC = itemView.findViewById(R.id.rbC);
+            rbD = itemView.findViewById(R.id.rbD);
         }
+    }
+
+    public List<String> getListAnswers() {
+        return listAnswers;
     }
 }
