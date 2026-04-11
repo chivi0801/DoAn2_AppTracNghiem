@@ -112,7 +112,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
         });
 
         // --- XỬ LÝ DANH SÁCH LỚP BÊN DƯỚI ---
-        danhSachLop = dbHelper.layDanhSachLop(gvId);
+        danhSachLop = dbHelper.layDanhSachLopTheoKyThi(kyThiId);
 
         spinnerThongKe = v.findViewById(R.id.spinnerThongKe);
         listTenLop = new ArrayList<>();
@@ -180,11 +180,22 @@ public class Fragment_ChiTietKyThi extends Fragment {
                     Toast.makeText(getContext(), "Lỗi xác thực người dùng!", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                boolean isInserted = dbHelper.themLop(gvId, tenLop, nienKhoa);
-                if (isInserted) {
-                    Toast.makeText(getContext(), "Thêm lớp thành công!", Toast.LENGTH_SHORT).show();
+                // 1. Thêm lớp mới và lấy ID của lớp đó
+                long lopId = dbHelper.themLop(gvId, tenLop, nienKhoa);
+
+                if (lopId != -1) {
+                    // 2. Liên kết lớp vừa tạo với kỳ thi hiện tại trong bảng KyThi_Lop
+                    boolean isLinked = dbHelper.themKyThiLop(kyThiId, (int) lopId);
+
+                    if (isLinked) {
+                        Toast.makeText(getContext(), "Thêm lớp và gán vào kỳ thi thành công!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Lớp đã tạo nhưng lỗi khi gán vào kỳ thi!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    // Cập nhật lại giao diện
                     danhSachLop.clear();
-                    danhSachLop.addAll(dbHelper.layDanhSachLop(gvId));
+                    danhSachLop.addAll(dbHelper.layDanhSachLopTheoKyThi(kyThiId));
 
                     listTenLop.clear();
                     listTenLop.add("Thống kê");
@@ -193,7 +204,6 @@ public class Fragment_ChiTietKyThi extends Fragment {
                     }
                     spinnerAdapter.notifyDataSetChanged();
                     spinnerThongKe.setSelection(listTenLop.size() - 1);
-
                     lopAdapter.notifyDataSetChanged();
                 } else {
                     Toast.makeText(getContext(), "Lỗi khi thêm lớp", Toast.LENGTH_SHORT).show();

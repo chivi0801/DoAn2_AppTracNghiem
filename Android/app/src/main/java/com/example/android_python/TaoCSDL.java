@@ -168,7 +168,7 @@ public class TaoCSDL extends SQLiteOpenHelper{
         long result = db.insert("KyThi", null, cv);
         return result != -1;
     }
-    public boolean themLop(int gvId, String tenLop, String nienKhoa) {
+    public long themLop(int gvId, String tenLop, String nienKhoa) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
@@ -176,31 +176,38 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cv.put("TenLop", tenLop);
         cv.put("NienKhoa", nienKhoa);
 
-        long result = db.insert("Lop", null, cv);
-        return result != -1; // Trả về true nếu thêm thành công
+        return db.insert("Lop", null, cv); // Trả về ID của dòng vừa chèn hoặc -1 nếu lỗi
     }
-    public ArrayList<Lop> layDanhSachLop(int gvId) {
-        ArrayList<Lop> danhSach = new ArrayList<>();
 
+    public boolean themKyThiLop(int kyThiId, int lopId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("KyThi_ID", kyThiId);
+        cv.put("Lop_ID", lopId);
+        long result = db.insert("KyThi_Lop", null, cv);
+        return result != -1;
+    }
+    public ArrayList<Lop> layDanhSachLopTheoKyThi(int kyThiId) {
+        ArrayList<Lop> danhSach = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        String query = "SELECT * FROM Lop WHERE GV_ID = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(gvId)});
+        // Join bảng Lop và KyThi_Lop để lấy những lớp thuộc kỳ thi cụ thể
+        String query = "SELECT L.* FROM Lop L " +
+                "JOIN KyThi_Lop KL ON L.Lop_ID = KL.Lop_ID " +
+                "WHERE KL.KyThi_ID = ?";
+        
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(kyThiId)});
 
         if (cursor.moveToFirst()) {
             do {
-                int id = cursor.getInt(0);
-                String tenLop = cursor.getString(2); // Vị trí 2 vì 0:Lop_ID, 1:GV_ID, 2:TenLop, 3:NienKhoa
-                String nienKhoa = cursor.getString(3);
+                int id = cursor.getInt(0); // Lop_ID
+                String tenLop = cursor.getString(2); // TenLop (Cột 1 là GV_ID)
+                String nienKhoa = cursor.getString(3); // NienKhoa
 
-                // Thêm vào danh sách
                 danhSach.add(new Lop(id, tenLop, nienKhoa));
             } while (cursor.moveToNext());
         }
-
-        // Đóng con trỏ để giải phóng bộ nhớ
         cursor.close();
-
         return danhSach;
     }
     public boolean xoaLop(int lopId) {
