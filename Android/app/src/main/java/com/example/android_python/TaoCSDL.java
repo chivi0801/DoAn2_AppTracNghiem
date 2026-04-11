@@ -115,7 +115,6 @@ public class TaoCSDL extends SQLiteOpenHelper{
 
         cv.put("GV_ID", gvId); // Khóa ngoại liên kết với giáo viên
         cv.put("TenKyThi", tenKyThi);
-        // Nếu bảng KyThi của bạn có thêm cột nào (như NgayTao, TrangThai...), bạn có thể thêm cv.put() ở đây
 
         long result = db.insert("KyThi", null, cv);
         return result != -1;
@@ -149,5 +148,71 @@ public class TaoCSDL extends SQLiteOpenHelper{
 
         long result = db.insert("KyThi", null, cv);
         return result != -1;
+    }
+    public boolean themLop(String tenLop, String nienKhoa) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+
+        cv.put("TenLop", tenLop);
+        cv.put("NienKhoa", nienKhoa);
+
+        long result = db.insert("Lop", null, cv);
+        return result != -1; // Trả về true nếu thêm thành công
+    }
+    public ArrayList<Lop> layDanhSachLop() {
+        ArrayList<Lop> danhSach = new ArrayList<>();
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM Lop";
+        Cursor cursor = db.rawQuery(query, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(0);
+                String tenLop = cursor.getString(1);
+                String nienKhoa = cursor.getString(2);
+
+                // Thêm vào danh sách
+                danhSach.add(new Lop(id, tenLop, nienKhoa));
+            } while (cursor.moveToNext());
+        }
+
+        // Đóng con trỏ để giải phóng bộ nhớ
+        cursor.close();
+
+        return danhSach;
+    }
+    public boolean xoaLop(int lopId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        // Xóa dòng có Lop_ID tương ứng
+        long result = db.delete("Lop", "Lop_ID=?", new String[]{String.valueOf(lopId)});
+        return result > 0; // Trả về true nếu xóa thành công
+    }
+    // Hàm lấy toàn bộ danh sách Kỳ Thi để hiển thị lên RecyclerView
+    public ArrayList<Exam> layDanhSachKyThiDayDu() {
+        ArrayList<Exam> danhSach = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Tạm thời lấy hết. Sau này có tính năng Đăng Nhập thì bạn thêm WHERE GV_ID = ?
+        Cursor cursor = db.rawQuery("SELECT * FROM KyThi", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int kyThiId = cursor.getInt(0);         // KyThi_ID
+                String tenKyThi = cursor.getString(2);  // TenKyThi
+                String loaiPhieu = cursor.getString(3); // LoaiPhieu
+                int soCau = cursor.getInt(4);           // SoCau
+
+                // Vì CSDL của bạn chưa lưu Ngày Tạo, ta tạm lấy ngày hiện tại để hiển thị cho đẹp
+                String date = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Calendar.getInstance().getTime());
+
+                // Tạo đối tượng Exam (Đảm bảo class Exam của bạn khớp tham số này)
+                Exam exam = new Exam(tenKyThi, date, loaiPhieu, soCau);
+                danhSach.add(exam);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return danhSach;
     }
 }

@@ -6,9 +6,6 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -24,75 +21,70 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.Arrays;
-
 public class AnswerKeyFragment extends Fragment {
     private RecyclerView rvChoices;
-    private Button btnTabMaDe, btnTabDapAn;
+    private Button btnTabMaDe, btnTabDapAn, btnSave; // Thêm khai báo nút Lưu
     private TextView tvCurrentMode;
     private LinearLayout layoutHeaderLabels;
 
     private int questionCount = 30;
-    private int[] maDeSelections = new int[3];
-    private int[] dapAnSelections;
-    private int editingPosition = -1;
     private boolean isMaDeMode = true;
+    private int editingPosition = -1;
+
+    // Chuỗi lưu dữ liệu cũ
+    private String existingMaDe = "";
+    private String existingDapAn = "";
+
+    // 2 Adapter chuẩn mực mới
+    private MaDeAdapter maDeAdapter;
+    private BubbleAdapter bubbleAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+        // ĐÃ XÓA: setHasOptionsMenu(true); -> Không dùng Menu Toolbar nữa cho đỡ lỗi
 
-        // 1. Nhận số câu hỏi từ ExamDetail
         if (getArguments() != null) {
             questionCount = getArguments().getInt("QUESTION_COUNT", 30);
-        }
 
-        // 2. Khởi tạo mảng trống
-        dapAnSelections = new int[questionCount];
-        Arrays.fill(maDeSelections, -1);
-        Arrays.fill(dapAnSelections, -1);
-
-        // 3. LOGIC PHỤC HỒI DỮ LIỆU (Kết nối với trang cũ)
-        if (getArguments() != null && getArguments().containsKey("EXISTING_KEY")) {
-            SavedKey existing = (SavedKey) getArguments().getSerializable("EXISTING_KEY");
-            editingPosition = getArguments().getInt("EDIT_POSITION", -1);
-
-            if (existing != null) {
-                // Dịch chuỗi Mã đề: "123" -> [1, 2, 3]
-                String md = existing.getMaDe();
-                for (int i = 0; i < 3 && i < md.length(); i++) {
-                    char c = md.charAt(i);
-                    maDeSelections[i] = (c == '?') ? -1 : Character.getNumericValue(c);
-                }
-
-                // Dịch chuỗi Đáp án: "ABCD" -> [0, 1, 2, 3]
-                String da = existing.getDapAn();
-                for (int i = 0; i < questionCount; i++) {
-                    if (i < da.length()) {
-                        char c = da.charAt(i);
-                        dapAnSelections[i] = (c == '?') ? -1 : (c - 'A');
-                    }
+            // Lấy dữ liệu cũ nếu đang ở chế độ CHỈNH SỬA
+            if (getArguments().containsKey("EXISTING_KEY")) {
+                SavedKey existing = (SavedKey) getArguments().getSerializable("EXISTING_KEY");
+                editingPosition = getArguments().getInt("EDIT_POSITION", -1);
+                if (existing != null) {
+                    existingMaDe = existing.getMaDe();
+                    existingDapAn = existing.getDapAn();
                 }
             }
         }
+
+        maDeAdapter = new MaDeAdapter(existingMaDe);
+        bubbleAdapter = new BubbleAdapter(questionCount, existingDapAn);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_answer_key, container, false);
+        // LƯU Ý MÀU ĐỎ: Nếu dòng dưới báo đỏ, bạn đổi "fragment_answer_key" thành "fragment_dap_an" nhé
+        View v = inflater.inflate(R.layout.fragment_dap_an, container, false);
+
         rvChoices = v.findViewById(R.id.rvChoices);
         btnTabMaDe = v.findViewById(R.id.btnTabMaDe);
         btnTabDapAn = v.findViewById(R.id.btnTabDapAn);
         tvCurrentMode = v.findViewById(R.id.tvCurrentMode);
         layoutHeaderLabels = v.findViewById(R.id.layoutHeaderLabels);
 
+        // Ánh xạ nút Lưu ở dưới cùng màn hình
+        btnSave = v.findViewById(R.id.btnSaveAnswerKey);
+
         setupToolbar(v);
         rvChoices.setLayoutManager(new LinearLayoutManager(getContext()));
 
         btnTabMaDe.setOnClickListener(view -> { isMaDeMode = true; updateUI(); });
         btnTabDapAn.setOnClickListener(view -> { isMaDeMode = false; updateUI(); });
+
+        // Sự kiện khi bấm nút Lưu
+        btnSave.setOnClickListener(view -> luuKetQua());
 
         updateUI();
         return v;
@@ -104,39 +96,34 @@ public class AnswerKeyFragment extends Fragment {
             btnTabDapAn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#CCCCCC")));
             tvCurrentMode.setText("Mã Đề");
             if (layoutHeaderLabels != null) layoutHeaderLabels.setVisibility(View.GONE);
-            rvChoices.setAdapter(new ChoiceAdapter(10, 3, maDeSelections, true));
+
+            rvChoices.setAdapter(maDeAdapter);
         } else {
             btnTabDapAn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#00CCFF")));
             btnTabMaDe.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#CCCCCC")));
-            tvCurrentMode.setText("Đáp Án");
+            tvCurrentMode.setText("Đáp Án (" + questionCount + " Câu)");
             if (layoutHeaderLabels != null) {
                 layoutHeaderLabels.setVisibility(View.VISIBLE);
                 updateHeaderLabels();
             }
-            rvChoices.setAdapter(new ChoiceAdapter(questionCount, 4, dapAnSelections, false));
+
+            rvChoices.setAdapter(bubbleAdapter);
         }
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_answer_key, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }
+    // Hàm xử lý lưu dữ liệu (Thay thế cho Menu)
+    private void luuKetQua() {
+        String chuoiMaDe = maDeAdapter.layChuoiMaDe();
+        String chuoiDapAn = bubbleAdapter.layChuoiDapAn();
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_print) {
-            Bundle result = new Bundle();
-            result.putString("MA_DE", formatResult(maDeSelections, true));
-            result.putString("DAP_AN", formatResult(dapAnSelections, false));
-            result.putInt("EDIT_POSITION", editingPosition);
+        Bundle result = new Bundle();
+        result.putString("MA_DE", chuoiMaDe);
+        result.putString("DAP_AN", chuoiDapAn);
+        result.putInt("EDIT_POSITION", editingPosition);
 
-            getParentFragmentManager().setFragmentResult("requestKey", result);
-            Toast.makeText(getContext(), "Đã lưu thay đổi!", Toast.LENGTH_SHORT).show();
-            getParentFragmentManager().popBackStack();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        getParentFragmentManager().setFragmentResult("requestKey", result);
+        Toast.makeText(getContext(), "Đã lưu bộ đáp án!", Toast.LENGTH_SHORT).show();
+        getParentFragmentManager().popBackStack();
     }
 
     private void setupToolbar(View v) {
@@ -153,15 +140,6 @@ public class AnswerKeyFragment extends Fragment {
         }
     }
 
-    private String formatResult(int[] arr, boolean isMd) {
-        StringBuilder sb = new StringBuilder();
-        for (int s : arr) {
-            if (s == -1) sb.append("?");
-            else sb.append(isMd ? s : (char)('A' + s));
-        }
-        return sb.toString();
-    }
-
     private void updateHeaderLabels() {
         if (layoutHeaderLabels == null) return;
         layoutHeaderLabels.removeAllViews();
@@ -173,7 +151,8 @@ public class AnswerKeyFragment extends Fragment {
             tv.setTextColor(Color.parseColor("#003366"));
             tv.setTypeface(null, Typeface.BOLD);
             tv.setTextSize(16);
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(130, -2);
+
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
             tv.setLayoutParams(p);
             layoutHeaderLabels.addView(tv);
         }

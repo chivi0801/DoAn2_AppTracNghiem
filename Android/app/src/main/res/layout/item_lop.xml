@@ -14,20 +14,19 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:baselineAligned="false"
-        android:weightSum="3">
+        android:gravity="center_vertical">
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1.2"
+            android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvItemSubject"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Lớp 12a"
+                android:text="Tên lớp"
                 android:textColor="#000000"
                 android:textSize="17sp"
                 android:textStyle="bold" />
@@ -37,44 +36,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Phiếu: 40"
+                android:text="Niên khóa"
                 android:textColor="#666666"
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvItemDate"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="23/3/2026"
-            android:textColor="#333333"
-            android:textSize="15sp" />
-
-        <LinearLayout
-            android:layout_width="0dp"
+        <ImageView
+            android:id="@+id/ivMoreOptions"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
-            android:gravity="end"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Số câu"
-                android:textColor="#666666"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/tvItemCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="40"
-                android:textColor="#000000"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/daubacham" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>
