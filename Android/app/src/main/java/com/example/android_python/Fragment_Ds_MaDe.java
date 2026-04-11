@@ -16,43 +16,29 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Fragment_Ds_MaDe extends Fragment {
     private RecyclerView rvSavedKeys;
     private SavedKeyAdapter adapter;
-    private List<SavedKey> savedKeyList = new ArrayList<>();
-
+    private List<SavedKey> savedKeyList;
     private int questionCount;
-    private int kyThiId = -1; // Thêm biến hứng ID kỳ thi
-    private TaoCSDL dbHelper; // Thêm biến gọi CSDL
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        dbHelper = new TaoCSDL(getContext());
-
-        if (getArguments() != null) {
-            questionCount = getArguments().getInt("QUESTION_COUNT", 30);
-            kyThiId = getArguments().getInt("KYTHI_ID", -1);
-        }
-    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ds_made, container, false);
 
-        setupToolbar(view);
-
-        // Lấy dữ liệu trực tiếp từ CSDL theo KyThi_ID thay vì lấy tĩnh từ Fragment khác
-        savedKeyList.clear();
-        if (kyThiId != -1) {
-            savedKeyList.addAll(dbHelper.layDanhSachMaDe(kyThiId));
+        if (getArguments() != null) {
+            questionCount = getArguments().getInt("QUESTION_COUNT", 30);
         }
 
-        rvSavedKeys = view.findViewById(R.id.rvExams);
+        // Lấy danh sách từ Fragment_ChiTietKyThi (để tạm thời dùng chung dữ liệu)
+        savedKeyList = Fragment_ChiTietKyThi.savedKeyList;
+
+        setupToolbar(view);
+
+        rvSavedKeys = view.findViewById(R.id.rvExams); // rvExams là ID RecyclerView trong fragment_ds_made.xml
         rvSavedKeys.setLayoutManager(new LinearLayoutManager(getContext()));
 
         adapter = new SavedKeyAdapter(savedKeyList, position -> {
@@ -60,28 +46,20 @@ public class Fragment_Ds_MaDe extends Fragment {
         });
         rvSavedKeys.setAdapter(adapter);
 
-        // Nút thêm (+)
+        // Nút thêm (+) giống Activity_Main
         view.findViewById(R.id.fabAdd).setOnClickListener(v -> openEditAnswerKey(null, -1));
 
         setupSwipeToDelete();
 
-        // Xử lý sự kiện khi màn hình Nhập Đáp Án bấm Lưu gửi về
+        // Nhận kết quả trả về khi Lưu đáp án
         getParentFragmentManager().setFragmentResultListener("requestKey", this, (requestKey, bundle) -> {
             String maDe = bundle.getString("MA_DE");
             String dapAn = bundle.getString("DAP_AN");
             int editPos = bundle.getInt("EDIT_POSITION", -1);
-
-            if (maDe != null && dapAn != null && kyThiId != -1) {
+            if (maDe != null && dapAn != null) {
                 if (editPos != -1 && editPos < savedKeyList.size()) {
-                    // Cập nhật (Sửa) trong CSDL
-                    SavedKey oldKey = savedKeyList.get(editPos);
-                    dbHelper.suaMaDe(kyThiId, oldKey.getMaDe(), maDe, dapAn);
-
                     savedKeyList.set(editPos, new SavedKey(maDe, dapAn));
                 } else {
-                    // Thêm mới vào CSDL
-                    dbHelper.themMaDe(kyThiId, maDe, dapAn);
-
                     savedKeyList.add(new SavedKey(maDe, dapAn));
                 }
                 adapter.notifyDataSetChanged();
@@ -126,14 +104,6 @@ public class Fragment_Ds_MaDe extends Fragment {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
-
-                // 1. Xóa trong CSDL trước
-                SavedKey deletedKey = savedKeyList.get(position);
-                if (kyThiId != -1) {
-                    dbHelper.xoaMaDe(kyThiId, deletedKey.getMaDe());
-                }
-
-                // 2. Xóa trên giao diện
                 savedKeyList.remove(position);
                 adapter.notifyItemRemoved(position);
                 Toast.makeText(getContext(), "Đã xóa mã đề", Toast.LENGTH_SHORT).show();
