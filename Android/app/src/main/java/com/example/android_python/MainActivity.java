@@ -10,24 +10,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Kết nối với file XML có FragmentContainerView mà bạn vừa khoe lúc nãy
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new Fragment_DsKyThi())
-                    .commit();
-        }
 
-        // 1. Cài đặt Toolbar (Thanh tiêu đề màu xanh)
+        // 1. Cài đặt Toolbar (Chỉ gọi 1 lần ở Activity)
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         if (getSupportActionBar() != null) {
-            // QUAN TRỌNG: Tắt tiêu đề mặc định của hệ thống
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
 
-        // 2. Nạp Fragment đầu tiên (Trang danh sách kỳ thi) vào khung chứa
+        // 2. Nạp Fragment đầu tiên (CHỈ NẠP 1 LẦN)
         if (savedInstanceState == null) {
             loadFragment(new Fragment_DsKyThi());
         }
