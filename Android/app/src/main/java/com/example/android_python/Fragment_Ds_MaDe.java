@@ -76,17 +76,31 @@ public class Fragment_Ds_MaDe extends Fragment {
 
             if (maDe != null && dapAn != null && kyThiId != -1) {
                 if (editPos != -1) {
-                    // Nếu là chỉnh sửa: Update CSDL
+                    // TRƯỜNG HỢP 1: CHỈNH SỬA MÃ ĐỀ (UPDATE)
                     SavedKey oldKey = savedKeyList.get(editPos);
                     dbHelper.suaMaDe(kyThiId, oldKey.getMaDe(), maDe, dapAn);
-                } else {
-                    // Nếu là tạo mới: Insert vào CSDL
-                    dbHelper.themMaDe(kyThiId, maDe, dapAn);
-                }
 
-                // SAU KHI LƯU XONG -> LOAD LẠI TỪ CSDL ĐỂ HIỂN THỊ
-                loadDataFromDatabase();
-                adapter.notifyDataSetChanged();
+                    // Cập nhật lại giao diện
+                    loadDataFromDatabase();
+                    adapter.notifyDataSetChanged();
+                    Toast.makeText(getContext(), "Đã cập nhật mã đề!", Toast.LENGTH_SHORT).show();
+
+                } else {
+                    // TRƯỜNG HỢP 2: TẠO MỚI MÃ ĐỀ (INSERT)
+                    // Gọi hàm kiểm tra trùng lặp trước khi thêm
+                    if (dbHelper.kiemTraMaDeTonTai(kyThiId, maDe)) {
+                        // Trùng mã đề -> Báo lỗi và KHÔNG LƯU
+                        Toast.makeText(getContext(), "Lỗi: Mã đề " + maDe + " đã tồn tại!", Toast.LENGTH_LONG).show();
+                    } else {
+                        // Không trùng -> Tiến hành lưu
+                        dbHelper.themMaDe(kyThiId, maDe, dapAn);
+
+                        // Chỉ cập nhật lại giao diện khi lưu thành công
+                        loadDataFromDatabase();
+                        adapter.notifyDataSetChanged();
+                        Toast.makeText(getContext(), "Tạo mã đề thành công!", Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
         });
 
@@ -104,14 +118,14 @@ public class Fragment_Ds_MaDe extends Fragment {
 
     private void confirmDelete(SavedKey item, int position) {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Xóa mã đề")
-                .setMessage("Xóa toàn bộ bộ đáp án mã đề " + item.getMaDe() + "?")
                 .setPositiveButton("Xóa", (dialog, which) -> {
-                    // Xóa trong CSDL trước
-                    dbHelper.xoaMaDe(kyThiId, item.getMaDe());
-                    // Cập nhật lại giao diện
-                    savedKeyList.remove(position);
-                    adapter.notifyItemRemoved(position);
+                    int actualPosition = savedKeyList.indexOf(item);
+                    if (actualPosition != -1) {
+                        dbHelper.xoaMaDe(kyThiId, item.getMaDe());
+                        savedKeyList.remove(actualPosition);
+                        adapter.notifyItemRemoved(actualPosition);
+                        adapter.notifyItemRangeChanged(actualPosition, savedKeyList.size());
+                    }
                 })
                 .setNegativeButton("Hủy", null).show();
     }
@@ -140,5 +154,12 @@ public class Fragment_Ds_MaDe extends Fragment {
         getParentFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .addToBackStack(null).commit();
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 }

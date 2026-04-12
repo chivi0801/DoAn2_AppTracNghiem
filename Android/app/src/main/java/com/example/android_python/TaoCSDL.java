@@ -273,11 +273,18 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cursor.close();
         return danhSach;
     }
-    // Gỡ lớp khỏi kỳ thi (không xóa lớp gốc)
     public boolean goLopKhoiKyThi(int kyThiId, int lopId) {
         SQLiteDatabase db = this.getWritableDatabase();
         long result = db.delete("KyThi_Lop", "KyThi_ID=? AND Lop_ID=?",
                 new String[]{String.valueOf(kyThiId), String.valueOf(lopId)});
         return result > 0;
+    }
+    public boolean kiemTraMaDeTonTai(int idKyThi, String tenMaDe) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT * FROM MaDe WHERE id_ky_thi = ? AND ten_ma_de = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(idKyThi), tenMaDe});
+        boolean daTonTai = (cursor.getCount() > 0);
+        cursor.close();
+        return daTonTai;
     }
 }
