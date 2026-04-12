@@ -34,7 +34,7 @@ public class Fragment_Ds_MaDe extends Fragment {
         dbHelper = new TaoCSDL(getContext());
 
         if (getArguments() != null) {
-            questionCount = getArguments().getInt("QUESTION_COUNT", 30);
+            questionCount = getArguments().getInt("QUESTION_COUNT", 40);
             kyThiId = getArguments().getInt("KYTHI_ID", -1);
         }
     }

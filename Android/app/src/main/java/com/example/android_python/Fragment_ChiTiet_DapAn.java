@@ -27,7 +27,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
     private TextView tvCurrentMode;
     private LinearLayout layoutHeaderLabels;
 
-    private int questionCount = 30;
+    private int questionCount = 40;
     private boolean isMaDeMode = true;
     private int editingPosition = -1;
 
@@ -45,7 +45,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         // ĐÃ XÓA: setHasOptionsMenu(true); -> Không dùng Menu Toolbar nữa cho đỡ lỗi
 
         if (getArguments() != null) {
-            questionCount = getArguments().getInt("QUESTION_COUNT", 30);
+            questionCount = getArguments().getInt("QUESTION_COUNT", 40);
 
             // Lấy dữ liệu cũ nếu đang ở chế độ CHỈNH SỬA
             if (getArguments().containsKey("EXISTING_KEY")) {
@@ -101,7 +101,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         } else {
             btnTabDapAn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#00CCFF")));
             btnTabMaDe.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#CCCCCC")));
-            tvCurrentMode.setText("Đáp Án (" + questionCount + " Câu)");
+            tvCurrentMode.setText("Đáp Án");
             if (layoutHeaderLabels != null) {
                 layoutHeaderLabels.setVisibility(View.VISIBLE);
                 updateHeaderLabels();
@@ -172,15 +172,26 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
     private void updateHeaderLabels() {
         if (layoutHeaderLabels == null) return;
         layoutHeaderLabels.removeAllViews();
+
+        // 1. CHÈN KHOẢNG TRỐNG VÔ HÌNH BÙ TRỪ CHO CỘT SỐ THỨ TỰ
+        TextView tvEmpty = new TextView(getContext());
+        // Độ rộng khoảng 40dp (Bạn có thể tăng giảm số 40 này cho khớp với độ rộng của chữ "24", "25" trong giao diện của bạn)
+        int widthInDp = 40;
+        int widthInPx = (int) (widthInDp * getResources().getDisplayMetrics().density);
+        tvEmpty.setLayoutParams(new LinearLayout.LayoutParams(widthInPx, ViewGroup.LayoutParams.WRAP_CONTENT));
+        layoutHeaderLabels.addView(tvEmpty);
+
+        // 2. VẼ 4 CHỮ A, B, C, D NHƯ BÌNH THƯỜNG
         String[] labels = {"A", "B", "C", "D"};
         for (String label : labels) {
             TextView tv = new TextView(getContext());
             tv.setText(label);
             tv.setGravity(Gravity.CENTER);
-            tv.setTextColor(Color.parseColor("#003366"));
+            tv.setTextColor(Color.parseColor("#003366")); // Màu xanh đậm
             tv.setTypeface(null, Typeface.BOLD);
             tv.setTextSize(16);
 
+            // Thuộc tính weight = 1.0f giúp 4 chữ A B C D chia đều phần không gian CÒN LẠI
             LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
             tv.setLayoutParams(p);
             layoutHeaderLabels.addView(tv);
