@@ -1,5 +1,5 @@
 import itertools
-
+import json
 import cv2
 import numpy as np
 
@@ -440,15 +440,15 @@ def Debug_DapAn(
     if len(ds_score_theo_hang) == 0:
         return warped
 
-    roi_h_goc, roi_w_goc = roi_goc.shape[:2]
-    roi_h_resize, roi_w_resize = roi_da_resize.shape[:2]
+    roi_h_goc, roi_w_goc = roi_goc.shape[:2] #lấy ra chiều cao, rộng của vùng đáp án ROI
+    roi_h_resize, roi_w_resize = roi_da_resize.shape[:2] #lấy ra chiều cao, rộng của vùng đáp án ROI resize
 
     ti_le_x = roi_w_goc / float(roi_w_resize)
     ti_le_y = roi_h_goc / float(roi_h_resize)
 
     so_hang = len(ds_score_theo_hang)
     chieu_rong_cot_resize = roi_w_resize / 4.0
-    chieu_cao_hang_resize = roi_h_resize / float(so_hang)
+    chieu_cao_hang_resize = roi_h_resize / float(so_hang) #10 hàng
 
     map_dap_an = {"A": 0, "B": 1, "C": 2, "D": 3}
 
@@ -471,7 +471,7 @@ def Debug_DapAn(
             nguong_to_nhieu=nguong_to_nhieu,
         )
 
-        if trang_thai != "single":
+        if trang_thai != "single": #nếu tô ko hợp lệ thì vẽ ô vuông
             x1_resize = 0
             x2_resize = roi_w_resize
             y1_resize = chi_so_hang * chieu_cao_hang_resize
@@ -494,239 +494,23 @@ def Debug_DapAn(
 
         cot_thi_sinh = map_dap_an.get(dap_an_thi_sinh_hang)
         cot_dap_an_dung = map_dap_an.get(dap_an_dung_hang)
+        ##
 
-        if cot_thi_sinh is not None and cot_thi_sinh == cot_dap_an_dung:
+
+        if cot_thi_sinh is not None and cot_thi_sinh == cot_dap_an_dung: #nếu đáp án thí sinh chọn đúng - xanh
             ve_vong_tron(chi_so_hang, cot_thi_sinh, (0, 255, 0), 3)
+            #thêm lưu câu đúng
+
             continue
 
         if cot_thi_sinh is not None:
-            ve_vong_tron(chi_so_hang, cot_thi_sinh, (0, 0, 255), 3)
+            ve_vong_tron(chi_so_hang, cot_thi_sinh, (0, 0, 255), 3) #nếu đáp án thí sinh chọn sai - đỏ
+            # #thêm lưu câu sai
 
-        if cot_dap_an_dung is not None:
-            ve_vong_tron(chi_so_hang, cot_dap_an_dung, (0, 255, 0), 3)
+        if cot_dap_an_dung is not None: #vẫn vẽ lên chổ đáp án đúng
+            ve_vong_tron(chi_so_hang, cot_dap_an_dung, (255, 255, 0), 3)
 
-    return warped
-
-def XuLySOBAODANH_cu(cacMocNho, warped):
-    print("***DEBUG SBD***")
-    #PHAN VUNG ----------------------------
-    copy = warped.copy()
-    #cacMocNho phai được chuẩn hóa bang ham chuanHoa_6_MocNho()
-    #warped là ảnh đã được phối cảnh 4 mốc lớn, có kích thước chuẩn để tính toán chính xác vị trí SBD
-
-    top_left, top_right, mid_left, mid_right, bot_left, bot_right = cacMocNho
-
-    # Tính khoảng cách giữa các mốc để xác định kích thước và vị trí vùng SBD
-    col_gap = top_right[0] - top_left[0]
-    row_gap = mid_left[1] - top_left[1]
-
-    #
-    sbd_x1 = int(top_left[0] - 1.05 * col_gap)
-    sbd_y1 = int(top_left[1] + 0.05 * row_gap)
-
-    sbd_x2 = int(top_left[0] - 0.065 * col_gap)
-    sbd_y2 = int(mid_left[1] - 0.048 * row_gap)
-
-    h, w = warped.shape[:2]
-    sbd_x1 = max(0, min(w - 1, sbd_x1)) #trên trái
-    sbd_y1 = max(0, min(h - 1, sbd_y1))
-
-    sbd_x2 = max(0, min(w - 1, sbd_x2)) # dưới phải
-    sbd_y2 = max(0, min(h - 1, sbd_y2))
-
-    sbd_roi = copy[sbd_y1:sbd_y2, sbd_x1:sbd_x2] #cắt vùng SBD từ ảnh đã phối cảnh để xử lý riêng
-
-    #Nguyên tắc:image[y1:y2, x1:x2] vì ảnh được lưu dưới dạng mảng numpy với thứ tự hàng (y) trước cột (x)
-
-    #vẽ hình chữ nhật vùng SBD lên ảnh để debug
-    cv2.rectangle(warped, (sbd_x1, sbd_y1), (sbd_x2, sbd_y2), (0, 255, 0), 2)
-
-
-    ############################3
-    thresholded_sbd_roi = TienXuLyBanDau(sbd_roi) #đưa vùng SBD về ảnh nhị phân
-    #resize vùng SBD về chiều cao 1000
-    resized_sbd_roi = resize_keep_ratio(thresholded_sbd_roi, height=1000)
-
-    # cv2.imshow("vung so bao danh nhi phan", resize_keep_ratio(resized_sbd_roi, height=750))
-    # cv2.waitKey(0)
-
-    #XU LY------------------------------------------------------
-
-    chia_6_cot = resized_sbd_roi.shape[1] // 6 #chia làm 6
-    # cắt từng cột SBD để xử lý riêng
-    ds_cot = []
-    for j in range(6):
-        cot_j = resized_sbd_roi[0:resized_sbd_roi.shape[0], chia_6_cot * j:chia_6_cot * (j + 1)] #cắt
-        ds_cot.append(cot_j) #thêm vào ds
-        # cv2.imshow(f"cot{j+1}",(resize_keep_ratio(cot_j, height=750)) )
-        # cv2.waitKey(0)
-
-    #cắt mỗi và XỬ LÝ mỗi hàng
-    chia_10_hang = resized_sbd_roi.shape[0] // 10
-    SBD = [] # lưu SBD thực
-    ds_score_theo_cot = []
-    for j, cot in enumerate(ds_cot): #dung enumerate để có cả chỉ số cột và dữ liệu cột (j:index, cot: ảnh cột)
-        score_theoHang = []
-
-        for i in range(10):
-            hang_i = cot[chia_10_hang * i : chia_10_hang * (i+1),  0:cot.shape[1]] #cắt hàng i của cột hiện tại
-
-            score = tinh_score_o(hang_i) #tính điểm số của hang i hiện tại
-            # print(f"cot {j+1} - hang {i+1}: score = {score}")
-
-            score_theoHang.append(score) #thêm điểm vào mảng lưu tạm
-
-            # cv2.imshow(f"cot {j+1} - hang{i}", resize_keep_ratio(hang_i, height=750))
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
-
-        #XỬ LÝ TIẾP CÁC TRƯỜNG HỢP: KO TÔ, TÔ 2 Ô. ############
-        score_theoHang_copy = sorted(score_theoHang, reverse=True) #sắp xếp điểm số theo thứ tự giảm dần để tìm max dễ hơn
-        max1 = score_theoHang_copy[0] #lấy phần tử đầu tiên
-        max2 = score_theoHang_copy[1] #lấy phần tử thứ hai
-        print(f"COT {j+1}: max1 = {max1}, max2 = {max2}")
-
-        if max1 < 500:
-            print(f"COT {j+1} ==> KHONG CO O NAO DUOC TO")
-            SBD.append("X") #thêm "X" vào SBD thực nếu không có ô nào được tô
-            continue
-
-        elif max2 > 400 or (max2 != 0 and max1 / max2 < 2):
-            print(f"COT {j+1} ==> CO 2 O DUOC TO, CAN XET TIEP")
-            SBD.append("N") #thêm "N" vào SBD thực nếu có 2 ô được tô vì không thể xác định chắc chắn ô nào được tô hơn
-        else:
-            sbd = score_theoHang.index(max1)  #lấy index của điểm max coi như đã tô
-            SBD.append(sbd) #thêm index vào mảng SBD thực
-            print(f"COT {j+1} ==> O DUOC TO LA: {sbd}")
-        ##############
-
-
-
-    print("SBD:", SBD)
-    sbd_str = "".join(str(num) for num in SBD)
-    print("SBD (chuoi):", sbd_str)
-    print("")
-
-    cv2.putText(warped, f"SBD: {sbd_str}", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
-
-    return sbd_str, sbd_roi, warped
-
-def XuLyMADE_cu(cacMocNho, warped):
-    print("***DEBUG MA DE***")
-    #PHAN VUNG ----------------------------
-    copy = warped.copy()
-    #cacMocNho phai được chuẩn hóa bang ham chuanHoa_6_MocNho()
-    #warped là ảnh đã được phối cảnh 4 mốc lớn, có kích thước chuẩn để tính toán chính xác vị trí SBD
-
-
-    top_left, top_right, mid_left, mid_right, bot_left, bot_right = cacMocNho
-
-    # Tính khoảng cách giữa các mốc để xác định kích thước và vị trí vùng SBD
-    col_gap = top_right[0] - top_left[0]
-    row_gap = mid_left[1] - top_left[1]
-
-    #
-    made_x1 = int(top_left[0] + 0.1 * col_gap)#
-    made_y1 = int(top_left[1] + 0.05 * row_gap)
-
-    made_x2 = int(top_left[0] + 0.61 * col_gap) #
-    made_y2 = int(mid_left[1] - 0.048 * row_gap)
-
-    #(bỏ cũng đc)
-    h, w = warped.shape[:2]
-    made_x1 = max(0, min(w - 1, made_x1)) #trên trái
-    made_y1 = max(0, min(h - 1, made_y1))
-
-    made_x2 = max(0, min(w - 1, made_x2)) # dưới phải
-    made_y2 = max(0, min(h - 1, made_y2))
-
-    made_roi = copy[made_y1:made_y2, made_x1:made_x2] #cắt vùng MA DE từ ảnh đã phối cảnh để xử lý riêng
-    print ("kich thuoc MA DE _ ROI:", made_roi.shape)
-
-    thresholded_made_roi = TienXuLyBanDau(made_roi) #đưa vùng MA DE về ảnh nhị phân
-
-    #resize vùng MA DE về chiều cao 1000
-    resized_made_roi = resize_keep_ratio(thresholded_made_roi, height=1000)
-
-    #### XỬ LÝ VẼ LẠI LÊN GIẤY
-    print ("kich thuoc MA DE _ ROI sau khi xu ly:", resized_made_roi.shape)
-
-    #tính tỉ lệ từ ảnh resize về ảnh crop
-    ti_le_x = made_roi.shape[1] / resized_made_roi.shape[1]
-    ti_le_y = made_roi.shape[0] / resized_made_roi.shape[0]
-
-    test = resize_keep_ratio(resized_made_roi, height=made_roi.shape[0])
-    print ("kich thuoc MA DE _ ROI sau khi xu ly resize ve chieu cao ban dau:", test.shape)
-
-    #tính vị trí đúng trên ảnh gốc (ảnh chưa crop)
-    #nguyên tắc: x1_goc = made_x1(vị trí crop gốc trái trên) + x_resized(vị trí ô có TÔ trong resize) * ti_le_x
-
-    x1_goc = int(made_x1 + 0 * ti_le_x) #chưa đưa dữ liệu thật
-    y1_goc = int(made_y1 + 0 * ti_le_y)
-
-    cv2.circle(warped, (x1_goc, y1_goc), 12, (0, 0, 255), 2)
-    ###--------------------------------------------------------------
-    # cv2.imshow("vung so bao danh nhi phan", resize_keep_ratio(resized_made_roi, height=750))
-    # cv2.waitKey(0)
-
-    #vẽ hình chữ nhật vùng MA DE lên ảnh để debug
-    cv2.rectangle(warped, (made_x1, made_y1), (made_x2, made_y2), (0, 255, 0), 2)
-
-    #XU LY-----------------------------------
-    chia_3_cot = resized_made_roi.shape[1] // 3 #chia làm 3
-    # cắt từng cột MA DE để xử lý riêng
-    ds_cot = []
-    for j in range(3):
-        cot_j = resized_made_roi[0:resized_made_roi.shape[0], chia_3_cot * j:chia_3_cot * (j + 1)] #cắt
-        ds_cot.append(cot_j) #thêm vào ds
-        # cv2.imshow(f"cot{j+1}",(resize_keep_ratio(cot_j, height=750)) )
-        # cv2.waitKey(0)
-
-    #cắt mỗi và XỬ LÝ mỗi hàng
-    chia_10_hang = resized_made_roi.shape[0] // 10
-    MADE = [] # lưu MA DE thực
-    for j, cot in enumerate(ds_cot): #dung enumerate để có cả chỉ số cột và dữ liệu cột (j:index, cot: ảnh cột)
-        score_theoHang = []
-
-        for i in range(10):
-            hang_i = cot[chia_10_hang * i : chia_10_hang * (i+1),  0:cot.shape[1]] #cắt hàng i của cột hiện tại
-
-            score = tinh_score_o(hang_i) #tính điểm số của hang i hiện tại
-            # print(f"cot {j+1} - hang {i+1}: score = {score}")
-            score_theoHang.append(score) #thêm điểm vào mảng lưu tạm
-
-            # cv2.imshow(f"cot {j+1} - hang{i}", resize_keep_ratio(hang_i, height=750))
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
-
-        #XỬ LÝ TIẾP CÁC TRƯỜNG HỢP: KO TÔ, TÔ 2 Ô. ############
-        score_theoHang_copy = sorted(score_theoHang, reverse=True) #sắp xếp điểm số theo thứ tự giảm dần để tìm max dễ hơn
-        max1 = score_theoHang_copy[0] #lấy phần tử đầu tiên
-        max2 = score_theoHang_copy[1] #lấy phần tử thứ hai
-        print(f"COT {j+1}: max1 = {max1}, max2 = {max2}")
-
-        if max1 < 500:
-            print(f"COT {j+1} ==> KHONG CO O NAO DUOC TO")
-            MADE.append("X") #thêm "X" vào MA DE thực nếu không có ô nào được tô
-            continue
-        elif max2 > 400 or (max2 != 0 and max1 / max2 < 2):
-            print(f"COT {j+1} ==> CO 2 O DUOC TO, CAN XET TIEP")
-            MADE.append("N") #thêm "N" vào MA DE thực nếu có 2 ô được tô vì không thể xác định chắc chắn ô nào được tô hơn
-        else:
-            sbd = score_theoHang.index(max1)  #lấy index của điểm max coi như đã tô
-            MADE.append(sbd) #thêm index vào mảng MA DE thực
-        ##############
-
-
-
-    print("MA DE:", MADE)
-    made_str = "".join(str(num) for num in MADE)
-    print("MA DE (chuoi):", made_str)
-    print("")
-
-    cv2.putText(warped, f"MA DE: {made_str}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 0), 2)
-
-    return made_str, made_roi, warped
+    return warped #thêm return câu đúng sai
 
 def XuLySOBAODANH(cacMocNho, warped):
     print("***DEBUG SBD***")
@@ -923,14 +707,19 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
     row_gap = mid_left[1] - top_left[1]
 
     if(cau1_10==True):
-        #
+        # NOTE: nho vi tri bat dau de sau nay doi hang 0..9 thanh cau 1..10
+        cau_bat_dau = 1
+
         dapan_x1 = int(top_right[0] + 0.1 * col_gap)#
         dapan_y1 = int(top_right[1] + 0.05 * row_gap)
 
         dapan_x2 = int(top_right[0] + 0.77 * col_gap) #
         dapan_y2 = int(mid_right[1] - 0.048 * row_gap)
 
+
     if(cau11_20==True):
+        # NOTE: nhom thu 2 tuong ung cau 11..20
+        cau_bat_dau = 11
         dapan_x1 = int(mid_right[0] + 0.1 * col_gap)#
         dapan_y1 = int(mid_right[1] + 0.05 * row_gap)
 
@@ -939,6 +728,8 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
 
     if(cau21_30==True):
         #
+        # NOTE: nhom thu 3 tuong ung cau 21..30
+        cau_bat_dau = 21
         dapan_x1 = int(mid_left[0] + 0.1 * col_gap)#
         dapan_y1 = int(mid_left[1] + 0.05 * row_gap)
 
@@ -946,6 +737,8 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
         dapan_y2 = int(bot_left[1] - 0.048 * row_gap)
 
     if(cau31_40==True):
+        # NOTE: nhom thu 4 tuong ung cau 31..40
+        cau_bat_dau = 31
         dapan_x1 = int(mid_left[0] - 0.9 * col_gap)#
         dapan_y1 = int(mid_left[1] + 0.05 * row_gap)
 
@@ -960,10 +753,10 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
     dapan_x2 = max(0, min(w - 1, dapan_x2)) # dưới phải
     dapan_y2 = max(0, min(h - 1, dapan_y2))
 
-    dapan_roi = copy[dapan_y1:dapan_y2, dapan_x1:dapan_x2] #cắt vùng MA DE từ ảnh đã phối cảnh để xử lý riêng
+    dapan_roi = copy[dapan_y1:dapan_y2, dapan_x1:dapan_x2] #cắt vùng Dap an từ ảnh đã phối cảnh để xử lý riêng
 
-    thresholded_dapan_roi = TienXuLyBanDau(dapan_roi) #đưa vùng MA DE về ảnh nhị phân
-    #resize vùng MA DE về chiều cao 1000
+    thresholded_dapan_roi = TienXuLyBanDau(dapan_roi) #đưa vùng Dap an về ảnh nhị phân
+    #resize vùng Dap an về chiều cao 1000
     resized_dapan_roi = resize_keep_ratio(thresholded_dapan_roi, height=1000)
 
     # cv2.imshow("vung so bao danh nhi phan", resize_keep_ratio(resized_dapan_roi, height=750))
@@ -1057,12 +850,32 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
     elif cau31_40 == True:
         dap_an_dung_nhom = dapAnDung_list[30:40]
         diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
-        # --------------------------------------------
+
+        # NOTE: giu lai chi tiet tung cau o dang list[dict] cho de debug va de XuLyAnh ghep du 40 cau.
+    chi_tiet_10_cau = []
+    for i, dap_an_thi_sinh in enumerate(DAPAN):
+        cau_so = cau_bat_dau + i
+        dap_an_dung = dap_an_dung_nhom[i]
+
+        # NOTE: X = bo trong, N = to nhieu o; ca hai deu xem la khong hop le.
+        if dap_an_thi_sinh == dap_an_dung:
+            trang_thai_cau = "dung"
+        elif dap_an_thi_sinh in ("X", "N"):
+            trang_thai_cau = "khong_hop_le"
+        else:
+            trang_thai_cau = "sai"
+
+        chi_tiet_10_cau.append({
+            "cauSo": cau_so,
+            "dapAnThiSinh": dap_an_thi_sinh,
+            "trangThai": trang_thai_cau,
+        })
+    # --------------------------------------------
 
     warped = Debug_DapAn(
-        warped=warped,
-        roi_goc=dapan_roi,
-        roi_da_resize=resized_dapan_roi,
+        warped=warped, # ảnh phiếu
+        roi_goc=dapan_roi, #ảnh vùng đáp án ROI
+        roi_da_resize=resized_dapan_roi, # ảnh vùng đáp án ROI resize
         roi_x1=dapan_x1,
         roi_y1=dapan_y1,
         ds_score_theo_hang=ds_score_theo_hang,
@@ -1070,7 +883,7 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
         dap_an_dung=dap_an_dung_nhom,
     )
 
-    return diemThiSinh, warped
+    return diemThiSinh, warped, chi_tiet_10_cau
 
 #Hàm chấm điểm mỗi 10 câu, so sánh đáp án thí sinh với đáp án đúng để tính điểm
 def ChamDiem(dapAn_ThiSinh_10cau, list_dap_an_dung):
@@ -1118,9 +931,6 @@ def lay_HoTen_Lop(warped):
 
 
 def XuLyAnh(img_path, BoDapAn):
-    # # Chuyển Java HashMap sang Python dict
-    # if not isinstance(BoDapAn, dict):
-    #     BoDapAn = dict(BoDapAn)
 
     # Cách nhanh nhất là gọi dict() nếu nó có interface Map
     if not isinstance(BoDapAn, dict):
@@ -1146,6 +956,7 @@ def XuLyAnh(img_path, BoDapAn):
                 f"Bo dap an cua ma de '{ma_de}' khong hop le sau chuan hoa: "
                 f"can 40 ky tu, nhung hien co {len(dap_an)} ky tu."
             )
+
 
 
     img = cv2.imread(img_path) #đọc ảnh
@@ -1176,32 +987,27 @@ def XuLyAnh(img_path, BoDapAn):
         cv2.putText(warped, str(i), (int(cx) -10, int(cy) - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         i += 1
 
-
     #khoanh vùng SBD
 
-    sbd_str, warped= XuLySOBAODANH(cacMocNho, warped)
+    ThiSinhID, warped= XuLySOBAODANH(cacMocNho, warped)
     made_str, warped= XuLyMADE(cacMocNho, warped)
 
-    diem1_10,  warped = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau1_10=True)
-    diem11_20, warped = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau11_20 =True)
-    diem21_30, warped = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau21_30 =True)
-    diem31_40, warped = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau31_40 =True)
+    diem1_10,  warped, chi_tiet_1_10 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau1_10=True)
+    diem11_20, warped, chi_tiet_11_20 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau11_20 =True)
+    diem21_30, warped, chi_tiet_21_30 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau21_30 =True)
+    diem31_40, warped, chi_tiet_31_40 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau31_40 =True)
 
-    hoten_roi, lop_roi, warped = lay_HoTen_Lop(warped)
+    # NOTE: Noi 4 nhom thanh du lieu day du 40 cau, sau do moi doi sang JSON de tra ve cho Java.
+    chi_tiet_40_cau = chi_tiet_1_10 + chi_tiet_11_20 + chi_tiet_21_30 + chi_tiet_31_40
+    Json_DapAnThiSinh = json.dumps(chi_tiet_40_cau, ensure_ascii=False)
 
+    Ten_ROI, Lop_LOP, warped = lay_HoTen_Lop(warped)
+
+    #Tính điểm
     TongDiem = diem1_10 + diem11_20 + diem21_30 + diem31_40
     print (f"Tong diem: {TongDiem}/10")
 
     cv2.putText(warped, f"Tong diem: {TongDiem}/10", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
-
-    # cv2.imshow("SBD", resize_keep_ratio(sbd_roi, height=750))
-    # cv2.waitKey(0)
-
-    # cv2.imshow("MA DE", resize_keep_ratio(made_roi, height=750))
-    # cv2.waitKey(0)
-
-    # cv2.imshow("DAP AN", resize_keep_ratio(dapan_roi, height=750))
-    # cv2.waitKey(0)
 
     # cv2.imshow("DAP AN", resize_keep_ratio(hoten_roi, width=750, height=200))
     # cv2.waitKey(0)
@@ -1210,9 +1016,10 @@ def XuLyAnh(img_path, BoDapAn):
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
-    return warped
+    return warped, Ten_ROI, Lop_LOP, ThiSinhID, made_str, TongDiem, Json_DapAnThiSinh
 
-
+    #return warped, Ten_ROI, Lop_ROI, ThiSinhID, MaDe, TongDiem, Json_DapAnThiSinh
+#
 # BoDapAn = {
 #     "001": "ABCB ACBCABCABDBCABDBCABACBDADCADCABDABCA",
 #     "002": "BCABCABDBCABDBCABACBDADCADCABDABCACCCABC",
@@ -1221,7 +1028,8 @@ def XuLyAnh(img_path, BoDapAn):
 # }
 
 
-# xuly = XuLyAnh("test8_dapAn.jpg", BoDapAn)
+# xuly, Ten_ROI, Lop_LOP, ThiSinhID, made_str, TongDiem, Json_DapAnThiSinh = XuLyAnh("test8_dapAn.jpg", BoDapAn)
 
 
+# print(Json_DapAnThiSinh)
 
