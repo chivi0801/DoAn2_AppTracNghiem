@@ -59,7 +59,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         }
 
         maDeAdapter = new MaDeAdapter(existingMaDe);
-        bubbleAdapter = new BubbleAdapter(questionCount, existingDapAn);
+        bubbleAdapter = new BubbleAdapter(existingDapAn);
     }
 
     @Nullable

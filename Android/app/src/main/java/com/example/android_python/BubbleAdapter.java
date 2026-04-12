@@ -13,19 +13,20 @@ import java.util.List;
 
 public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder> {
 
-    private int questionCount;
+    // GÁN CỨNG: Luôn là 40 câu, không quan tâm biến bên ngoài
+    private final int QUESTION_COUNT = 40;
     private List<String> listAnswers;
 
-    public BubbleAdapter(int questionCount, String existingData) {
-        this.questionCount = questionCount;
+    // ĐÃ SỬA: Bỏ tham số questionCount ở constructor cho gọn
+    public BubbleAdapter(String existingData) {
         this.listAnswers = new ArrayList<>();
 
-        // Code đã được làm gọn: Bỏ lọc X, M. Trực tiếp nạp dữ liệu chuẩn.
-        for (int i = 0; i < questionCount; i++) {
+        // Vòng lặp luôn chạy 40 lần để tạo 40 hàng
+        for (int i = 0; i < QUESTION_COUNT; i++) {
             if (existingData != null && i < existingData.length()) {
                 listAnswers.add(String.valueOf(existingData.charAt(i)));
             } else {
-                listAnswers.add(""); // Tạo mới thì mặc định là chưa chọn (rỗng)
+                listAnswers.add(""); // Nếu là tạo mới hoặc dữ liệu cũ ngắn hơn 40, gán rỗng
             }
         }
     }
@@ -43,13 +44,11 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
 
         String currentAnswer = listAnswers.get(position);
 
-        // Xóa listener cũ trước khi set trạng thái để tránh lỗi loop
         holder.rbA.setOnCheckedChangeListener(null);
         holder.rbB.setOnCheckedChangeListener(null);
         holder.rbC.setOnCheckedChangeListener(null);
         holder.rbD.setOnCheckedChangeListener(null);
 
-        // Hiển thị đáp án đã chọn
         holder.rbA.setChecked("A".equals(currentAnswer));
         holder.rbB.setChecked("B".equals(currentAnswer));
         holder.rbC.setChecked("C".equals(currentAnswer));
@@ -57,7 +56,6 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
 
         holder.rbD.setVisibility(View.VISIBLE);
 
-        // Bắt sự kiện khi click
         View.OnClickListener clickListener = v -> {
             String clickedAnswer = "";
             if (v == holder.rbA) clickedAnswer = "A";
@@ -65,7 +63,6 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
             else if (v == holder.rbC) clickedAnswer = "C";
             else if (v == holder.rbD) clickedAnswer = "D";
 
-            // Bắt buộc 1 câu 1 đáp án: Chỉ cho phép đổi sang đáp án khác, không cho click lại để hủy
             if (!currentAnswer.equals(clickedAnswer)) {
                 listAnswers.set(position, clickedAnswer);
                 holder.itemView.post(() -> notifyItemChanged(position));
@@ -78,12 +75,11 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
         holder.rbD.setOnClickListener(clickListener);
     }
 
-    // Xuất chuỗi đáp án (VD: AABCD...). Nếu giáo viên bỏ sót câu nào thì nó ra chữ "X" để Activity bắt lỗi.
     public String layChuoiDapAn() {
         StringBuilder builder = new StringBuilder();
         for (String ans : listAnswers) {
             if (ans.isEmpty()) {
-                builder.append("X");
+                builder.append("X"); // Trả về X nếu giáo viên quên tô câu đó
             } else {
                 builder.append(ans);
             }
@@ -93,7 +89,7 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
 
     @Override
     public int getItemCount() {
-        return questionCount;
+        return QUESTION_COUNT; // Luôn trả về 40
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
