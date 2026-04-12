@@ -19,7 +19,7 @@ public class ResultActivity extends AppCompatActivity {
         ImageView imageView = new ImageView(this);
         setContentView(imageView);
 
-        String imagePath = getIntent().getStringExtra("PROCESSED_IMAGE_PATH");
+        String imagePath = getIntent().getStringExtra("PATH_ANH_CHINH");
 
         if (imagePath != null) {
             File imgFile = new File(imagePath);

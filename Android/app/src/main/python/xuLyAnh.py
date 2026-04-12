@@ -920,7 +920,7 @@ def lay_HoTen_Lop(warped):
     x1 = int(w * 0.68)
     y1 = int(h * 0.006)
 
-    x2 = int(w * 0.9)
+    x2 = int(w * 1)
     y2 = int(h * 0.07)
 
     lop_roi = copy[y1:y2, x1:x2]

@@ -44,8 +44,8 @@ public class Activity_Camera extends AppCompatActivity {
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private Button btnChup;
-    private boolean isProcessing = false;
-    private boolean stopScanning = false;
+    private volatile boolean isProcessing = false;
+    private volatile boolean stopScanning = false;
 
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
     private static final int REQUEST_CODE_PERMISSIONS = 1001;
@@ -86,7 +86,8 @@ public class Activity_Camera extends AppCompatActivity {
     }
 
     private void takePhoto() { // dành cho nút chụp tay
-        if (imageCapture == null) return;
+        if (imageCapture == null || isProcessing || stopScanning) return;
+        isProcessing = true;
 
         File storageDir = new File(getExternalFilesDir(null), "LuuAnh");
         if (!storageDir.exists()) storageDir.mkdirs();
@@ -108,6 +109,7 @@ public class Activity_Camera extends AppCompatActivity {
 
             @Override
             public void onError(@NonNull ImageCaptureException e) {
+                isProcessing = false;
                 runOnUiThread(() -> Toast.makeText(Activity_Camera.this, "Lỗi chụp ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
@@ -146,6 +148,7 @@ public class Activity_Camera extends AppCompatActivity {
                 File fileAnhTen = new File(storageDir, "TEN_" + timeStamp + ".jpg");
                 File fileAnhLop = new File(storageDir, "LOP_" + timeStamp + ".jpg");
 
+                // Sử dụng Chaquopy để lưu ảnh
                 PyObject cv2 = py.getModule("cv2");
                 cv2.callAttr("imwrite", fileAnhChinh.getAbsolutePath(), anhWarped);
                 cv2.callAttr("imwrite", fileAnhTen.getAbsolutePath(), tenROI);
@@ -215,28 +218,29 @@ public class Activity_Camera extends AppCompatActivity {
                         .build();
 
                 imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), image -> {
-                    if (isProcessing || stopScanning) {
+                    if (isProcessing || stopScanning || imageCapture == null) {
                         image.close();
                         return;
                     }
 
-                    // Chuyển frame thành file tạm để Python xử lý
-                    try {
-                        android.graphics.Bitmap bitmap = previewView.getBitmap();
-                        if (bitmap != null) {
-                            File cacheFile = new File(getCacheDir(), "temp_frame.jpg");
-                            java.io.FileOutputStream out = new java.io.FileOutputStream(cacheFile);
-                            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, out);
-                            out.flush();
-                            out.close();
+                    isProcessing = true;
+                    image.close();
 
+                    File cacheFile = new File(getCacheDir(), "temp_frame.jpg");
+                    ImageCapture.OutputFileOptions options = new ImageCapture.OutputFileOptions.Builder(cacheFile).build();
+
+                    imageCapture.takePicture(options, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
+                        @Override
+                        public void onImageSaved(@NonNull ImageCapture.OutputFileResults results) {
                             processImageWithPython(cacheFile);
                         }
-                    } catch (Exception e) {
-                        Log.e("ANALYSIS_ERROR", "Error saving frame", e);
-                    } finally {
-                        image.close();
-                    }
+
+                        @Override
+                        public void onError(@NonNull ImageCaptureException e) {
+                            isProcessing = false;
+                            Log.e("ANALYSIS_ERROR", "Error capturing high quality image", e);
+                        }
+                    });
                 });
 
                 ViewPort viewPort = new ViewPort.Builder(new Rational(3, 4), getWindowManager().getDefaultDisplay().getRotation()).build();
