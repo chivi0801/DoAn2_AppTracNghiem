@@ -42,6 +42,8 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private Spinner spinnerThongKe;
     private ArrayAdapter<String> spinnerAdapter;
     private List<String> listTenLop;
+    private ArrayList<Lop> listLop;
+    private RecyclerView recyclerViewLop;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -132,32 +134,50 @@ public class Fragment_ChiTietKyThi extends Fragment {
         lopAdapter = new LopAdapter(danhSachLop);
         rvThongKeList.setAdapter(lopAdapter);
 
-        lopAdapter.setOnItemClickListener((lop, position) -> {
-            new AlertDialog.Builder(requireContext())
-                    .setTitle("Gỡ Lớp") // Đổi tiêu đề cho rõ nghĩa
-                    .setMessage("Bạn có chắc chắn muốn gỡ lớp " + lop.getTenLop() + " khỏi kỳ thi này không?")
-                    .setPositiveButton("Gỡ", (dialog, which) -> {
+        // GỌI SỰ KIỆN CLICK Ở ĐÂY CHỨ ĐỪNG VIẾT HÀM BÊN NGOÀI
+        lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
 
-                        // SỬA DÒNG NÀY: Dùng hàm gỡ liên kết thay vì xóa thẳng lớp
-                        if (dbHelper.goLopKhoiKyThi(kyThiId, lop.getLopId())) {
+            // SỰ KIỆN 1: BẤM VÀO LỚP CHUYỂN QUA CÁI 2 TAB
+            @Override
+            public void onItemClick(Lop lop) {
+                Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
 
-                            danhSachLop.remove(position);
-                            lopAdapter.notifyItemRemoved(position);
-                            lopAdapter.notifyItemRangeChanged(position, danhSachLop.size());
+                Bundle bundle = new Bundle();
+                bundle.putString("TEN_LOP", lop.getTenLop());
+                fragmentItemLop.setArguments(bundle);
 
-                            listTenLop.remove(position + 1);
-                            spinnerAdapter.notifyDataSetChanged();
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragmentItemLop) // SỬA THÀNH ĐÚNG ID NÀY
+                        .addToBackStack(null)
+                        .commit();
+            }
 
-                            Toast.makeText(getContext(), "Đã gỡ lớp " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(getContext(), "Lỗi khi gỡ lớp!", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .setNegativeButton("Hủy", null)
-                    .show();
+            // SỰ KIỆN 2: BẤM VÀO NÚT 3 CHẤM ĐỂ GỠ LỚP (Giữ nguyên code cũ của mày)
+            @Override
+            public void onDeleteClick(Lop lop, int position) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Gỡ Lớp")
+                        .setMessage("Bạn có chắc chắn muốn gỡ lớp " + lop.getTenLop() + " khỏi kỳ thi này không?")
+                        .setPositiveButton("Gỡ", (dialog, which) -> {
+                            if (dbHelper.goLopKhoiKyThi(kyThiId, lop.getLopId())) {
+                                danhSachLop.remove(position);
+                                lopAdapter.notifyItemRemoved(position);
+                                lopAdapter.notifyItemRangeChanged(position, danhSachLop.size());
+
+                                listTenLop.remove(position + 1);
+                                spinnerAdapter.notifyDataSetChanged();
+
+                                Toast.makeText(getContext(), "Đã gỡ lớp " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Lỗi khi gỡ lớp!", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
+            }
         });
 
-        return v;
+        return v; // Giữ nguyên dòng này ở cuối onCreateView
     }
 
     // --- MENU XỔ XUỐNG ---
@@ -329,5 +349,40 @@ public class Fragment_ChiTietKyThi extends Fragment {
         }
         TextView title = getActivity().findViewById(R.id.toolbar_title);
         if (title != null) title.setText(examName);
+    }
+    private void setupRecyclerView() {
+        // SỬA LỖI 1: Khởi tạo adapter chỉ truyền vào listLop (bỏ getContext() đi)
+        lopAdapter = new LopAdapter(listLop);
+
+        lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
+
+            public void onItemClick(Lop lop) {
+                Toast.makeText(getContext(), "Đã click vào lớp: " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
+                Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
+
+                Bundle bundle = new Bundle();
+                bundle.putString("TEN_LOP", lop.getTenLop());
+                fragmentItemLop.setArguments(bundle);
+
+                requireActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.drawer_layout, fragmentItemLop) // Nhớ đổi ID này cho đúng với layout của bạn nhé
+                        .addToBackStack(null)
+                        .commit();
+            }
+
+            // SỬA LỖI 2: Phải thêm hàm onDeleteClick này vào thì mới không bị báo lỗi
+            // Sự kiện 2: Click vào nút 3 chấm để xóa
+            @Override
+            public void onDeleteClick(Lop lop, int position) {
+                // Xóa phần tử khỏi danh sách
+                listLop.remove(position);
+                // Báo cho Adapter biết vị trí đã bị xóa để cập nhật giao diện
+                lopAdapter.notifyItemRemoved(position);
+
+                // (Tuỳ chọn) Bạn có thể gọi thêm code xóa trong Database ở đây
+            }
+        });
+
+        recyclerViewLop.setAdapter(lopAdapter);
     }
 }

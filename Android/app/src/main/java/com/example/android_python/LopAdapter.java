@@ -14,14 +14,14 @@ import java.util.ArrayList;
 public class LopAdapter extends RecyclerView.Adapter<LopAdapter.ViewHolder> {
 
     private ArrayList<Lop> listData;
-    private OnItemClickListener listener; // Khai báo Interface
+    private OnItemClickListener listener;
 
-    // 1. Tạo Interface để gửi sự kiện xóa ra Fragment
+    // 1. Gộp cả 2 sự kiện: Click chuyển trang và Click xóa
     public interface OnItemClickListener {
+        void onItemClick(Lop lop); // Thêm cái này
         void onDeleteClick(Lop lop, int position);
     }
 
-    // 2. Hàm set sự kiện
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
@@ -43,17 +43,21 @@ public class LopAdapter extends RecyclerView.Adapter<LopAdapter.ViewHolder> {
         holder.tvItemSubject.setText(lop.getTenLop());
         holder.tvItemSheet.setText("Niên khóa: " + lop.getNienKhoa());
 
-        // 3. Xử lý sự kiện click vào nút 3 chấm
-        holder.ivMoreOptions.setOnClickListener(v -> {
-            // Tạo một menu nhỏ xổ xuống
-            PopupMenu popup = new PopupMenu(v.getContext(), holder.ivMoreOptions);
-            popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Xóa Lớp"); // Thêm nút Xóa bằng code
+        // 2. BẮT SỰ KIỆN CLICK VÀO CARD LỚP ĐỂ CHUYỂN TRANG
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(lop);
+            }
+        });
 
-            // Xử lý khi bấm vào chữ "Xóa Lớp"
+        // 3. Xử lý sự kiện click vào nút 3 chấm để Xóa
+        holder.ivMoreOptions.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(v.getContext(), holder.ivMoreOptions);
+            popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Xóa Lớp");
+
             popup.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == 1) {
                     if (listener != null) {
-                        // Gửi Lớp và Vị trí ra ngoài Fragment để xử lý
                         listener.onDeleteClick(lop, position);
                     }
                     return true;
@@ -78,7 +82,7 @@ public class LopAdapter extends RecyclerView.Adapter<LopAdapter.ViewHolder> {
             super(itemView);
             tvItemSubject = itemView.findViewById(R.id.tvItemSubject);
             tvItemSheet = itemView.findViewById(R.id.tvItemSheet);
-            ivMoreOptions = itemView.findViewById(R.id.ivMoreOptions); // Ánh xạ nút 3 chấm
+            ivMoreOptions = itemView.findViewById(R.id.ivMoreOptions);
         }
     }
 }
