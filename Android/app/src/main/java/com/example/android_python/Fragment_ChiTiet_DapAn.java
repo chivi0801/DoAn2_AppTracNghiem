@@ -111,19 +111,48 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         }
     }
 
-    // Hàm xử lý lưu dữ liệu (Thay thế cho Menu)
     private void luuKetQua() {
-        String chuoiMaDe = maDeAdapter.layChuoiMaDe();
-        String chuoiDapAn = bubbleAdapter.layChuoiDapAn();
+        try {
+            String chuoiMaDe = "";
+            if (maDeAdapter != null) {
+                chuoiMaDe = maDeAdapter.layChuoiMaDe().trim();
+            }
 
-        Bundle result = new Bundle();
-        result.putString("MA_DE", chuoiMaDe);
-        result.putString("DAP_AN", chuoiDapAn);
-        result.putInt("EDIT_POSITION", editingPosition);
+            String chuoiDapAn = "";
+            if (bubbleAdapter != null) {
+                chuoiDapAn = bubbleAdapter.layChuoiDapAn();
+            }
 
-        getParentFragmentManager().setFragmentResult("requestKey", result);
-        Toast.makeText(getContext(), "Đã lưu bộ đáp án!", Toast.LENGTH_SHORT).show();
-        getParentFragmentManager().popBackStack();
+            if (chuoiMaDe.isEmpty() || chuoiMaDe.contains("X")) {
+                Toast.makeText(getContext(), "Lỗi: Vui lòng tô đủ 3 chữ số cho Mã Đề!", Toast.LENGTH_LONG).show();
+
+                isMaDeMode = true;
+                updateUI();
+                return;
+            }
+
+            if (chuoiDapAn.contains("X")) {
+                int cauBiThieu = chuoiDapAn.indexOf("X") + 1;
+                Toast.makeText(getContext(), "Chưa hoàn thành! Vui lòng chọn đáp án cho câu " + cauBiThieu, Toast.LENGTH_LONG).show();
+                isMaDeMode = false;
+                updateUI();
+                return;
+            }
+
+            Bundle result = new Bundle();
+            result.putString("MA_DE", chuoiMaDe);
+            result.putString("DAP_AN", chuoiDapAn);
+            result.putInt("EDIT_POSITION", editingPosition);
+
+            getParentFragmentManager().setFragmentResult("requestKey", result);
+            Toast.makeText(getContext(), "Đã lưu bộ đáp án thành công!", Toast.LENGTH_SHORT).show();
+            getParentFragmentManager().popBackStack();
+
+        } catch (Exception e) {
+            // Bọc try-catch lỡ có lỗi ngầm hệ thống thì báo lỗi ra màn hình chứ không sập app
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Lỗi hệ thống: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void setupToolbar(View v) {

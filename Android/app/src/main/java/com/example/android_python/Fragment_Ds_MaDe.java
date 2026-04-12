@@ -93,7 +93,7 @@ public class Fragment_Ds_MaDe extends Fragment {
                         Toast.makeText(getContext(), "Lỗi: Mã đề " + maDe + " đã tồn tại!", Toast.LENGTH_LONG).show();
                     } else {
                         // Không trùng -> Tiến hành lưu
-                        dbHelper.themMaDe(kyThiId, maDe, dapAn);
+                        dbHelper.themBoDapAn( maDe,kyThiId, dapAn);
 
                         // Chỉ cập nhật lại giao diện khi lưu thành công
                         loadDataFromDatabase();

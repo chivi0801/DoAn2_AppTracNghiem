@@ -212,14 +212,16 @@ public class TaoCSDL extends SQLiteOpenHelper{
     }
 
     // Hàm lấy toàn bộ danh sách Kỳ Thi để hiển thị lên RecyclerView
-    public boolean themMaDe(int kyThiId, String maDe, String dapAn) {
+    public long themBoDapAn(String maDe, int kyThiId, String dapAn) {
         SQLiteDatabase db = this.getWritableDatabase();
-        android.content.ContentValues cv = new android.content.ContentValues();
-        cv.put("KyThi_ID", kyThiId);
-        cv.put("MaDe", maDe);
-        cv.put("DapAn", dapAn);
-        long result = db.insert("BoDapAn", null, cv);
-        return result != -1;
+        ContentValues values = new ContentValues();
+
+        // Tên cột màu xanh lá cây phải gõ chính xác y hệt lúc CREATE TABLE
+        values.put("MaDe", maDe);
+        values.put("KyThi_ID", kyThiId);
+        values.put("DapAn", dapAn);
+
+        return db.insert("BoDapAn", null, values);
     }
 
     public boolean suaMaDe(int kyThiId, String maDeCu, String maDeMoi, String dapAnMoi) {
@@ -279,12 +281,17 @@ public class TaoCSDL extends SQLiteOpenHelper{
                 new String[]{String.valueOf(kyThiId), String.valueOf(lopId)});
         return result > 0;
     }
-    public boolean kiemTraMaDeTonTai(int idKyThi, String tenMaDe) {
+    // Nằm trong file TaoCSDL.java
+    public boolean kiemTraMaDeTonTai(int kyThiId, String maDe) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT * FROM MaDe WHERE id_ky_thi = ? AND ten_ma_de = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(idKyThi), tenMaDe});
-        boolean daTonTai = (cursor.getCount() > 0);
+
+        String query = "SELECT * FROM BoDapAn WHERE KyThi_ID = ? AND MaDe = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(kyThiId), maDe});
+
+        boolean exists = (cursor.getCount() > 0);
         cursor.close();
-        return daTonTai;
+
+        return exists;
     }
 }

@@ -14,29 +14,18 @@ import java.util.List;
 public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder> {
 
     private int questionCount;
-    // Bỏ mảng arrDapAn đi, CHỈ DÙNG 1 biến listAnswers cho đồng bộ
     private List<String> listAnswers;
 
-    // CONSTRUCTOR ĐÃ ĐƯỢC SỬA LỖI
     public BubbleAdapter(int questionCount, String existingData) {
         this.questionCount = questionCount;
-
-        // BẮT BUỘC PHẢI KHỞI TẠO LIST Ở ĐÂY ĐỂ TRÁNH LỖI VĂNG APP (NullPointerException)
         this.listAnswers = new ArrayList<>();
 
+        // Code đã được làm gọn: Bỏ lọc X, M. Trực tiếp nạp dữ liệu chuẩn.
         for (int i = 0; i < questionCount; i++) {
-            // Nếu có dữ liệu cũ thì load ra
             if (existingData != null && i < existingData.length()) {
-                String ans = String.valueOf(existingData.charAt(i));
-                // Nếu dữ liệu cũ là "X" (chưa chọn) thì đưa về chuỗi rỗng "" để UI xử lý
-                if (ans.equals("X") || ans.equals("M")) {
-                    listAnswers.add("");
-                } else {
-                    listAnswers.add(ans);
-                }
+                listAnswers.add(String.valueOf(existingData.charAt(i)));
             } else {
-                // Mặc định ban đầu chưa chọn gì cả là chuỗi rỗng
-                listAnswers.add("");
+                listAnswers.add(""); // Tạo mới thì mặc định là chưa chọn (rỗng)
             }
         }
     }
@@ -52,14 +41,15 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.tvRowNumber.setText(String.valueOf(position + 1));
 
-        // Lúc này listAnswers đã có dữ liệu nên không bị crash nữa
         String currentAnswer = listAnswers.get(position);
 
+        // Xóa listener cũ trước khi set trạng thái để tránh lỗi loop
         holder.rbA.setOnCheckedChangeListener(null);
         holder.rbB.setOnCheckedChangeListener(null);
         holder.rbC.setOnCheckedChangeListener(null);
         holder.rbD.setOnCheckedChangeListener(null);
 
+        // Hiển thị đáp án đã chọn
         holder.rbA.setChecked("A".equals(currentAnswer));
         holder.rbB.setChecked("B".equals(currentAnswer));
         holder.rbC.setChecked("C".equals(currentAnswer));
@@ -67,6 +57,7 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
 
         holder.rbD.setVisibility(View.VISIBLE);
 
+        // Bắt sự kiện khi click
         View.OnClickListener clickListener = v -> {
             String clickedAnswer = "";
             if (v == holder.rbA) clickedAnswer = "A";
@@ -74,12 +65,11 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
             else if (v == holder.rbC) clickedAnswer = "C";
             else if (v == holder.rbD) clickedAnswer = "D";
 
-            if (currentAnswer.equals(clickedAnswer)) {
-                listAnswers.set(position, ""); // Hủy chọn
-            } else {
-                listAnswers.set(position, clickedAnswer); // Chọn mới
+            // Bắt buộc 1 câu 1 đáp án: Chỉ cho phép đổi sang đáp án khác, không cho click lại để hủy
+            if (!currentAnswer.equals(clickedAnswer)) {
+                listAnswers.set(position, clickedAnswer);
+                holder.itemView.post(() -> notifyItemChanged(position));
             }
-            holder.itemView.post(() -> notifyItemChanged(position));
         };
 
         holder.rbA.setOnClickListener(clickListener);
@@ -88,12 +78,12 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
         holder.rbD.setOnClickListener(clickListener);
     }
 
-    // Hàm xuất chuỗi đáp án ra để lưu vào CSDL (VD: "ABCDX...")
+    // Xuất chuỗi đáp án (VD: AABCD...). Nếu giáo viên bỏ sót câu nào thì nó ra chữ "X" để Activity bắt lỗi.
     public String layChuoiDapAn() {
         StringBuilder builder = new StringBuilder();
         for (String ans : listAnswers) {
             if (ans.isEmpty()) {
-                builder.append("X"); // Nếu chuỗi rỗng (chưa chọn) thì lưu là X
+                builder.append("X");
             } else {
                 builder.append(ans);
             }
@@ -107,7 +97,6 @@ public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-
         TextView tvRowNumber;
         RadioButton rbA, rbB, rbC, rbD;
 
