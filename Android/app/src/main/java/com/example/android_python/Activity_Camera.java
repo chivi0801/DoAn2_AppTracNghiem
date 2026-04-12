@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -120,29 +121,53 @@ public class Activity_Camera extends AppCompatActivity {
         new Thread(() -> {
             try {
                 Python py = Python.getInstance();
-                // Lấy module xuLyAnh.py
                 PyObject pyModule = py.getModule("xuLyAnh");
 
-                // Gọi hàm XuLyAnh(img_path) từ Python--------------------------
-                // trả về một mảng numpy (ảnh đã xử lý)
-                PyObject processedImageArray = pyModule.callAttr("XuLyAnh", inputFile.getAbsolutePath(), boDapAn);
+                // 1. Gọi hàm và nhận về 1 list các PyObject
+                PyObject result = pyModule.callAttr("XuLyAnh", inputFile.getAbsolutePath(), boDapAn);
+                List<PyObject> results = result.asList();
 
-                //--------------------------------------------------------------
+                // 2. Lấy từng thành phần theo đúng thứ tự return trong Python
+                PyObject anhWarped = results.get(0);    // Ảnh bài chấm xong
+                PyObject tenROI = results.get(1);      // ROI Tên
+                PyObject lopROI = results.get(2);      // ROI Lớp
+                String thiSinhID = results.get(3).toString();
+                String maDe = results.get(4).toString();
+                double tongDiem = results.get(5).toDouble();
+                String jsonDapAn = results.get(6).toString();
 
-                // Nếu chạy đến đây mà không quăng Exception nghĩa là đã tìm thấy bài và xử lý thành công
+                // 3. Lưu các ảnh vào bộ nhớ máy
+                File storageDir = new File(getExternalFilesDir(null), "KetQua");
+                if (!storageDir.exists()) storageDir.mkdirs();
+
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis());
+
+                File fileAnhChinh = new File(storageDir, "CHINH_" + timeStamp + ".jpg");
+                File fileAnhTen = new File(storageDir, "TEN_" + timeStamp + ".jpg");
+                File fileAnhLop = new File(storageDir, "LOP_" + timeStamp + ".jpg");
+
+                PyObject cv2 = py.getModule("cv2");
+                cv2.callAttr("imwrite", fileAnhChinh.getAbsolutePath(), anhWarped);
+                cv2.callAttr("imwrite", fileAnhTen.getAbsolutePath(), tenROI);
+                cv2.callAttr("imwrite", fileAnhLop.getAbsolutePath(), lopROI);
+
+                // 4. Dừng quét và chuyển dữ liệu sang màn hình kết quả hoặc lưu DB
                 stopScanning = true;
 
-                // Lưu ảnh đã xử lý xuống file để ResultActivity có thể đọc
-                File processedFile = new File(getExternalFilesDir(null), "processed_result.jpg");
-
-                // Sử dụng cv2 của Python để lưu kết quả
-                PyObject cv2 = py.getModule("cv2");
-                cv2.callAttr("imwrite", processedFile.getAbsolutePath(), processedImageArray);
-
                 runOnUiThread(() -> {
-                    // Chuyển sang ResultActivity
+                    // Chuyển sang ResultActivity kèm theo tất cả thông tin
                     Intent intent = new Intent(Activity_Camera.this, ResultActivity.class);
-                    intent.putExtra("PROCESSED_IMAGE_PATH", processedFile.getAbsolutePath());
+                    intent.putExtra("PATH_ANH_CHINH", fileAnhChinh.getAbsolutePath());
+                    intent.putExtra("PATH_ANH_TEN", fileAnhTen.getAbsolutePath());
+                    intent.putExtra("PATH_ANH_LOP", fileAnhLop.getAbsolutePath());
+                    intent.putExtra("SBD", thiSinhID);
+                    intent.putExtra("MADE", maDe);
+                    intent.putExtra("DIEM", tongDiem);
+                    intent.putExtra("JSON_DAPAN", jsonDapAn);
+
+                    // Đừng quên truyền thêm Lop_ID và KyThi_ID mà bạn đang chấm
+                    // intent.putExtra("LOP_ID", currentLopId);
+
                     startActivity(intent);
                 });
 

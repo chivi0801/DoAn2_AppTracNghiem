@@ -106,8 +106,10 @@ public class Fragment_ChiTietKyThi extends Fragment {
             List<SavedKey> checkList = dbHelper.layDanhSachMaDe(kyThiId);
             if (checkList.isEmpty()) {
                 Toast.makeText(getContext(), "Vui lòng thêm Đáp Án trước khi chấm điểm!", Toast.LENGTH_SHORT).show();
+            } else if (danhSachLop.isEmpty()) {
+                Toast.makeText(getContext(), "Hãy tạo thêm lớp cho kỳ thi!", Toast.LENGTH_SHORT).show();
             } else {
-                openGradeFragment();
+                hienThiDialogChonLopDeChamDiem();
             }
         });
 
@@ -278,10 +280,27 @@ public class Fragment_ChiTietKyThi extends Fragment {
         spinnerThongKe.setSelection(listTenLop.size() - 1);
     }
 
-    private void openGradeFragment() {
+    private void hienThiDialogChonLopDeChamDiem() {
+        String[] arrTenLop = new String[danhSachLop.size()];
+        for (int i = 0; i < danhSachLop.size(); i++) {
+            arrTenLop[i] = danhSachLop.get(i).getTenLop() + " (" + danhSachLop.get(i).getNienKhoa() + ")";
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Chọn lớp để chấm điểm")
+                .setItems(arrTenLop, (dialog, which) -> {
+                    Lop lopSelected = danhSachLop.get(which);
+                    openGradeFragment(lopSelected.getLopId());
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void openGradeFragment(int lopId) {
         Intent intent = new Intent(getActivity(), Activity_Camera.class);
         intent.putExtra("EXAM_NAME", examName);
         intent.putExtra("KYTHI_ID", kyThiId);
+        intent.putExtra("LOP_ID", lopId);
         startActivity(intent);
     }
 

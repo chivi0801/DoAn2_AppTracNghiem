@@ -6,7 +6,20 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
+
     <!-- Container này ép tỉ lệ 3:4 (dọc) -->
+
+    <TextView
+        android:id="@+id/lop_dangChamBai"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="12A5"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        tools:layout_editor_absoluteX="177dp"
+        tools:layout_editor_absoluteY="16dp" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cameraContainer"
         android:layout_width="0dp"
@@ -18,6 +31,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.3"
         tools:ignore="MissingClass"> <!-- Đẩy lên trên một chút để chừa chỗ cho button -->
+
+
 
         <!-- Camera Preview nằm trọn trong container 3:4 -->
         <androidx.camera.view.PreviewView

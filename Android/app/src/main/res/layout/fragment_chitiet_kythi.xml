@@ -43,6 +43,7 @@
         android:textAllCaps="false"
         android:textColor="#FFF"
         android:textSize="18sp" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvThongKeList"
         android:layout_width="match_parent"
@@ -51,6 +52,7 @@
         android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingHorizontal="16dp" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/layoutSavedKeys"
         android:layout_width="match_parent"
