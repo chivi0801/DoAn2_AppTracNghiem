@@ -37,7 +37,6 @@ public class Fragment_DsKyThi extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ds_kythi, container, false);
-
         dbHelper = new TaoCSDL(getContext());
 
         // LẤY GV_ID TỪ SHAREDPREFERENCES
@@ -67,7 +66,6 @@ public class Fragment_DsKyThi extends Fragment {
         });
         rvExams.setAdapter(adapter);
 
-//        setupSwipeToDelete();
         view.findViewById(R.id.fabAdd).setOnClickListener(v -> showCreateExamDialog());
 
         return view;
@@ -86,9 +84,18 @@ public class Fragment_DsKyThi extends Fragment {
         if (activity != null) {
             TextView toolbarTitle = activity.findViewById(R.id.toolbar_title);
             if (toolbarTitle != null) toolbarTitle.setText("Kiểm Tra");
+
+            // HIỂN THỊ icon Menu và ẨN nút Quay về
+            View iconMenu = activity.findViewById(R.id.icon_Menu);
+            if (iconMenu != null) iconMenu.setVisibility(View.VISIBLE);
+
+            if (activity.getSupportActionBar() != null) {
+                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            }
         }
     }
 
+    // TẮT trượt để xóa
     private void setupSwipeToDelete() {
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             @Override

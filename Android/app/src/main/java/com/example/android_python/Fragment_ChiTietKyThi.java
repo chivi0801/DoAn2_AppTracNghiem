@@ -288,17 +288,19 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private void setupToolbar(View v) {
         AppCompatActivity activity = (AppCompatActivity) getActivity();
         if (activity != null) {
-            // KHÔNG gọi setSupportActionBar(toolbar) ở đây nữa vì nó đã được set ở MainActivity
-            // Chỉ cần lấy ActionBar đã có để tùy chỉnh nút quay về
+            // HIỆN nút Quay về và ẨN icon Menu
+            View iconMenu = activity.findViewById(R.id.icon_Menu);
+            if (iconMenu != null) iconMenu.setVisibility(View.GONE); // Ẩn nút Menu
+
+
             if (activity.getSupportActionBar() != null) {
-                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Hiển thị nút quay về
                 activity.getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back_white);
                 activity.getSupportActionBar().setDisplayShowTitleEnabled(false);
             }
 
             Toolbar toolbar = activity.findViewById(R.id.toolbar);
             if (toolbar != null) {
-                // Xử lý sự kiện nút back trên Toolbar
                 toolbar.setNavigationOnClickListener(view -> {
                     if (isAdded()) {
                         getParentFragmentManager().popBackStack();

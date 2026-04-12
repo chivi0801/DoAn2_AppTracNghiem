@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_exams"
+            android:icon="@drawable/kythi"
+            android:title="Kỳ thi" />
+        <item
+            android:id="@+id/nav_classes"
+            android:icon="@drawable/group_add_den"
+            android:title="Lớp học" />
+    </group>
+
+    <item android:title="Hệ thống">
+        <menu>
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/logout"
+                android:title="Đăng xuất" />
+        </menu>
+    </item>
+</menu>
