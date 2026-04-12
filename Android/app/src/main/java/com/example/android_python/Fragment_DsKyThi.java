@@ -49,20 +49,30 @@ public class Fragment_DsKyThi extends Fragment {
         rvExams.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // TẢI DỮ LIỆU THEO GV_ID
+        // TẢI DỮ LIỆU THEO GV_ID
         loadExamsFromDatabase();
 
-        adapter = new ExamAdapter(examList, exam -> {
-            Fragment_ChiTietKyThi detailFragment = new Fragment_ChiTietKyThi();
-            Bundle bundle = new Bundle();
-            bundle.putString("EXAM_NAME", exam.getSubject());
+        // CẬP NHẬT LẠI ADAPTER VỚI LISTENER MỚI
+        adapter = new ExamAdapter(examList, new ExamAdapter.OnExamActionListener() {
+            @Override
+            public void onItemClick(Exam exam) {
+                // Code mở chi tiết kỳ thi (giữ nguyên của ông)
+                Fragment_ChiTietKyThi detailFragment = new Fragment_ChiTietKyThi();
+                Bundle bundle = new Bundle();
+                bundle.putString("EXAM_NAME", exam.getSubject());
+                bundle.putInt("KYTHI_ID", exam.getExamId());
+                detailFragment.setArguments(bundle);
 
-            // QUAN TRỌNG: Truyền thêm KYTHI_ID sang trang chi tiết
-            bundle.putInt("KYTHI_ID", exam.getExamId());
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, detailFragment)
+                        .addToBackStack(null).commit();
+            }
 
-            detailFragment.setArguments(bundle);
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, detailFragment)
-                    .addToBackStack(null).commit();
+            @Override
+            public void onDeleteClick(Exam exam, int position) {
+                // GỌI HÀM XÁC NHẬN XÓA
+                xacnhanXoa(exam, position);
+            }
         });
         rvExams.setAdapter(adapter);
 
@@ -160,5 +170,26 @@ public class Fragment_DsKyThi extends Fragment {
             }
         });
         dialog.show();
+    }
+    private void xacnhanXoa(Exam item, int position) {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Xác nhận xóa kỳ thi")
+                .setMessage("Bạn có chắc muốn xóa kỳ thi '" + item.getSubject() + "' không? Mọi dữ liệu đáp án bên trong sẽ mất hết!")
+                .setPositiveButton("Xóa", (dialog, which) -> {
+                    // Gọi hàm xóa trong CSDL
+                    if (dbHelper.xoaKyThi(item.getExamId())) {
+                        // Xóa thành công thì cập nhật giao diện
+                        examList.remove(position);
+                        adapter.notifyItemRemoved(position);
+                        // Cập nhật lại index cho các item còn lại để tránh lỗi position
+                        adapter.notifyItemRangeChanged(position, examList.size());
+
+                        Toast.makeText(getContext(), "Đã xóa kỳ thi thành công!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Lỗi: Không thể xóa kỳ thi!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 }

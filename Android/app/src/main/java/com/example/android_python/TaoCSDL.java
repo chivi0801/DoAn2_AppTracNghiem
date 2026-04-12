@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
 import android.database.Cursor;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
@@ -152,10 +153,20 @@ public class TaoCSDL extends SQLiteOpenHelper{
     // 2. Hàm xóa kỳ thi khỏi CSDL
     public boolean xoaKyThi(int kyThiId) {
         SQLiteDatabase db = this.getWritableDatabase();
-        // Xóa luôn các dữ liệu liên quan để tránh rác database (Mã đề, bài thi...)
-        db.delete("BoDapAn", "KyThi_ID=?", new String[]{String.valueOf(kyThiId)});
-        long result = db.delete("KyThi", "KyThi_ID=?", new String[]{String.valueOf(kyThiId)});
-        return result > 0;
+        try {
+            // 1. Xóa tất cả đáp án thuộc về kỳ thi này trước (để tránh rác)
+            db.delete("BoDapAn", "KyThi_ID = ?", new String[]{String.valueOf(kyThiId)});
+
+            // 2. Xóa chính cái Kỳ thi đó
+            // db.delete trả về số dòng bị xóa. Nếu > 0 nghĩa là xóa thành công.
+            int result = db.delete("KyThi", "KyThi_ID = ?", new String[]{String.valueOf(kyThiId)});
+
+            return result > 0;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            db.close();
+        }
     }
     public boolean ThemKyThi(int gvId, String tenKyThi, String loaiPhieu) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -293,5 +304,29 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cursor.close();
 
         return exists;
+    }
+    public ArrayList<Lop> layDanhSachLopDuyNhat(int gvId) {
+        ArrayList<Lop> listLop = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // TRUY VẤN ĐÚNG BẢNG LOP VÀ TÊN CỘT ÔNG VỪA ĐƯA
+        // Cột của ông là: Lop_ID, TenLop, NienKhoa
+        String query = "SELECT Lop_ID, TenLop, NienKhoa FROM Lop WHERE GV_ID = ?";
+
+        android.database.Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(gvId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(0);
+                String tenLop = cursor.getString(1);
+                String nienKhoa = cursor.getString(2);
+
+                // Nạp vào Model Lop của ông
+                listLop.add(new Lop(id, tenLop, nienKhoa));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return listLop;
     }
 }

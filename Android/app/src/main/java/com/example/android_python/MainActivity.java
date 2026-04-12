@@ -58,20 +58,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupDrawerContent(NavigationView navigationView) {
         navigationView.setNavigationItemSelectedListener(menuItem -> {
-            int id = menuItem.getItemId();
+            int id = menuItem.getItemId(); // Biến id được khai báo ở đây
 
             if (id == R.id.nav_exams) {
                 loadFragment(new Fragment_DsKyThi());
-            } else if (id == R.id.nav_classes) {
-                // Fragment_DsLop sẽ được tạo sau, tạm thời thông báo
-                Toast.makeText(this, "Chức năng Lớp học đang phát triển", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.nav_logout) {
-
-                // Xử lý đăng xuất (Xóa session và về màn đăng nhập)
+            }
+            else if (id == R.id.nav_classes) {
+                // SỬA TẠI ĐÂY: Thay cái Toast bằng lệnh nạp Fragment_Lop
+                loadFragment(new Fragment_Lop());
+            }
+            else if (id == R.id.nav_logout) {
+                // ... code logout giữ nguyên ...
                 getSharedPreferences("UserSession", MODE_PRIVATE).edit().clear().apply();
                 finish();
-
-                // goị về màn đăng nhập
                 Intent intent = new Intent(this, Activity_DangNhap.class);
                 startActivity(intent);
             }
