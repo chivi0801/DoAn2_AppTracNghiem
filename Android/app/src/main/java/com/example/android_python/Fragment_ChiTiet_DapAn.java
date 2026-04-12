@@ -173,28 +173,49 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         if (layoutHeaderLabels == null) return;
         layoutHeaderLabels.removeAllViews();
 
-        // 1. CHÈN KHOẢNG TRỐNG VÔ HÌNH BÙ TRỪ CHO CỘT SỐ THỨ TỰ
+        // 1. ÉP THANH TIÊU ĐỀ THỤT LỀ 16dp Y HỆT FILE XML CỦA HÀNG ĐÁP ÁN
+        int paddingPx = (int) (16 * getResources().getDisplayMetrics().density);
+        layoutHeaderLabels.setPadding(paddingPx, layoutHeaderLabels.getPaddingTop(), paddingPx, layoutHeaderLabels.getPaddingBottom());
+
+        // 2. Ô TRỐNG BÙ CHO CỘT SỐ THỨ TỰ (Chính xác 50dp như cột số của bạn)
         TextView tvEmpty = new TextView(getContext());
-        // Độ rộng khoảng 40dp (Bạn có thể tăng giảm số 40 này cho khớp với độ rộng của chữ "24", "25" trong giao diện của bạn)
-        int widthInDp = 40;
-        int widthInPx = (int) (widthInDp * getResources().getDisplayMetrics().density);
+        int widthInPx = (int) (50 * getResources().getDisplayMetrics().density);
         tvEmpty.setLayoutParams(new LinearLayout.LayoutParams(widthInPx, ViewGroup.LayoutParams.WRAP_CONTENT));
         layoutHeaderLabels.addView(tvEmpty);
 
-        // 2. VẼ 4 CHỮ A, B, C, D NHƯ BÌNH THƯỜNG
+        // 3. TẠO KHUNG CHỨA 4 CHỮ A B C D
+        // (Bắt chước y hệt cái LinearLayout bọc 4 cái RadioButton bên XML)
+        LinearLayout textContainer = new LinearLayout(getContext());
+        LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+
+        // --- LƯU Ý QUAN TRỌNG CHỖ NÀY ---
+        // Nếu trong file XML bạn CÓ dùng dòng 'android:layout_marginStart="20dp"' cho cụm RadioButton
+        // Thì bạn mở comment 2 dòng dưới đây ra và điền đúng số 20 vào nhé để nó đẩy qua cho khớp:
+        // int marginStartPx = (int) (20 * getResources().getDisplayMetrics().density);
+        // containerParams.setMarginStart(marginStartPx);
+        // --------------------------------
+
+        textContainer.setLayoutParams(containerParams);
+        textContainer.setOrientation(LinearLayout.HORIZONTAL);
+        textContainer.setWeightSum(4);
+
+        // 4. NHÉT CHỮ A, B, C, D VÀO TRONG KHUNG
         String[] labels = {"A", "B", "C", "D"};
         for (String label : labels) {
             TextView tv = new TextView(getContext());
             tv.setText(label);
             tv.setGravity(Gravity.CENTER);
-            tv.setTextColor(Color.parseColor("#003366")); // Màu xanh đậm
+            tv.setTextColor(Color.parseColor("#003366"));
             tv.setTypeface(null, Typeface.BOLD);
             tv.setTextSize(16);
 
-            // Thuộc tính weight = 1.0f giúp 4 chữ A B C D chia đều phần không gian CÒN LẠI
+            // Bật weight=1.0f cho từng chữ để chia đều y hệt RadioButton
             LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
             tv.setLayoutParams(p);
-            layoutHeaderLabels.addView(tv);
+            textContainer.addView(tv);
         }
+
+        // Đưa nguyên cụm khung chữ này vào thanh Tiêu đề
+        layoutHeaderLabels.addView(textContainer);
     }
 }

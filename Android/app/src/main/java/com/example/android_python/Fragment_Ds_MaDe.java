@@ -118,6 +118,13 @@ public class Fragment_Ds_MaDe extends Fragment {
 
     private void confirmDelete(SavedKey item, int position) {
         new AlertDialog.Builder(requireContext())
+                // 1. THÊM TIÊU ĐỀ
+                .setTitle("Xác nhận xóa mã đề")
+
+                // 2. THÊM NỘI DUNG (Cố tình nhét luôn cái tên mã đề vào cho chuyên nghiệp)
+                .setMessage("Bạn có chắc chắn muốn xóa mã đề " + item.getMaDe() + " không? Dữ liệu này không thể khôi phục.")
+
+                // Phần nút bấm giữ nguyên
                 .setPositiveButton("Xóa", (dialog, which) -> {
                     int actualPosition = savedKeyList.indexOf(item);
                     if (actualPosition != -1) {
@@ -127,7 +134,8 @@ public class Fragment_Ds_MaDe extends Fragment {
                         adapter.notifyItemRangeChanged(actualPosition, savedKeyList.size());
                     }
                 })
-                .setNegativeButton("Hủy", null).show();
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     private void setupToolbar(View v) {
