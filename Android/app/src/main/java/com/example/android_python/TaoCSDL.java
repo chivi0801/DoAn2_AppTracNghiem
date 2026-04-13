@@ -11,6 +11,7 @@ import java.util.List;
 public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
     private static final int DATABASE_VERSION = 1;
+    SQLiteOpenHelper dbHelper;
     public TaoCSDL(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -328,5 +329,28 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cursor.close();
         db.close();
         return listLop;
+    }
+    private long themThiSinhVaoDB(String thiSinhId, int lopId, String hoTen) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put("ThiSinh_ID", thiSinhId);
+        values.put("Lop_ID", lopId);
+        values.put("HoTen", hoTen);
+
+        return db.insert("ThiSinh", null, values);
+    }
+    // Nhớ thêm hàm này vào TaoCSDL.java nhé
+    public ArrayList<ThiSinh> layDanhSachThiSinhTheoLop(int lopId) {
+        ArrayList<ThiSinh> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM ThiSinh WHERE Lop_ID = ?", new String[]{String.valueOf(lopId)});
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(new ThiSinh(cursor.getString(0), cursor.getInt(1), cursor.getString(2)));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return list;
     }
 }
