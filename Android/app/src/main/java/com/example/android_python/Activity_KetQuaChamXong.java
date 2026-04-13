@@ -1,7 +1,5 @@
 package com.example.android_python;
 
-import static android.content.Intent.getIntent;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -10,7 +8,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
 
-public class ResultActivity extends AppCompatActivity {
+public class Activity_KetQuaChamXong extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

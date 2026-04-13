@@ -158,8 +158,8 @@ public class Activity_Camera extends AppCompatActivity {
                 stopScanning = true;
 
                 runOnUiThread(() -> {
-                    // Chuyển sang ResultActivity kèm theo tất cả thông tin
-                    Intent intent = new Intent(Activity_Camera.this, ResultActivity.class);
+                    // Chuyển sang Activity_KetQuaChamXong kèm theo tất cả thông tin
+                    Intent intent = new Intent(Activity_Camera.this, Activity_KetQuaChamXong.class);
                     intent.putExtra("PATH_ANH_CHINH", fileAnhChinh.getAbsolutePath());
                     intent.putExtra("PATH_ANH_TEN", fileAnhTen.getAbsolutePath());
                     intent.putExtra("PATH_ANH_LOP", fileAnhLop.getAbsolutePath());

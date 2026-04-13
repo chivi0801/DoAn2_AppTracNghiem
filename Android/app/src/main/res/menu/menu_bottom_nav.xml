@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_baithi"
-        android:icon="@drawable/daubacham"
+        android:icon="@drawable/kythi"
         android:title="Bài thi" />
 
     <item
         android:id="@+id/nav_danhsach"
-        android:icon="@drawable/daubacham"
+        android:icon="@drawable/group_den"
         android:title="Danh sách" />
 </menu>

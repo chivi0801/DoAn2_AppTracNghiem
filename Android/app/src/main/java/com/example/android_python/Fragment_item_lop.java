@@ -6,20 +6,34 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
+
+import android.widget.TextView;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class Fragment_item_lop extends Fragment {
 
     private ViewPager2 viewPager;
     private BottomNavigationView bottomNavigationView;
+    private String tenLop;
+    private String examName;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_item_lop, container, false);
+
+        if (getArguments() != null) {
+            tenLop = getArguments().getString("TEN_LOP");
+            examName = getArguments().getString("EXAM_NAME");
+        }
+
+        setupToolbar();
 
         viewPager = view.findViewById(R.id.viewPager_item_lop);
         bottomNavigationView = view.findViewById(R.id.bottom_nav);
@@ -60,6 +74,33 @@ public class Fragment_item_lop extends Fragment {
         return view;
     }
 
+    private void setupToolbar() {
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity != null) {
+            TextView title = activity.findViewById(R.id.toolbar_title);
+            if (title != null) {
+                if (examName != null && !examName.isEmpty()) {
+                    title.setText(examName + " - " + tenLop);
+                } else {
+                    title.setText(tenLop);
+                }
+            }
+
+            //nút quay về trang trước
+            Toolbar toolbar = activity.findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                toolbar.setNavigationOnClickListener(view -> {
+                    if (isAdded()) {
+                        getParentFragmentManager().popBackStack();
+                    }
+                });
+            }
+
+        }
+
+
+    }
+
     // Adapter quản lý 2 Fragment con (Giữ nguyên)
     private class MyViewPagerAdapter extends FragmentStateAdapter {
         public MyViewPagerAdapter(@NonNull Fragment fragment) {
@@ -70,7 +111,7 @@ public class Fragment_item_lop extends Fragment {
         @Override
         public Fragment createFragment(int position) {
             if (position == 1) {
-                return new Fragment_DanhSach();
+                return new Fragment_DanhSachLop();
             }
             return new Fragment_BaiThi(); // Mặc định trả về Bài Thi
         }

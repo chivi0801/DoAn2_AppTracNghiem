@@ -45,7 +45,7 @@
         </activity>
 
         <activity
-            android:name=".ResultActivity"
+            android:name=".Activity_KetQuaChamXong"
             android:exported="false"
             android:label="Kết quả xử lý" />
 

@@ -144,6 +144,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
                 Bundle bundle = new Bundle();
                 bundle.putString("TEN_LOP", lop.getTenLop());
+                bundle.putString("EXAM_NAME", examName);
                 fragmentItemLop.setArguments(bundle);
 
                 getParentFragmentManager().beginTransaction()
@@ -362,6 +363,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
                 Bundle bundle = new Bundle();
                 bundle.putString("TEN_LOP", lop.getTenLop());
+                bundle.putString("EXAM_NAME", examName);
                 fragmentItemLop.setArguments(bundle);
 
                 requireActivity().getSupportFragmentManager().beginTransaction()
