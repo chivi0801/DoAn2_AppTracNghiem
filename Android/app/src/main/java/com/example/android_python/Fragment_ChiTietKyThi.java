@@ -146,8 +146,8 @@ public class Fragment_ChiTietKyThi extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putString("TEN_LOP", lop.getTenLop());
                 bundle.putString("EXAM_NAME", examName);
-
                 bundle.putInt("LOP_ID", lop.getLopId());
+                bundle.putInt("KYTHI_ID", kyThiId); // Thêm dòng này
 
                 fragmentItemLop.setArguments(bundle);
 

@@ -11,14 +11,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BubbleAdapter extends RecyclerView.Adapter<BubbleAdapter.ViewHolder> {
+public class Adapter_Bubble extends RecyclerView.Adapter<Adapter_Bubble.ViewHolder> {
 
     // GÁN CỨNG: Luôn là 40 câu, không quan tâm biến bên ngoài
     private final int QUESTION_COUNT = 40;
     private List<String> listAnswers;
 
     // ĐÃ SỬA: Bỏ tham số questionCount ở constructor cho gọn
-    public BubbleAdapter(String existingData) {
+    public Adapter_Bubble(String existingData) {
         this.listAnswers = new ArrayList<>();
 
         // Vòng lặp luôn chạy 40 lần để tạo 40 hàng
