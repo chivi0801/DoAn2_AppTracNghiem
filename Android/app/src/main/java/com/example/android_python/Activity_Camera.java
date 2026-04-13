@@ -47,14 +47,23 @@ public class Activity_Camera extends AppCompatActivity {
     private volatile boolean isProcessing = false;
     private volatile boolean stopScanning = false;
 
+    private String currentLopId;
+    private String currentKyThiId;
+
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
     private static final int REQUEST_CODE_PERMISSIONS = 1001;
+
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        //Bắt Intent từ CHiTiKyThi
+        currentLopId = getIntent().getStringExtra("LOP_ID");
+        currentKyThiId = getIntent().getStringExtra("KYTHI_ID");
 
         // Khởi tạo bộ đáp án
         boDapAn.put("001", "ABCBACBCABCABDBCABDBCABACBDADCADCABDABCA");
@@ -138,17 +147,17 @@ public class Activity_Camera extends AppCompatActivity {
                 double tongDiem = results.get(5).toDouble();
                 String jsonDapAn = results.get(6).toString();
 
-                // 3. Lưu các ảnh vào bộ nhớ máy
-                File storageDir = new File(getExternalFilesDir(null), "KetQua");
+                // 3. Lưu các ảnh vào bộ nhớ tạm (Cache) để hiển thị, chưa lưu chính thức
+                File storageDir = new File(getCacheDir(), "Temp_KetQua");
                 if (!storageDir.exists()) storageDir.mkdirs();
 
                 String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis());
 
-                File fileAnhChinh = new File(storageDir, "CHINH_" + timeStamp + ".jpg");
-                File fileAnhTen = new File(storageDir, "TEN_" + timeStamp + ".jpg");
-                File fileAnhLop = new File(storageDir, "LOP_" + timeStamp + ".jpg");
+                File fileAnhChinh = new File(storageDir, "TEMP_CHINH_" + timeStamp + ".jpg");
+                File fileAnhTen = new File(storageDir, "TEMP_TEN_" + timeStamp + ".jpg");
+                File fileAnhLop = new File(storageDir, "TEMP_LOP_" + timeStamp + ".jpg");
 
-                // Sử dụng Chaquopy để lưu ảnh
+                // Sử dụng Chaquopy để lưu ảnh vào cache
                 PyObject cv2 = py.getModule("cv2");
                 cv2.callAttr("imwrite", fileAnhChinh.getAbsolutePath(), anhWarped);
                 cv2.callAttr("imwrite", fileAnhTen.getAbsolutePath(), tenROI);
@@ -168,8 +177,9 @@ public class Activity_Camera extends AppCompatActivity {
                     intent.putExtra("DIEM", tongDiem);
                     intent.putExtra("JSON_DAPAN", jsonDapAn);
 
-                    // Đừng quên truyền thêm Lop_ID và KyThi_ID mà bạn đang chấm
-                    // intent.putExtra("LOP_ID", currentLopId);
+                    // Truyền thêm Lop_ID và KyThi_ID mà bạn đang chấm
+                    intent.putExtra("LOP_ID", currentLopId);
+                    intent.putExtra("KYTHI_ID", currentKyThiId);
 
                     startActivity(intent);
                 });

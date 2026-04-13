@@ -6,7 +6,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
 import android.database.Cursor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
@@ -62,7 +64,7 @@ public class TaoCSDL extends SQLiteOpenHelper{
                 "BaiThi_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "KyThi_ID INTEGER, " +
                 "MaDe TEXT, ThiSinh_ID TEXT, " +
-                "AnhBaiLam TEXT, AnhBaiLam_TenThiSinh TEXT, TongDiem REAL, " +
+                "AnhBaiLam TEXT, AnhBaiLam_TenThiSinh TEXT, AnhBaiLam_Lop TEXT, TongDiem REAL, " +
                 "FOREIGN KEY(KyThi_ID) REFERENCES KyThi(KyThi_ID), " +
                 "FOREIGN KEY(MaDe, KyThi_ID) REFERENCES BoDapAn(MaDe, KyThi_ID), " +
                 "FOREIGN KEY(ThiSinh_ID) REFERENCES ThiSinh(ThiSinh_ID))");
@@ -328,5 +330,28 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cursor.close();
         db.close();
         return listLop;
+    }
+
+    public long luuBaiThi(int kyThiId, String maDe, String thiSinhId, String pathAnhChinh, String pathAnhTen, String pathAnhLop, double tongDiem) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("KyThi_ID", kyThiId);
+        values.put("MaDe", maDe);
+        values.put("ThiSinh_ID", thiSinhId);
+        values.put("AnhBaiLam", pathAnhChinh);
+        values.put("AnhBaiLam_TenThiSinh", pathAnhTen);
+        values.put("AnhBaiLam_Lop", pathAnhLop);
+        values.put("TongDiem", tongDiem);
+        return db.insert("BaiThi", null, values);
+    }
+
+    public void luuChiTietBaiThi(long baiThiId, int cauSo, String dapAnThiSinh, String trangThai) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("BaiThi_ID", baiThiId);
+        values.put("CauSo", cauSo);
+        values.put("DapAnThiSinh", dapAnThiSinh);
+        values.put("TrangThai", trangThai);
+        db.insert("ChiTietBaiThi", null, values);
     }
 }
