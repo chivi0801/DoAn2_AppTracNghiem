@@ -65,7 +65,7 @@ public class TaoCSDL extends SQLiteOpenHelper{
                 "BaiThi_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "KyThi_ID INTEGER, " +
                 "MaDe TEXT, ThiSinh_ID TEXT, " +
-                "AnhBaiLam TEXT, AnhBaiLam_TenThiSinh TEXT, AnhBaiLam_Lop TEXT, TongDiem REAL, " +
+                "AnhBaiLam TEXT, AnhBaiLam_TenThiSinh TEXT, TongDiem REAL, " +
                 "FOREIGN KEY(KyThi_ID) REFERENCES KyThi(KyThi_ID), " +
                 "FOREIGN KEY(MaDe, KyThi_ID) REFERENCES BoDapAn(MaDe, KyThi_ID), " +
                 "FOREIGN KEY(ThiSinh_ID) REFERENCES ThiSinh(ThiSinh_ID))");
