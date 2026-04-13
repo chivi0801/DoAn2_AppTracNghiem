@@ -47,10 +47,36 @@ public class Fragment_Lop extends Fragment {
         int gvId = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE).getInt("GV_ID", -1);
         listLop = dbHelper.layDanhSachLopDuyNhat(gvId);
 
+        // Khởi tạo adapter
         adapter = new LopAdapter(listLop);
-        adapter.setOnItemClickListener((lop, position) -> {
-            confirmDelete(lop, position);
+
+        // GỌI ĐÚNG CHỮ 'adapter' NHA MÀY
+        adapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
+
+            // Hàm 1: Khi bấm vào Lớp -> Chuyển qua màn hình 2 tab
+            @Override
+            public void onItemClick(Lop lop) {
+                Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
+
+                Bundle bundle = new Bundle();
+                bundle.putString("TEN_LOP", lop.getTenLop());
+                fragmentItemLop.setArguments(bundle);
+
+                // Lưu ý cái R.id.fragment_container này phải khớp với activity_main của mày nha
+                requireActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragmentItemLop)
+                        .addToBackStack(null)
+                        .commit();
+            }
+
+            // Hàm 2: Khi bấm vào nút 3 chấm để xóa
+            @Override
+            public void onDeleteClick(Lop lop, int position) {
+                confirmDelete(lop, position);
+            }
         });
+
+        // Set adapter cho RecyclerView
         rvLop.setAdapter(adapter);
     }
 
