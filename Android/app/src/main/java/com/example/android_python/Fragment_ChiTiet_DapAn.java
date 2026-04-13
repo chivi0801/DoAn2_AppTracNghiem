@@ -36,7 +36,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
     private String existingDapAn = "";
 
     // 2 Adapter chuẩn mực mới
-    private MaDeAdapter maDeAdapter;
+    private Adapter_MaDe maDeAdapter;
     private BubbleAdapter bubbleAdapter;
 
     @Override
@@ -58,7 +58,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
             }
         }
 
-        maDeAdapter = new MaDeAdapter(existingMaDe);
+        maDeAdapter = new Adapter_MaDe(existingMaDe);
         bubbleAdapter = new BubbleAdapter(existingDapAn);
     }
 

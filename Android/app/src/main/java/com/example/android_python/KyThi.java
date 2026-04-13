@@ -1,12 +1,12 @@
 package com.example.android_python;
 
-public class Exam {
+public class KyThi {
     private int examId;
     private String subject, date, sheetType;
 
-    private int questionCount;
+//    private int questionCount;
 
-    public Exam(int examId, String subject, String date, String sheetType) {
+    public KyThi(int examId, String subject, String date, String sheetType) {
         this.examId = examId;
         this.subject = subject;
         this.date = date;
@@ -18,7 +18,8 @@ public class Exam {
     public String getSubject() { return subject; }
     public String getDate() { return date; }
     public String getSheetType() { return sheetType; }
-    public int getQuestionCount() {
-        return questionCount;
-    }
+
+//    public int getQuestionCount() {
+//        return questionCount;
+//    }
 }

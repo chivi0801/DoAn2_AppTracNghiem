@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
-public class LopAdapter extends RecyclerView.Adapter<LopAdapter.ViewHolder> {
+public class Adapter_Lop extends RecyclerView.Adapter<Adapter_Lop.ViewHolder> {
 
     private ArrayList<Lop> listData;
     private OnItemClickListener listener;
@@ -26,7 +26,7 @@ public class LopAdapter extends RecyclerView.Adapter<LopAdapter.ViewHolder> {
         this.listener = listener;
     }
 
-    public LopAdapter(ArrayList<Lop> listData) {
+    public Adapter_Lop(ArrayList<Lop> listData) {
         this.listData = listData;
     }
 
