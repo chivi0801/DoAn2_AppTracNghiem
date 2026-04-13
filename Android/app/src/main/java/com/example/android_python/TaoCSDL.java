@@ -13,6 +13,7 @@ import java.util.Map;
 public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
     private static final int DATABASE_VERSION = 1;
+    SQLiteOpenHelper dbHelper;
     public TaoCSDL(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
