@@ -305,6 +305,35 @@ public class TaoCSDL extends SQLiteOpenHelper{
 
         return exists;
     }
+    public boolean xoaLop(int lopId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            // 1. Xóa trong bảng ChiTietBaiThi
+            db.execSQL("DELETE FROM ChiTietBaiThi WHERE BaiThi_ID IN (SELECT BaiThi_ID FROM BaiThi WHERE ThiSinh_ID IN (SELECT ThiSinh_ID FROM ThiSinh WHERE Lop_ID = ?))", new Object[]{lopId});
+
+            // 2. Xóa trong bảng BaiThi
+            db.execSQL("DELETE FROM BaiThi WHERE ThiSinh_ID IN (SELECT ThiSinh_ID FROM ThiSinh WHERE Lop_ID = ?)", new Object[]{lopId});
+
+            // 3. Xóa trong bảng ThiSinh
+            db.delete("ThiSinh", "Lop_ID=?", new String[]{String.valueOf(lopId)});
+
+            // 4. Xóa trong bảng KyThi_Lop
+            db.delete("KyThi_Lop", "Lop_ID=?", new String[]{String.valueOf(lopId)});
+
+            // 5. Xóa trong bảng Lop
+            int result = db.delete("Lop", "Lop_ID=?", new String[]{String.valueOf(lopId)});
+
+            db.setTransactionSuccessful();
+            return result > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     public boolean xoaThiSinh(String thiSinhId) {
         SQLiteDatabase db = this.getWritableDatabase();
         // Lệnh delete trả về số dòng bị ảnh hưởng

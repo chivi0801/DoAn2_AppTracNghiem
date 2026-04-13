@@ -48,21 +48,10 @@ public class Fragment_Lop extends Fragment {
 
         lopAdapter = new Adapter_Lop(listLop);
 
-        // BỔ SUNG LẠI SỰ KIỆN CLICK Ở ĐÂY (TRẠM 2)
         lopAdapter.setOnItemClickListener(new Adapter_Lop.OnItemClickListener() {
             @Override
             public void onItemClick(Lop lop) {
-                Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
-                Bundle bundle = new Bundle();
-                bundle.putInt("LOP_ID", lop.getLopId());
-                bundle.putString("TEN_LOP", lop.getTenLop());
-
-                fragmentItemLop.setArguments(bundle);
-
-                requireActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, fragmentItemLop)
-                        .addToBackStack(null)
-                        .commit();
+                // Không làm gì cả theo yêu cầu: Sidebar/Lớp Học không có sự kiện click vào item
             }
 
             @Override
@@ -76,12 +65,17 @@ public class Fragment_Lop extends Fragment {
 
     private void confirmDelete(Lop lop, int position) {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Xác nhận")
-                .setMessage("Bạn muốn ẩn lớp " + lop.getTenLop() + " khỏi danh sách này?")
-                .setPositiveButton("Xóa", (dialog, which) -> {
-                    listLop.remove(position);
-                    lopAdapter.notifyItemRemoved(position);
-                    Toast.makeText(getContext(), "Đã xóa khỏi danh sách", Toast.LENGTH_SHORT).show();
+                .setTitle("Xóa lớp vĩnh viễn")
+                .setMessage("Bạn có chắc chắn muốn xóa lớp " + lop.getTenLop() + "?\nHành động này sẽ xóa vĩnh viễn lớp, toàn bộ thí sinh và các bài thi liên quan trong hệ thống.")
+                .setPositiveButton("Xóa vĩnh viễn", (dialog, which) -> {
+                    if (dbHelper.xoaLop(lop.getLopId())) {
+                        listLop.remove(position);
+                        lopAdapter.notifyItemRemoved(position);
+                        lopAdapter.notifyItemRangeChanged(position, listLop.size());
+                        Toast.makeText(getContext(), "Đã xóa lớp khỏi hệ thống", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Lỗi khi xóa dữ liệu trong CSDL!", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("Hủy", null).show();
     }
