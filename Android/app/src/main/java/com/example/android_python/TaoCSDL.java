@@ -418,6 +418,22 @@ public class TaoCSDL extends SQLiteOpenHelper{
         values.put("TrangThai", trangThai);
         db.insert("ChiTietBaiThi", null, values);
     }
+    public ArrayList<Double> layDanhSachDiemTheoLop(int kyThiId, int lopId) {
+        ArrayList<Double> listDiem = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT TongDiem FROM BaiThi " +
+                "JOIN ThiSinh ON BaiThi.ThiSinh_ID = ThiSinh.ThiSinh_ID " +
+                "WHERE BaiThi.KyThi_ID = ? AND ThiSinh.Lop_ID = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(kyThiId), String.valueOf(lopId)});
+        if (cursor.moveToFirst()) {
+            do {
+                listDiem.add(cursor.getDouble(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return listDiem;
+    }
+
     public boolean capNhatThiSinh(String idCu, String idMoi, String tenMoi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();

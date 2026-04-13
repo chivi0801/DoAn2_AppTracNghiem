@@ -227,12 +227,22 @@ public class Fragment_ChiTietKyThi extends Fragment {
     }
 
     private void veThongKeDiemThuCong(int lopId) {
-        // DỮ LIỆU GIẢ
-        int duoi4 = 2;
-        int tu4den6 = 5;
-        int tu6den8 = 15;
-        int tren8 = 8;
-        int tongSoHocSinh = duoi4 + tu4den6 + tu6den8 + tren8;
+        // Lấy dữ liệu thực tế từ CSDL
+        ArrayList<Double> listDiem = dbHelper.layDanhSachDiemTheoLop(kyThiId, lopId);
+
+        int duoi4 = 0;
+        int tu4den6 = 0;
+        int tu6den8 = 0;
+        int tren8 = 0;
+
+        for (Double diem : listDiem) {
+            if (diem < 4) duoi4++;
+            else if (diem < 6) tu4den6++;
+            else if (diem < 8) tu6den8++;
+            else tren8++;
+        }
+
+        int tongSoHocSinh = listDiem.size();
 
         if (tongSoHocSinh == 0) {
             setBarHeight(spaceYeu, barYeu, 0);
@@ -430,7 +440,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
                     activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                     activity.getSupportActionBar().setDisplayShowTitleEnabled(false);
                 }
-
+                toolbar.setNavigationIcon(R.drawable.ic_back_white);
                 toolbar.setNavigationOnClickListener(view -> {
                     if (isAdded()) {
                         getParentFragmentManager().popBackStack();
