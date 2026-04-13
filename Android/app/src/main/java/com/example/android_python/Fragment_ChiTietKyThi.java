@@ -35,7 +35,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private int gvId = -1;
 
     private RecyclerView rvThongKeList;
-    private LopAdapter lopAdapter;
+    private Adapter_Lop lopAdapter;
 
     private TaoCSDL dbHelper;
     private ArrayList<Lop> danhSachLop;
@@ -131,11 +131,11 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
         rvThongKeList = v.findViewById(R.id.rvThongKeList);
         rvThongKeList.setLayoutManager(new LinearLayoutManager(getContext()));
-        lopAdapter = new LopAdapter(danhSachLop);
+        lopAdapter = new Adapter_Lop(danhSachLop);
         rvThongKeList.setAdapter(lopAdapter);
 
         // GỌI SỰ KIỆN CLICK Ở ĐÂY CHỨ ĐỪNG VIẾT HÀM BÊN NGOÀI
-        lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
+        lopAdapter.setOnItemClickListener(new Adapter_Lop.OnItemClickListener() {
 
             // SỰ KIỆN 1: BẤM VÀO LỚP CHUYỂN QUA CÁI 2 TAB
             // SỰ KIỆN 1: BẤM VÀO LỚP CHUYỂN QUA CÁI 2 TAB
@@ -357,9 +357,9 @@ public class Fragment_ChiTietKyThi extends Fragment {
     }
     private void setupRecyclerView() {
         // SỬA LỖI 1: Khởi tạo adapter chỉ truyền vào listLop (bỏ getContext() đi)
-        lopAdapter = new LopAdapter(listLop);
+        lopAdapter = new Adapter_Lop(listLop);
 
-        lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
+        lopAdapter.setOnItemClickListener(new Adapter_Lop.OnItemClickListener() {
 
             public void onItemClick(Lop lop) {
                 Toast.makeText(getContext(), "Đã click vào lớp: " + lop.getTenLop(), Toast.LENGTH_SHORT).show();

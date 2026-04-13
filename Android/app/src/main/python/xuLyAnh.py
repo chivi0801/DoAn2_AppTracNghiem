@@ -65,7 +65,7 @@ def TienXuLyBanDau(image): # chủ yếu để khoanh vùng và chấm điểm
         255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
-        51,
+        81,
         20,
     )
     return thresh
@@ -350,8 +350,8 @@ def Debug_SBD_MaDe(
         roi_x1,
         roi_y1,
         ds_score_theo_cot,
-        nguong_khong_to=500,
-        nguong_to_nhieu=400,
+        nguong_khong_to=400,
+        nguong_to_nhieu=300,
 ):
     """
     Ve debug cho vung SBD / Ma de len anh warped.
@@ -419,8 +419,8 @@ def Debug_DapAn(
         ds_score_theo_hang,
         dap_an_thi_sinh=None,
         dap_an_dung=None,
-        nguong_khong_to=500,
-        nguong_to_nhieu=400,
+        nguong_khong_to=400,
+        nguong_to_nhieu=300,
 ):
     """
     Ve debug cho vung Dap An len anh warped.

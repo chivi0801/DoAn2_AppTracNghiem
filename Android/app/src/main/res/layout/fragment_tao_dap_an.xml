@@ -79,6 +79,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="A"
+                    android:textSize="20sp"
                     android:textColor="#004C8C"
                     android:textStyle="bold" />
 
@@ -88,6 +89,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="B"
+                    android:textSize="20sp"
                     android:textColor="#004C8C"
                     android:textStyle="bold" />
 
@@ -97,6 +99,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="C"
+                    android:textSize="20sp"
                     android:textColor="#004C8C"
                     android:textStyle="bold" />
 
@@ -106,6 +109,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="D"
+                    android:textSize="20sp"
                     android:textColor="#004C8C"
                     android:textStyle="bold" />
             </LinearLayout>

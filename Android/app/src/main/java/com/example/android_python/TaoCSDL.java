@@ -6,9 +6,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
 import android.database.Cursor;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
@@ -129,8 +126,8 @@ public class TaoCSDL extends SQLiteOpenHelper{
 
     // 2. Hàm lấy danh sách TÊN các kỳ thi của một giáo viên cụ thể
     // 1. Hàm lấy danh sách đầy đủ THEO GIẢNG VIÊN
-    public ArrayList<Exam> layDanhSachKyThiTheoGV(int gvId) {
-        ArrayList<Exam> danhSach = new ArrayList<>();
+    public ArrayList<KyThi> layDanhSachKyThiTheoGV(int gvId) {
+        ArrayList<KyThi> danhSach = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
         // Lọc theo GV_ID để không bị lẫn lộn dữ liệu giữa các tài khoản
@@ -145,8 +142,8 @@ public class TaoCSDL extends SQLiteOpenHelper{
                 String date = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
                         .format(java.util.Calendar.getInstance().getTime());
 
-                // Đưa ID vào đối tượng Exam (Đã bỏ soCau)
-                danhSach.add(new Exam(kyThiId, tenKyThi, date, loaiPhieu));
+                // Đưa ID vào đối tượng KyThi (Đã bỏ soCau)
+                danhSach.add(new KyThi(kyThiId, tenKyThi, date, loaiPhieu));
             } while (cursor.moveToNext());
         }
         cursor.close();

@@ -10,18 +10,18 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
-public class ExamAdapter extends RecyclerView.Adapter<ExamAdapter.ExamViewHolder> {
+public class Adapter_KyThi extends RecyclerView.Adapter<Adapter_KyThi.ExamViewHolder> {
 
-    private List<Exam> examList;
+    private List<KyThi> examList;
     private OnExamActionListener listener;
 
     // 1. CẬP NHẬT INTERFACE: Có cả click chọn và click xóa
     public interface OnExamActionListener {
-        void onItemClick(Exam exam);
-        void onDeleteClick(Exam exam, int position);
+        void onItemClick(KyThi exam);
+        void onDeleteClick(KyThi exam, int position);
     }
 
-    public ExamAdapter(List<Exam> examList, OnExamActionListener listener) {
+    public Adapter_KyThi(List<KyThi> examList, OnExamActionListener listener) {
         this.examList = examList;
         this.listener = listener;
     }
@@ -35,12 +35,12 @@ public class ExamAdapter extends RecyclerView.Adapter<ExamAdapter.ExamViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ExamViewHolder holder, int position) {
-        Exam exam = examList.get(position);
+        KyThi exam = examList.get(position);
 
         holder.tvSubject.setText(exam.getSubject());
         holder.tvDate.setText(exam.getDate());
         holder.tvSheet.setText("Phiếu: " + exam.getSheetType());
-        holder.tvCount.setText(String.valueOf(exam.getQuestionCount())); // Nếu có TextView hiển thị số câu
+//        holder.tvCount.setText(String.valueOf(exam.getQuestionCount())); // Nếu có TextView hiển thị số câu
 
         // 2. XỬ LÝ CLICK VÀO NÚT 3 CHẤM
         holder.btnMore.setOnClickListener(v -> {
@@ -80,7 +80,7 @@ public class ExamAdapter extends RecyclerView.Adapter<ExamAdapter.ExamViewHolder
             tvSubject = itemView.findViewById(R.id.tvItemSubject);
             tvDate = itemView.findViewById(R.id.tvItemDate);
             tvSheet = itemView.findViewById(R.id.tvItemSheet);
-            tvCount = itemView.findViewById(R.id.tvItemCount);
+//            tvCount = itemView.findViewById(R.id.tvItemCount);
             btnMore = itemView.findViewById(R.id.btnItemMore); // ÁNH XẠ NÚT 3 CHẤM
         }
     }

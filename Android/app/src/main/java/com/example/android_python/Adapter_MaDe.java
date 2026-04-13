@@ -8,12 +8,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class MaDeAdapter extends RecyclerView.Adapter<MaDeAdapter.ViewHolder> {
+public class Adapter_MaDe extends RecyclerView.Adapter<Adapter_MaDe.ViewHolder> {
 
     // Mảng lưu 3 chữ số của mã đề (Hàng trăm, hàng chục, hàng đơn vị). Mặc định là "X"
     private String[] arrMaDe = {"X", "X", "X"};
 
-    public MaDeAdapter(String existingData) {
+    public Adapter_MaDe(String existingData) {
         if (existingData != null && existingData.length() >= 3) {
             arrMaDe[0] = String.valueOf(existingData.charAt(0));
             arrMaDe[1] = String.valueOf(existingData.charAt(1));

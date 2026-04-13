@@ -28,8 +28,8 @@ import java.util.List;
 
 public class Fragment_DsKyThi extends Fragment {
     private RecyclerView rvExams;
-    private ExamAdapter adapter;
-    private List<Exam> examList = new ArrayList<>();
+    private Adapter_KyThi adapter;
+    private List<KyThi> examList = new ArrayList<>();
     private TaoCSDL dbHelper;
     private int currentGvId; // Biến lưu ID giảng viên hiện tại
 
@@ -53,9 +53,9 @@ public class Fragment_DsKyThi extends Fragment {
         loadExamsFromDatabase();
 
         // CẬP NHẬT LẠI ADAPTER VỚI LISTENER MỚI
-        adapter = new ExamAdapter(examList, new ExamAdapter.OnExamActionListener() {
+        adapter = new Adapter_KyThi(examList, new Adapter_KyThi.OnExamActionListener() {
             @Override
-            public void onItemClick(Exam exam) {
+            public void onItemClick(KyThi exam) {
                 // Code mở chi tiết kỳ thi (giữ nguyên của ông)
                 Fragment_ChiTietKyThi detailFragment = new Fragment_ChiTietKyThi();
                 Bundle bundle = new Bundle();
@@ -69,7 +69,7 @@ public class Fragment_DsKyThi extends Fragment {
             }
 
             @Override
-            public void onDeleteClick(Exam exam, int position) {
+            public void onDeleteClick(KyThi exam, int position) {
                 // GỌI HÀM XÁC NHẬN XÓA
                 xacnhanXoa(exam, position);
             }
@@ -116,7 +116,7 @@ public class Fragment_DsKyThi extends Fragment {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
-                Exam examToDelete = examList.get(position);
+                KyThi examToDelete = examList.get(position);
 
                 // Xóa trong CSDL
                 if (dbHelper.xoaKyThi(examToDelete.getExamId())) {
@@ -171,7 +171,7 @@ public class Fragment_DsKyThi extends Fragment {
         });
         dialog.show();
     }
-    private void xacnhanXoa(Exam item, int position) {
+    private void xacnhanXoa(KyThi item, int position) {
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Xác nhận xóa kỳ thi")
                 .setMessage("Bạn có chắc muốn xóa kỳ thi '" + item.getSubject() + "' không? Mọi dữ liệu đáp án bên trong sẽ mất hết!")

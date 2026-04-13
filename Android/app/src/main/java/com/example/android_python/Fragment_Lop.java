@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class Fragment_Lop extends Fragment {
     private RecyclerView rvLop;
-    private LopAdapter lopAdapter;
+    private Adapter_Lop lopAdapter;
     private ArrayList<Lop> listLop;
     private TaoCSDL dbHelper;
 
@@ -46,7 +46,7 @@ public class Fragment_Lop extends Fragment {
         int gvId = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE).getInt("GV_ID", -1);
         listLop = dbHelper.layDanhSachLopDuyNhat(gvId);
 
-        lopAdapter = new LopAdapter(listLop);
+        lopAdapter = new Adapter_Lop(listLop);
 
         // BỔ SUNG LẠI SỰ KIỆN CLICK Ở ĐÂY (TRẠM 2)
         lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
