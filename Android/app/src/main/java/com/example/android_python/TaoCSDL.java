@@ -305,6 +305,12 @@ public class TaoCSDL extends SQLiteOpenHelper{
 
         return exists;
     }
+    public boolean xoaThiSinh(String thiSinhId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        // Lệnh delete trả về số dòng bị ảnh hưởng
+        int result = db.delete("ThiSinh", "ThiSinh_ID = ?", new String[]{thiSinhId});
+        return result > 0;
+    }
     public ArrayList<Lop> layDanhSachLopDuyNhat(int gvId) {
         ArrayList<Lop> listLop = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();

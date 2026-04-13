@@ -1,5 +1,6 @@
 package com.example.android_python;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
@@ -102,14 +103,28 @@ public class Fragment_DanhSachLop extends Fragment {
 
                 return true;
             } else if (item.getTitle().equals("Xóa")) {
-                // Xóa khỏi danh sách hiển thị
-                danhSachThiSinh.remove(position);
-                thiSinhAdapter.notifyItemRemoved(position);
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Xác nhận xóa")
+                        .setMessage("Bạn có chắc muốn xóa thí sinh " + thiSinh.getHoTen() + " không?")
+                        .setPositiveButton("Xóa", (dialogInterface, i) -> {
 
-                // Xóa thật trong Database (Bạn tự viết thêm hàm xoaThiSinh(id) trong dbHelper nhé)
-                // dbHelper.xoaThiSinh(thiSinh.getThiSinhId());
+                            // 1. Xóa trong CSDL trước
+                            boolean isDeleted = dbHelper.xoaThiSinh(thiSinh.getThiSinhId());
 
-                Toast.makeText(requireContext(), "Đã xóa " + thiSinh.getHoTen(), Toast.LENGTH_SHORT).show();
+                            if (isDeleted) {
+                                // 2. Nếu DB xóa xong thì mới xóa trên giao diện
+                                danhSachThiSinh.remove(position);
+                                thiSinhAdapter.notifyItemRemoved(position);
+                                // Cập nhật lại các vị trí còn lại để tránh lỗi Index
+                                thiSinhAdapter.notifyItemRangeChanged(position, danhSachThiSinh.size());
+
+                                Toast.makeText(requireContext(), "Đã xóa vĩnh viễn thí sinh", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(requireContext(), "Lỗi: Không thể xóa dữ liệu!", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
                 return true;
             }
             return false;
