@@ -331,6 +331,29 @@ public class TaoCSDL extends SQLiteOpenHelper{
         db.close();
         return listLop;
     }
+    private long themThiSinhVaoDB(String thiSinhId, int lopId, String hoTen) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put("ThiSinh_ID", thiSinhId);
+        values.put("Lop_ID", lopId);
+        values.put("HoTen", hoTen);
+
+        return db.insert("ThiSinh", null, values);
+    }
+    // Nhớ thêm hàm này vào TaoCSDL.java nhé
+    public ArrayList<ThiSinh> layDanhSachThiSinhTheoLop(int lopId) {
+        ArrayList<ThiSinh> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM ThiSinh WHERE Lop_ID = ?", new String[]{String.valueOf(lopId)});
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(new ThiSinh(cursor.getString(0), cursor.getInt(1), cursor.getString(2)));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return list;
+    }
 
     public long luuBaiThi(int kyThiId, String maDe, String thiSinhId, String pathAnhChinh, String pathAnhTen, String pathAnhLop, double tongDiem) {
         SQLiteDatabase db = this.getWritableDatabase();

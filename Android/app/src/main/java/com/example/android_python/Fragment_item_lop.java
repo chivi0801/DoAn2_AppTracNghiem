@@ -22,6 +22,7 @@ public class Fragment_item_lop extends Fragment {
     private BottomNavigationView bottomNavigationView;
     private String tenLop;
     private String examName;
+    private int lopId;
 
     @Nullable
     @Override
@@ -100,8 +101,6 @@ public class Fragment_item_lop extends Fragment {
 
 
     }
-
-    // Adapter quản lý 2 Fragment con (Giữ nguyên)
     private class MyViewPagerAdapter extends FragmentStateAdapter {
         public MyViewPagerAdapter(@NonNull Fragment fragment) {
             super(fragment);
@@ -110,11 +109,17 @@ public class Fragment_item_lop extends Fragment {
         @NonNull
         @Override
         public Fragment createFragment(int position) {
+            // Trong hàm createFragment của MyViewPagerAdapter
             if (position == 1) {
-                return new Fragment_DanhSachLop();
+                Fragment_DanhSachLop fragmentDanhSach = new Fragment_DanhSachLop();
+                Bundle bundle = new Bundle();
+                bundle.putInt("LOP_ID", lopId);
+                fragmentDanhSach.setArguments(bundle);
+                return fragmentDanhSach;
             }
-            return new Fragment_BaiThi(); // Mặc định trả về Bài Thi
+            return new Fragment_BaiThi();
         }
+
 
         @Override
         public int getItemCount() {

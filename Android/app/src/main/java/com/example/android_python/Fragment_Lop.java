@@ -18,21 +18,19 @@ import java.util.ArrayList;
 
 public class Fragment_Lop extends Fragment {
     private RecyclerView rvLop;
-    private LopAdapter adapter;
+    private LopAdapter lopAdapter;
     private ArrayList<Lop> listLop;
     private TaoCSDL dbHelper;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Tận dụng layout có sẵn RecyclerView của Fragment_DsKyThi
         View view = inflater.inflate(R.layout.fragment_ds_kythi, container, false);
 
         dbHelper = new TaoCSDL(getContext());
         rvLop = view.findViewById(R.id.rvExams);
         rvLop.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Ẩn nút FAB (+) vì lớp này tự lấy từ các kỳ thi ra, không cần tạo thủ công
         if (view.findViewById(R.id.fabAdd) != null) {
             view.findViewById(R.id.fabAdd).setVisibility(View.GONE);
         }
@@ -47,37 +45,10 @@ public class Fragment_Lop extends Fragment {
         int gvId = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE).getInt("GV_ID", -1);
         listLop = dbHelper.layDanhSachLopDuyNhat(gvId);
 
-        // Khởi tạo adapter
-        adapter = new LopAdapter(listLop);
+        lopAdapter = new LopAdapter(listLop);
 
-        // GỌI ĐÚNG CHỮ 'adapter' NHA MÀY
-        adapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
 
-            // Hàm 1: Khi bấm vào Lớp -> Chuyển qua màn hình 2 tab
-            @Override
-            public void onItemClick(Lop lop) {
-                Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
-
-                Bundle bundle = new Bundle();
-                bundle.putString("TEN_LOP", lop.getTenLop());
-                fragmentItemLop.setArguments(bundle);
-
-                // Lưu ý cái R.id.fragment_container này phải khớp với activity_main của mày nha
-                requireActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, fragmentItemLop)
-                        .addToBackStack(null)
-                        .commit();
-            }
-
-            // Hàm 2: Khi bấm vào nút 3 chấm để xóa
-            @Override
-            public void onDeleteClick(Lop lop, int position) {
-                confirmDelete(lop, position);
-            }
-        });
-
-        // Set adapter cho RecyclerView
-        rvLop.setAdapter(adapter);
+        rvLop.setAdapter(lopAdapter);
     }
 
     private void confirmDelete(Lop lop, int position) {
@@ -85,11 +56,8 @@ public class Fragment_Lop extends Fragment {
                 .setTitle("Xác nhận")
                 .setMessage("Bạn muốn ẩn lớp " + lop.getTenLop() + " khỏi danh sách này?")
                 .setPositiveButton("Xóa", (dialog, which) -> {
-                    // Lưu ý: Đây là danh sách tổng hợp, nếu xóa thật trong DB
-                    // sẽ làm mất các Kỳ thi thuộc lớp này.
-                    // Tạm thời mình chỉ xóa trên giao diện hiển thị:
                     listLop.remove(position);
-                    adapter.notifyItemRemoved(position);
+                    lopAdapter.notifyItemRemoved(position);
                     Toast.makeText(getContext(), "Đã xóa khỏi danh sách", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Hủy", null).show();
