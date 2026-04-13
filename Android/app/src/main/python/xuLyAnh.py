@@ -65,8 +65,8 @@ def TienXuLyBanDau(image): # chủ yếu để khoanh vùng và chấm điểm
         255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
-        81,
-        30,
+        51,
+        20,
     )
     return thresh
 
@@ -499,6 +499,10 @@ def Debug_DapAn(
 
         if cot_thi_sinh is not None and cot_thi_sinh == cot_dap_an_dung: #nếu đáp án thí sinh chọn đúng - xanh
             ve_vong_tron(chi_so_hang, cot_thi_sinh, (0, 255, 0), 3)
+            x_goc, y_goc = lay_tam_o(chi_so_hang, cot_thi_sinh)
+
+            cv2.putText(warped, "+0.25", (x_goc, y_goc), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
             #thêm lưu câu đúng
 
             continue
