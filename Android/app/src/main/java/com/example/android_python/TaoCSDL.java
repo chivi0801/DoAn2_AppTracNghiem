@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // Tăng version để cập nhật bảng
     SQLiteOpenHelper dbHelper;
     public TaoCSDL(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -65,7 +65,7 @@ public class TaoCSDL extends SQLiteOpenHelper{
                 "BaiThi_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "KyThi_ID INTEGER, " +
                 "MaDe TEXT, ThiSinh_ID TEXT, " +
-                "AnhBaiLam TEXT, AnhBaiLam_TenThiSinh TEXT, TongDiem REAL, " +
+                "AnhBaiLam TEXT, AnhBaiLam_TenThiSinh TEXT, AnhBaiLam_Lop TEXT, TongDiem REAL, " +
                 "FOREIGN KEY(KyThi_ID) REFERENCES KyThi(KyThi_ID), " +
                 "FOREIGN KEY(MaDe, KyThi_ID) REFERENCES BoDapAn(MaDe, KyThi_ID), " +
                 "FOREIGN KEY(ThiSinh_ID) REFERENCES ThiSinh(ThiSinh_ID))");
@@ -332,8 +332,8 @@ public class TaoCSDL extends SQLiteOpenHelper{
         db.close();
         return listLop;
     }
-    private long themThiSinhVaoDB(String thiSinhId, int lopId, String hoTen) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    public long themThiSinhVaoDB(String thiSinhId, int lopId, String hoTen) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
         values.put("ThiSinh_ID", thiSinhId);
@@ -341,6 +341,14 @@ public class TaoCSDL extends SQLiteOpenHelper{
         values.put("HoTen", hoTen);
 
         return db.insert("ThiSinh", null, values);
+    }
+
+    public boolean kiemTraThiSinhTonTai(String thiSinhId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM ThiSinh WHERE ThiSinh_ID = ?", new String[]{thiSinhId});
+        boolean exists = (cursor.getCount() > 0);
+        cursor.close();
+        return exists;
     }
     // Nhớ thêm hàm này vào TaoCSDL.java nhé
     public ArrayList<ThiSinh> layDanhSachThiSinhTheoLop(int lopId) {

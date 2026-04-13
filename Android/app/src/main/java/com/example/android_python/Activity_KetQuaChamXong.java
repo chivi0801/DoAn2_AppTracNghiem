@@ -75,17 +75,29 @@ public class Activity_KetQuaChamXong extends AppCompatActivity {
                 
                 // Ép kiểu ID về int, mặc định là -1 nếu không có
                 int kId = -1;
+                int lId = -1;
                 try {
                     if (kyThiID != null) {
                         kId = Integer.parseInt(kyThiID);
                     }
+                    if (lopID != null) {
+                        lId = Integer.parseInt(lopID);
+                    }
                 } catch (NumberFormatException e) {
-                    Log.e("SAVE_ERROR", "Lỗi định dạng KyThi_ID: " + kyThiID);
+                    Log.e("SAVE_ERROR", "Lỗi định dạng ID: " + kyThiID + ", " + lopID);
                 }
                 
-                if (kId == -1) {
-                    Toast.makeText(this, "Lỗi: Không xác định được Kỳ thi ID", Toast.LENGTH_SHORT).show();
+                if (kId == -1 || lId == -1) {
+                    Toast.makeText(this, "Lỗi: Không xác định được Kỳ thi hoặc Lớp ID", Toast.LENGTH_SHORT).show();
                     return;
+                }
+
+                // Kiểm tra và tự động thêm thí sinh nếu chưa có trong DB
+                if (thiSinhID != null && !thiSinhID.isEmpty()) {
+                    if (!db.kiemTraThiSinhTonTai(thiSinhID)) {
+                        db.themThiSinhVaoDB(thiSinhID, lId, "(chưa cập nhật)"); // Họ tên để trống
+                        Log.d("SAVE_INFO", "Đã tự động thêm thí sinh mới: " + thiSinhID);
+                    }
                 }
                 
                 long baiThiId = db.luuBaiThi(kId, maDe, thiSinhID, permanentChinhPath, permanentTenPath, permanentLopPath, tongDiem);
@@ -93,14 +105,19 @@ public class Activity_KetQuaChamXong extends AppCompatActivity {
                 if (baiThiId != -1) {
                     // 3. Lưu chi tiết từng câu từ JSON
                     if (jsonDapAn != null && !jsonDapAn.isEmpty()) {
-                        JSONArray array = new JSONArray(jsonDapAn);
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject obj = array.getJSONObject(i);
-                            int cauSo = obj.getInt("cauSo");
-                            String dapAn = obj.getString("dapAnThiSinh");
-                            String trangThai = obj.getString("trangThai");
+                        try {
+                            JSONArray array = new JSONArray(jsonDapAn);
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+                                // Kiểm tra các key từ JSON trả về (phải khớp với Python)
+                                int cauSo = obj.optInt("cauSo", i + 1);
+                                String dapAn = obj.optString("dapAnThiSinh", "");
+                                String trangThai = obj.optString("trangThai", "");
 
-                            db.luuChiTietBaiThi(baiThiId, cauSo, dapAn, trangThai);
+                                db.luuChiTietBaiThi(baiThiId, cauSo, dapAn, trangThai);
+                            }
+                        } catch (Exception jsonEx) {
+                            Log.e("JSON_ERROR", "Lỗi phân tích JSON đáp án: " + jsonEx.getMessage());
                         }
                     }
 

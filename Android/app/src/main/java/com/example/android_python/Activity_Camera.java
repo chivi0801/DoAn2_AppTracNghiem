@@ -47,8 +47,9 @@ public class Activity_Camera extends AppCompatActivity {
     private volatile boolean isProcessing = false;
     private volatile boolean stopScanning = false;
 
-    private String currentLopId;
-    private String currentKyThiId;
+    private int currentLopId;
+    private int currentKyThiId;
+    private TaoCSDL dbHelper;
 
     private static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.CAMERA};
     private static final int REQUEST_CODE_PERMISSIONS = 1001;
@@ -61,15 +62,12 @@ public class Activity_Camera extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        //Bắt Intent từ CHiTiKyThi
-        currentLopId = getIntent().getStringExtra("LOP_ID");
-        currentKyThiId = getIntent().getStringExtra("KYTHI_ID");
+        //Bắt Intent từ ChiTietKyThi
+        currentLopId = getIntent().getIntExtra("LOP_ID", -1);
+        currentKyThiId = getIntent().getIntExtra("KYTHI_ID", -1);
 
-        // Khởi tạo bộ đáp án
-        boDapAn.put("001", "ABCBACBCABCABDBCABDBCABACBDADCADCABDABCA");
-        boDapAn.put("002", "BCABCABDBCABDBCABACBDADCADCABDABCACCCABC");
-        boDapAn.put("003", "CABDABCAABCBACBCABCABDBCABDBCABACBDADCAD");
-        boDapAn.put("004", "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+        dbHelper = new TaoCSDL(this);
+        loadBoDapAn();
 
         previewView = findViewById(R.id.previewView);
         btnChup = findViewById(R.id.btn_chupVaCham);
@@ -83,6 +81,16 @@ public class Activity_Camera extends AppCompatActivity {
         }
 
         btnChup.setOnClickListener(v -> takePhoto()); // nút chụp
+    }
+
+    private void loadBoDapAn() {
+        List<SavedKey> list = dbHelper.layDanhSachMaDe(currentKyThiId);
+        if (list != null) {
+            for (SavedKey sk : list) {
+                boDapAn.put(sk.getMaDe(), sk.getDapAn());
+            }
+        }
+        Log.d("BO_DAP_AN", "Đã tải " + boDapAn.size() + " mã đề cho kỳ thi " + currentKyThiId);
     }
     //--------------------------------------------------------------------------------------------------
 
@@ -178,8 +186,8 @@ public class Activity_Camera extends AppCompatActivity {
                     intent.putExtra("JSON_DAPAN", jsonDapAn);
 
                     // Truyền thêm Lop_ID và KyThi_ID mà bạn đang chấm
-                    intent.putExtra("LOP_ID", currentLopId);
-                    intent.putExtra("KYTHI_ID", currentKyThiId);
+                    intent.putExtra("LOP_ID", String.valueOf(currentLopId));
+                    intent.putExtra("KYTHI_ID", String.valueOf(currentKyThiId));
 
                     startActivity(intent);
                 });
