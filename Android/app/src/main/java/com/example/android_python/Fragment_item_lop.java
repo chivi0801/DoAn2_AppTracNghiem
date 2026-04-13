@@ -13,6 +13,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -32,6 +33,8 @@ public class Fragment_item_lop extends Fragment {
         if (getArguments() != null) {
             tenLop = getArguments().getString("TEN_LOP");
             examName = getArguments().getString("EXAM_NAME");
+            // 1. NHẬN TỪ TRẠM 2
+            lopId = getArguments().getInt("LOP_ID", -1);
         }
 
         setupToolbar();

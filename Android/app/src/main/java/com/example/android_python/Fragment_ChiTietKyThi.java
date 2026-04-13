@@ -138,6 +138,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
         lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
 
             // SỰ KIỆN 1: BẤM VÀO LỚP CHUYỂN QUA CÁI 2 TAB
+            // SỰ KIỆN 1: BẤM VÀO LỚP CHUYỂN QUA CÁI 2 TAB
             @Override
             public void onItemClick(Lop lop) {
                 Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
@@ -145,10 +146,13 @@ public class Fragment_ChiTietKyThi extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putString("TEN_LOP", lop.getTenLop());
                 bundle.putString("EXAM_NAME", examName);
+
+                bundle.putInt("LOP_ID", lop.getLopId());
+
                 fragmentItemLop.setArguments(bundle);
 
                 getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, fragmentItemLop) // SỬA THÀNH ĐÚNG ID NÀY
+                        .replace(R.id.fragment_container, fragmentItemLop)
                         .addToBackStack(null)
                         .commit();
             }

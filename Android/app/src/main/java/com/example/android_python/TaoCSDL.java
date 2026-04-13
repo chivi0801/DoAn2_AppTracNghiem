@@ -312,8 +312,8 @@ public class TaoCSDL extends SQLiteOpenHelper{
         ArrayList<Lop> listLop = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // TRUY VẤN ĐÚNG BẢNG LOP VÀ TÊN CỘT ÔNG VỪA ĐƯA
-        // Cột của ông là: Lop_ID, TenLop, NienKhoa
+
+
         String query = "SELECT Lop_ID, TenLop, NienKhoa FROM Lop WHERE GV_ID = ?";
 
         android.database.Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(gvId)});

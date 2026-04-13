@@ -41,12 +41,35 @@ public class Fragment_Lop extends Fragment {
         return view;
     }
 
+
     private void loadData() {
         int gvId = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE).getInt("GV_ID", -1);
         listLop = dbHelper.layDanhSachLopDuyNhat(gvId);
 
         lopAdapter = new LopAdapter(listLop);
 
+        // BỔ SUNG LẠI SỰ KIỆN CLICK Ở ĐÂY (TRẠM 2)
+        lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(Lop lop) {
+                Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
+                Bundle bundle = new Bundle();
+                bundle.putInt("LOP_ID", lop.getLopId());
+                bundle.putString("TEN_LOP", lop.getTenLop());
+
+                fragmentItemLop.setArguments(bundle);
+
+                requireActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragmentItemLop)
+                        .addToBackStack(null)
+                        .commit();
+            }
+
+            @Override
+            public void onDeleteClick(Lop lop, int position) {
+                confirmDelete(lop, position);
+            }
+        });
 
         rvLop.setAdapter(lopAdapter);
     }
