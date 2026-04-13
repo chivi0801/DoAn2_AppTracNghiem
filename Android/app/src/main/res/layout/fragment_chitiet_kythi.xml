@@ -22,6 +22,7 @@
             android:textColor="#000"
             android:textSize="18sp" />
     </androidx.cardview.widget.CardView>
+
     <Spinner
         android:id="@+id/spinnerThongKe"
         android:layout_width="match_parent"
@@ -32,6 +33,164 @@
         android:background="@color/white"
         android:spinnerMode="dropdown" />
 
+    <LinearLayout
+        android:id="@+id/layoutThongKeTuLam"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Biểu đồ phân bố điểm"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom|center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCountYeu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="0"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="35dp"
+                    android:layout_height="100dp"
+                    android:orientation="vertical"
+                    android:weightSum="100">
+                    <View android:id="@+id/spaceYeu" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="100" />
+                    <View android:id="@+id/barYeu" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0" android:background="#F44336" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Yếu\n(&lt;4)"
+                    android:textAlignment="center"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom|center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCountTB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="0"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="35dp"
+                    android:layout_height="100dp"
+                    android:orientation="vertical"
+                    android:weightSum="100">
+                    <View android:id="@+id/spaceTB" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="100" />
+                    <View android:id="@+id/barTB" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0" android:background="#FF9800" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="TB\n(4-5)"
+                    android:textAlignment="center"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom|center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCountKha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="0"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="35dp"
+                    android:layout_height="100dp"
+                    android:orientation="vertical"
+                    android:weightSum="100">
+                    <View android:id="@+id/spaceKha" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="100" />
+                    <View android:id="@+id/barKha" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0" android:background="#2196F3" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Khá\n(6-7)"
+                    android:textAlignment="center"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom|center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCountGioi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="0"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="35dp"
+                    android:layout_height="100dp"
+                    android:orientation="vertical"
+                    android:weightSum="100">
+                    <View android:id="@+id/spaceGioi" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="100" />
+                    <View android:id="@+id/barGioi" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0" android:background="#4CAF50" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Giỏi\n(8-10)"
+                    android:textAlignment="center"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
     <Button
         android:id="@+id/btnGrade"
         android:layout_width="200dp"

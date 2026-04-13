@@ -8,6 +8,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -42,8 +43,13 @@ public class Fragment_ChiTietKyThi extends Fragment {
     private Spinner spinnerThongKe;
     private ArrayAdapter<String> spinnerAdapter;
     private List<String> listTenLop;
-    private ArrayList<Lop> listLop;
-    private RecyclerView recyclerViewLop;
+
+    // --- BIẾN CHO GIAO DIỆN BIỂU ĐỒ ---
+    private LinearLayout layoutThongKeTuLam;
+    private View barYeu, barTB, barKha, barGioi;
+    private TextView tvCountYeu, tvCountTB, tvCountKha, tvCountGioi;
+
+    private View spaceYeu, spaceTB, spaceKha, spaceGioi;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,7 +58,6 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
         dbHelper = new TaoCSDL(getContext());
 
-        // Lấy gvId từ SharedPreferences
         android.content.SharedPreferences sharedPreferences = getContext().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE);
         gvId = sharedPreferences.getInt("GV_ID", -1);
 
@@ -87,11 +92,27 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
         setupToolbar(v);
 
-        // Nút Đáp án: Chuyển qua trang Danh sách Mã Đề
+        // Ánh xạ các View của Biểu đồ
+        layoutThongKeTuLam = v.findViewById(R.id.layoutThongKeTuLam);
+        barYeu = v.findViewById(R.id.barYeu);
+
+        // Thêm 4 dòng này
+        spaceYeu = v.findViewById(R.id.spaceYeu);
+        spaceTB = v.findViewById(R.id.spaceTB);
+        spaceKha = v.findViewById(R.id.spaceKha);
+        spaceGioi = v.findViewById(R.id.spaceGioi);
+        barTB = v.findViewById(R.id.barTB);
+        barKha = v.findViewById(R.id.barKha);
+        barGioi = v.findViewById(R.id.barGioi);
+        tvCountYeu = v.findViewById(R.id.tvCountYeu);
+        tvCountTB = v.findViewById(R.id.tvCountTB);
+        tvCountKha = v.findViewById(R.id.tvCountKha);
+        tvCountGioi = v.findViewById(R.id.tvCountGioi);
+
         v.findViewById(R.id.cardAnswers).setOnClickListener(view -> {
             Fragment_Ds_MaDe fragment = new Fragment_Ds_MaDe();
             Bundle b = new Bundle();
-            b.putInt("KYTHI_ID", kyThiId); // BẮT BUỘC PHẢI CÓ DÒNG NÀY ĐỂ BÊN KIA NHẬN DIỆN
+            b.putInt("KYTHI_ID", kyThiId);
             b.putInt("QUESTION_COUNT", questionCount);
             b.putString("EXAM_NAME", examName);
             fragment.setArguments(b);
@@ -102,9 +123,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
                     .commit();
         });
 
-        // Nút Chấm Điểm
         v.findViewById(R.id.btnGrade).setOnClickListener(view -> {
-            // Kiểm tra trực tiếp từ CSDL xem kỳ thi này đã có mã đề nào chưa
             List<SavedKey> checkList = dbHelper.layDanhSachMaDe(kyThiId);
             if (checkList.isEmpty()) {
                 Toast.makeText(getContext(), "Vui lòng thêm Đáp Án trước khi chấm điểm!", Toast.LENGTH_SHORT).show();
@@ -115,7 +134,6 @@ public class Fragment_ChiTietKyThi extends Fragment {
             }
         });
 
-        // --- XỬ LÝ DANH SÁCH LỚP BÊN DƯỚI ---
         danhSachLop = dbHelper.layDanhSachLopTheoKyThi(kyThiId);
 
         spinnerThongKe = v.findViewById(R.id.spinnerThongKe);
@@ -134,21 +152,36 @@ public class Fragment_ChiTietKyThi extends Fragment {
         lopAdapter = new Adapter_Lop(danhSachLop);
         rvThongKeList.setAdapter(lopAdapter);
 
-        // GỌI SỰ KIỆN CLICK Ở ĐÂY CHỨ ĐỪNG VIẾT HÀM BÊN NGOÀI
-        lopAdapter.setOnItemClickListener(new Adapter_Lop.OnItemClickListener() {
+        // XỬ LÝ SỰ KIỆN KHI CHỌN SPINNER
+        spinnerThongKe.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    // Chọn "Thống kê" -> Ẩn biểu đồ, hiện danh sách
+                    layoutThongKeTuLam.setVisibility(View.GONE);
+                    rvThongKeList.setVisibility(View.VISIBLE);
+                } else {
+                    // Chọn Lớp -> Hiện biểu đồ, ẩn danh sách
+                    rvThongKeList.setVisibility(View.GONE);
+                    layoutThongKeTuLam.setVisibility(View.VISIBLE);
 
-            // SỰ KIỆN 1: BẤM VÀO LỚP CHUYỂN QUA CÁI 2 TAB
-            // SỰ KIỆN 1: BẤM VÀO LỚP CHUYỂN QUA CÁI 2 TAB
+                    Lop lopDuocChon = danhSachLop.get(position - 1);
+                    veThongKeDiemThuCong(lopDuocChon.getLopId());
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        lopAdapter.setOnItemClickListener(new Adapter_Lop.OnItemClickListener() {
             @Override
             public void onItemClick(Lop lop) {
                 Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
-
                 Bundle bundle = new Bundle();
                 bundle.putString("TEN_LOP", lop.getTenLop());
                 bundle.putString("EXAM_NAME", examName);
-
                 bundle.putInt("LOP_ID", lop.getLopId());
-
                 fragmentItemLop.setArguments(bundle);
 
                 getParentFragmentManager().beginTransaction()
@@ -157,7 +190,6 @@ public class Fragment_ChiTietKyThi extends Fragment {
                         .commit();
             }
 
-            // SỰ KIỆN 2: BẤM VÀO NÚT 3 CHẤM ĐỂ GỠ LỚP (Giữ nguyên code cũ của mày)
             @Override
             public void onDeleteClick(Lop lop, int position) {
                 new AlertDialog.Builder(requireContext())
@@ -168,10 +200,8 @@ public class Fragment_ChiTietKyThi extends Fragment {
                                 danhSachLop.remove(position);
                                 lopAdapter.notifyItemRemoved(position);
                                 lopAdapter.notifyItemRangeChanged(position, danhSachLop.size());
-
                                 listTenLop.remove(position + 1);
                                 spinnerAdapter.notifyDataSetChanged();
-
                                 Toast.makeText(getContext(), "Đã gỡ lớp " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(getContext(), "Lỗi khi gỡ lớp!", Toast.LENGTH_SHORT).show();
@@ -182,213 +212,65 @@ public class Fragment_ChiTietKyThi extends Fragment {
             }
         });
 
-        return v; // Giữ nguyên dòng này ở cuối onCreateView
+        return v;
     }
 
-    // --- MENU XỔ XUỐNG ---
-    private void hienThiMenuChonCachThemLop() {
-        View anchorView = getActivity().findViewById(R.id.toolbar);
-        if (anchorView == null) return;
+    private void veThongKeDiemThuCong(int lopId) {
+        // DỮ LIỆU GIẢ
+        int duoi4 = 2;
+        int tu4den6 = 5;
+        int tu6den8 = 15;
+        int tren8 = 8;
+        int tongSoHocSinh = duoi4 + tu4den6 + tu6den8 + tren8;
 
-        PopupMenu popup = new PopupMenu(requireContext(), anchorView, android.view.Gravity.END);
-        popup.getMenu().add(Menu.NONE, 0, Menu.NONE, "Tạo lớp mới");
-        popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Sử dụng lớp đã có");
-
-        popup.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == 0) {
-                hienThiDialogThemLopMoi();
-            } else if (item.getItemId() == 1) {
-                hienThiDialogChonLopCu();
-            }
-            return true;
-        });
-        popup.show();
-    }
-
-    // --- CÁCH 1: TẠO LỚP MỚI HOÀN TOÀN ---
-    private void hienThiDialogThemLopMoi() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Thêm Lớp Mới");
-
-        LinearLayout layout = new LinearLayout(getContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 20, 50, 20);
-
-        final EditText edtTenLop = new EditText(getContext());
-        edtTenLop.setHint("Nhập tên lớp (VD: 12A1)");
-        layout.addView(edtTenLop);
-
-        final EditText edtNienKhoa = new EditText(getContext());
-        edtNienKhoa.setHint("Nhập niên khóa (VD: 2023)");
-        layout.addView(edtNienKhoa);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Lưu", (dialog, which) -> {
-            String tenLop = edtTenLop.getText().toString().trim();
-            String nienKhoa = edtNienKhoa.getText().toString().trim();
-
-            if (!tenLop.isEmpty() && !nienKhoa.isEmpty() && gvId != -1 && kyThiId != -1) {
-                // 1. Lưu lớp vào bảng Lớp -> Lấy ra ID của lớp vừa tạo
-                long newLopId = dbHelper.themLop(gvId, tenLop, nienKhoa);
-
-                if (newLopId != -1) {
-                    // 2. Liên kết Lớp đó với Kỳ Thi hiện tại trong bảng trung gian
-                    dbHelper.themKyThiLop(kyThiId, (int) newLopId);
-                    capNhatDanhSachLop();
-                    Toast.makeText(getContext(), "Tạo lớp mới thành công!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Lỗi khi thêm lớp", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Hủy", null).show();
-    }
-
-    // --- CÁCH 2: CHỌN LỚP ĐÃ CÓ CỦA GIÁO VIÊN ---
-    private void hienThiDialogChonLopCu() {
-        if (gvId == -1) return;
-
-        ArrayList<Lop> danhSachLopCu = dbHelper.layDanhSachLopCuaGV(gvId);
-
-        if (danhSachLopCu.isEmpty()) {
-            Toast.makeText(getContext(), "Bạn chưa tạo lớp nào trước đây!", Toast.LENGTH_SHORT).show();
+        if (tongSoHocSinh == 0) {
+            setBarHeight(spaceYeu, barYeu, 0);
+            setBarHeight(spaceTB, barTB, 0);
+            setBarHeight(spaceKha, barKha, 0);
+            setBarHeight(spaceGioi, barGioi, 0);
+            tvCountYeu.setText("0"); tvCountTB.setText("0"); tvCountKha.setText("0"); tvCountGioi.setText("0");
             return;
         }
 
-        String[] arrLopCu = new String[danhSachLopCu.size()];
-        for (int i = 0; i < danhSachLopCu.size(); i++) {
-            arrLopCu[i] = danhSachLopCu.get(i).getTenLop() + " (" + danhSachLopCu.get(i).getNienKhoa() + ")";
-        }
+        tvCountYeu.setText(String.valueOf(duoi4));
+        tvCountTB.setText(String.valueOf(tu4den6));
+        tvCountKha.setText(String.valueOf(tu6den8));
+        tvCountGioi.setText(String.valueOf(tren8));
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Chọn lớp đã có");
+        float ptYeu = ((float) duoi4 / tongSoHocSinh) * 100;
+        float ptTB = ((float) tu4den6 / tongSoHocSinh) * 100;
+        float ptKha = ((float) tu6den8 / tongSoHocSinh) * 100;
+        float ptGioi = ((float) tren8 / tongSoHocSinh) * 100;
 
-        LinearLayout layout = new LinearLayout(getContext());
-        layout.setPadding(50, 40, 50, 40);
-
-        Spinner spinnerLopCu = new Spinner(getContext());
-        ArrayAdapter<String> spinAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, arrLopCu);
-        spinnerLopCu.setAdapter(spinAdapter);
-        layout.addView(spinnerLopCu);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Thêm vào kỳ thi", (dialog, which) -> {
-            int pos = spinnerLopCu.getSelectedItemPosition();
-            Lop lopDuocChon = danhSachLopCu.get(pos);
-
-            // Vì lớp đã có sẵn ID, ta chỉ cần nhét nó vào bảng trung gian KyThi_Lop
-            if (kyThiId != -1 && dbHelper.themKyThiLop(kyThiId, lopDuocChon.getLopId())) {
-                capNhatDanhSachLop();
-                Toast.makeText(getContext(), "Đã thêm lớp " + lopDuocChon.getTenLop(), Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getContext(), "Lớp này có thể đã được thêm rồi!", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Hủy", null).show();
+        // GỌI HÀM MỚI Ở ĐÂY
+        setBarHeight(spaceYeu, barYeu, ptYeu);
+        setBarHeight(spaceTB, barTB, ptTB);
+        setBarHeight(spaceKha, barKha, ptKha);
+        setBarHeight(spaceGioi, barGioi, ptGioi);
     }
 
-    // --- HÀM CẬP NHẬT GIAO DIỆN CHUNG ---
-    private void capNhatDanhSachLop() {
-        danhSachLop.clear();
-        // Lấy danh sách lớp thuộc Kỳ thi thông qua bảng trung gian (Hàm bạn vừa thêm)
-        danhSachLop.addAll(dbHelper.layDanhSachLopTheoKyThi(kyThiId));
-        lopAdapter.notifyDataSetChanged();
+    // HÀM MỚI (Thay thế cho setBarWidth cũ)
+    private void setBarHeight(View space, View bar, float percent) {
+        float barWeight = percent > 0 ? Math.max(percent, 1f) : 0; // Đảm bảo nếu có người thì hiện 1 vạch mỏng
+        float spaceWeight = 100f - barWeight; // Phần trống còn lại
 
-        listTenLop.clear();
-        listTenLop.add("Thống kê");
-        for (Lop lop : danhSachLop) {
-            listTenLop.add(lop.getTenLop() + " (" + lop.getNienKhoa() + ")");
-        }
-        spinnerAdapter.notifyDataSetChanged();
-        spinnerThongKe.setSelection(listTenLop.size() - 1);
+        // Cập nhật phần Trống (Space)
+        LinearLayout.LayoutParams spaceParams = (LinearLayout.LayoutParams) space.getLayoutParams();
+        spaceParams.weight = spaceWeight;
+        space.setLayoutParams(spaceParams);
+
+        // Cập nhật phần Màu (Bar)
+        LinearLayout.LayoutParams barParams = (LinearLayout.LayoutParams) bar.getLayoutParams();
+        barParams.weight = barWeight;
+        bar.setLayoutParams(barParams);
     }
+    // ==========================================
 
-    private void hienThiDialogChonLopDeChamDiem() {
-        String[] arrTenLop = new String[danhSachLop.size()];
-        for (int i = 0; i < danhSachLop.size(); i++) {
-            arrTenLop[i] = danhSachLop.get(i).getTenLop() + " (" + danhSachLop.get(i).getNienKhoa() + ")";
-        }
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Chọn lớp để chấm điểm")
-                .setItems(arrTenLop, (dialog, which) -> {
-                    Lop lopSelected = danhSachLop.get(which);
-                    openGradeFragment(lopSelected.getLopId());
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
-    }
-
-    private void openGradeFragment(int lopId) {
-        Intent intent = new Intent(getActivity(), Activity_Camera.class);
-        intent.putExtra("EXAM_NAME", examName);
-        intent.putExtra("KYTHI_ID", kyThiId);
-        intent.putExtra("LOP_ID", lopId);
-        startActivity(intent);
-    }
-
-    private void setupToolbar(View v) {
-        AppCompatActivity activity = (AppCompatActivity) getActivity();
-        if (activity != null) {
-            // HIỆN nút Quay về và ẨN icon Menu
-            View iconMenu = activity.findViewById(R.id.icon_Menu);
-            if (iconMenu != null) iconMenu.setVisibility(View.GONE); // Ẩn nút Menu
-
-
-            if (activity.getSupportActionBar() != null) {
-                activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Hiển thị nút quay về
-                activity.getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_back_white);
-                activity.getSupportActionBar().setDisplayShowTitleEnabled(false);
-            }
-
-            Toolbar toolbar = activity.findViewById(R.id.toolbar);
-            if (toolbar != null) {
-                toolbar.setNavigationOnClickListener(view -> {
-                    if (isAdded()) {
-                        getParentFragmentManager().popBackStack();
-                    }
-                });
-            }
-        }
-        TextView title = getActivity().findViewById(R.id.toolbar_title);
-        if (title != null) title.setText(examName);
-    }
-    private void setupRecyclerView() {
-        // SỬA LỖI 1: Khởi tạo adapter chỉ truyền vào listLop (bỏ getContext() đi)
-        lopAdapter = new Adapter_Lop(listLop);
-
-        lopAdapter.setOnItemClickListener(new Adapter_Lop.OnItemClickListener() {
-
-            public void onItemClick(Lop lop) {
-                Toast.makeText(getContext(), "Đã click vào lớp: " + lop.getTenLop(), Toast.LENGTH_SHORT).show();
-                Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
-
-                Bundle bundle = new Bundle();
-                bundle.putString("TEN_LOP", lop.getTenLop());
-                bundle.putString("EXAM_NAME", examName);
-                fragmentItemLop.setArguments(bundle);
-
-                requireActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.drawer_layout, fragmentItemLop) // Nhớ đổi ID này cho đúng với layout của bạn nhé
-                        .addToBackStack(null)
-                        .commit();
-            }
-
-            // SỬA LỖI 2: Phải thêm hàm onDeleteClick này vào thì mới không bị báo lỗi
-            // Sự kiện 2: Click vào nút 3 chấm để xóa
-            @Override
-            public void onDeleteClick(Lop lop, int position) {
-                // Xóa phần tử khỏi danh sách
-                listLop.remove(position);
-                // Báo cho Adapter biết vị trí đã bị xóa để cập nhật giao diện
-                lopAdapter.notifyItemRemoved(position);
-
-                // (Tuỳ chọn) Bạn có thể gọi thêm code xóa trong Database ở đây
-            }
-        });
-
-        recyclerViewLop.setAdapter(lopAdapter);
-    }
+    private void hienThiMenuChonCachThemLop() { /* Giữ nguyên */ }
+    private void hienThiDialogThemLopMoi() { /* Giữ nguyên */ }
+    private void hienThiDialogChonLopCu() { /* Giữ nguyên */ }
+    private void capNhatDanhSachLop() { /* Giữ nguyên */ }
+    private void hienThiDialogChonLopDeChamDiem() { /* Giữ nguyên */ }
+    private void openGradeFragment(int lopId) { /* Giữ nguyên */ }
+    private void setupToolbar(View v) { /* Giữ nguyên */ }
 }
