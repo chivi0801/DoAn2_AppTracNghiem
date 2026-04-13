@@ -49,7 +49,7 @@ public class Fragment_Lop extends Fragment {
         lopAdapter = new Adapter_Lop(listLop);
 
         // BỔ SUNG LẠI SỰ KIỆN CLICK Ở ĐÂY (TRẠM 2)
-        lopAdapter.setOnItemClickListener(new LopAdapter.OnItemClickListener() {
+        lopAdapter.setOnItemClickListener(new Adapter_Lop.OnItemClickListener() {
             @Override
             public void onItemClick(Lop lop) {
                 Fragment_item_lop fragmentItemLop = new Fragment_item_lop();
