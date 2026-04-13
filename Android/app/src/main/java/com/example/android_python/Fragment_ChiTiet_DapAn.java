@@ -37,7 +37,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
 
     // 2 Adapter chuẩn mực mới
     private Adapter_MaDe maDeAdapter;
-    private BubbleAdapter bubbleAdapter;
+    private Adapter_Bubble bubbleAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,7 +59,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         }
 
         maDeAdapter = new Adapter_MaDe(existingMaDe);
-        bubbleAdapter = new BubbleAdapter(existingDapAn);
+        bubbleAdapter = new Adapter_Bubble(existingDapAn);
     }
 
     @Nullable

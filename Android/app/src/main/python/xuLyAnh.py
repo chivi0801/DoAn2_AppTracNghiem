@@ -66,7 +66,7 @@ def TienXuLyBanDau(image): # chủ yếu để khoanh vùng và chấm điểm
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
         81,
-        20,
+        30,
     )
     return thresh
 
@@ -350,8 +350,8 @@ def Debug_SBD_MaDe(
         roi_x1,
         roi_y1,
         ds_score_theo_cot,
-        nguong_khong_to=400,
-        nguong_to_nhieu=300,
+        nguong_khong_to=500,
+        nguong_to_nhieu=400,
 ):
     """
     Ve debug cho vung SBD / Ma de len anh warped.
@@ -419,8 +419,8 @@ def Debug_DapAn(
         ds_score_theo_hang,
         dap_an_thi_sinh=None,
         dap_an_dung=None,
-        nguong_khong_to=400,
-        nguong_to_nhieu=300,
+        nguong_khong_to=500,
+        nguong_to_nhieu=400,
 ):
     """
     Ve debug cho vung Dap An len anh warped.
@@ -482,7 +482,8 @@ def Debug_DapAn(
             y1_goc = int(round(roi_y1 + y1_resize * ti_le_y))
             y2_goc = int(round(roi_y1 + y2_resize * ti_le_y))
 
-            cv2.rectangle(warped, (x1_goc, y1_goc), (x2_goc, y2_goc), (0, 0, 255), 2)
+            #vẽ ô vuông
+            # cv2.rectangle(warped, (x1_goc, y1_goc), (x2_goc, y2_goc), (0, 0, 255), 2)
 
         dap_an_thi_sinh_hang = None
         if dap_an_thi_sinh is not None and chi_so_hang < len(dap_an_thi_sinh):
@@ -698,13 +699,20 @@ def XuLyMADE(cacMocNho, warped):
     return made_str, warped
 
 
-def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 = False, cau21_30 = False, cau31_40 = False):
+def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = False, cau11_20 = False, cau21_30 = False, cau31_40 = False):
     #PHAN VUNG ----------------------------
     copy = warped.copy()
     #cacMocNho phai được chuẩn hóa bang ham chuanHoa_6_MocNho()
     #warped là ảnh đã được phối cảnh 4 mốc lớn, có kích thước chuẩn để tính toán chính xác vị trí SBD
 
     top_left, top_right, mid_left, mid_right, bot_left, bot_right = cacMocNho
+
+    ds_nhom_duoc_chon = [cau1_10, cau11_20, cau21_30, cau31_40]
+    so_nhom_duoc_chon = sum(bool(x) for x in ds_nhom_duoc_chon)
+    if so_nhom_duoc_chon == 0:
+        cau1_10 = True
+    elif so_nhom_duoc_chon > 1:
+        raise ValueError("XuLyDAPAN chi duoc xu ly 1 nhom cau trong moi lan goi.")
 
     # Tính khoảng cách giữa các mốc để xác định kích thước và vị trí vùng SBD
     col_gap = top_right[0] - top_left[0]
@@ -721,16 +729,16 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
         dapan_y2 = int(mid_right[1] - 0.048 * row_gap)
 
 
-    if(cau11_20==True):
+    elif(cau11_20==True):
         # NOTE: nhom thu 2 tuong ung cau 11..20
         cau_bat_dau = 11
-        dapan_x1 = int(mid_right[0] + 0.1 * col_gap)#
-        dapan_y1 = int(mid_right[1] + 0.05 * row_gap)
+        dapan_x1 = int(mid_left[0] - 0.9 * col_gap)#
+        dapan_y1 = int(mid_left[1] + 0.05 * row_gap)
 
-        dapan_x2 = int(mid_right[0] + 0.77 * col_gap) #
-        dapan_y2 = int(bot_right[1] - 0.048 * row_gap)
+        dapan_x2 = int(mid_left[0] - 0.23 * col_gap) #
+        dapan_y2 = int(bot_left[1] - 0.048 * row_gap)
 
-    if(cau21_30==True):
+    elif(cau21_30==True):
         #
         # NOTE: nhom thu 3 tuong ung cau 21..30
         cau_bat_dau = 21
@@ -740,14 +748,14 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
         dapan_x2 = int(mid_left[0] + 0.77 * col_gap) #
         dapan_y2 = int(bot_left[1] - 0.048 * row_gap)
 
-    if(cau31_40==True):
+    elif(cau31_40==True):
         # NOTE: nhom thu 4 tuong ung cau 31..40
         cau_bat_dau = 31
-        dapan_x1 = int(mid_left[0] - 0.9 * col_gap)#
-        dapan_y1 = int(mid_left[1] + 0.05 * row_gap)
+        dapan_x1 = int(mid_right[0] + 0.1 * col_gap)#
+        dapan_y1 = int(mid_right[1] + 0.05 * row_gap)
 
-        dapan_x2 = int(mid_left[0] - 0.23 * col_gap) #
-        dapan_y2 = int(bot_left[1] - 0.048 * row_gap)
+        dapan_x2 = int(mid_right[0] + 0.77 * col_gap) #
+        dapan_y2 = int(bot_right[1] - 0.048 * row_gap)
 
 
     h, w = warped.shape[:2]
@@ -855,7 +863,13 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = True, cau11_20 
         dap_an_dung_nhom = dapAnDung_list[30:40]
         diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
 
-        # NOTE: giu lai chi tiet tung cau o dang list[dict] cho de debug va de XuLyAnh ghep du 40 cau.
+    print(
+        f"Nhom cau {cau_bat_dau}-{cau_bat_dau + 9} | "
+        f"Dap an dung: {''.join(dap_an_dung_nhom)} | "
+        f"Dap an doc duoc: {''.join(DAPAN)}"
+    )
+
+    # NOTE: giu lai chi tiet tung cau o dang list[dict] cho de debug va de XuLyAnh ghep du 40 cau.
     chi_tiet_10_cau = []
     for i, dap_an_thi_sinh in enumerate(DAPAN):
         cau_so = cau_bat_dau + i
@@ -1023,7 +1037,7 @@ def XuLyAnh(img_path, BoDapAn):
     return warped, Ten_ROI, Lop_LOP, ThiSinhID, made_str, TongDiem, Json_DapAnThiSinh
 
     #return warped, Ten_ROI, Lop_ROI, ThiSinhID, MaDe, TongDiem, Json_DapAnThiSinh
-#
+
 # BoDapAn = {
 #     "001": "ABCB ACBCABCABDBCABDBCABACBDADCADCABDABCA",
 #     "002": "BCABCABDBCABDBCABACBDADCADCABDABCACCCABC",

@@ -24,6 +24,7 @@ public class Fragment_item_lop extends Fragment {
     private String tenLop;
     private String examName;
     private int lopId;
+    private int kyThiId;
 
     @Nullable
     @Override
@@ -35,6 +36,7 @@ public class Fragment_item_lop extends Fragment {
             examName = getArguments().getString("EXAM_NAME");
             // 1. NHẬN TỪ TRẠM 2
             lopId = getArguments().getInt("LOP_ID", -1);
+            kyThiId = getArguments().getInt("KYTHI_ID", -1);
         }
 
         setupToolbar();
@@ -113,7 +115,14 @@ public class Fragment_item_lop extends Fragment {
         @Override
         public Fragment createFragment(int position) {
             // Trong hàm createFragment của MyViewPagerAdapter
-            if (position == 1) {
+            if (position == 0) {
+                Fragment_BaiThi fragmentBaiThi = new Fragment_BaiThi();
+                Bundle bundle = new Bundle();
+                bundle.putInt("LOP_ID", lopId);
+                bundle.putInt("KYTHI_ID", kyThiId);
+                fragmentBaiThi.setArguments(bundle);
+                return fragmentBaiThi;
+            } else if (position == 1) {
                 Fragment_DanhSachLop fragmentDanhSach = new Fragment_DanhSachLop();
                 Bundle bundle = new Bundle();
                 bundle.putInt("LOP_ID", lopId);

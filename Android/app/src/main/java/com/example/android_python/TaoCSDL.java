@@ -447,4 +447,32 @@ public class TaoCSDL extends SQLiteOpenHelper{
         // Nếu rowsAffected > 0 nghĩa là đã cập nhật thành công ít nhất 1 dòng
         return rowsAffected > 0;
     }
+
+    public ArrayList<BaiThi> layDanhSachBaiThi(int kyThiId, int lopId) {
+        ArrayList<BaiThi> danhSach = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT B.* FROM BaiThi B " +
+                "JOIN ThiSinh T ON B.ThiSinh_ID = T.ThiSinh_ID " +
+                "WHERE B.KyThi_ID = ? AND T.Lop_ID = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(kyThiId), String.valueOf(lopId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("BaiThi_ID"));
+                int ktId = cursor.getInt(cursor.getColumnIndexOrThrow("KyThi_ID"));
+                String maDe = cursor.getString(cursor.getColumnIndexOrThrow("MaDe"));
+                String tsId = cursor.getString(cursor.getColumnIndexOrThrow("ThiSinh_ID"));
+                String anhChinh = cursor.getString(cursor.getColumnIndexOrThrow("AnhBaiLam"));
+                String anhTen = cursor.getString(cursor.getColumnIndexOrThrow("AnhBaiLam_TenThiSinh"));
+                String anhLop = cursor.getString(cursor.getColumnIndexOrThrow("AnhBaiLam_Lop"));
+                double diem = cursor.getDouble(cursor.getColumnIndexOrThrow("TongDiem"));
+
+                danhSach.add(new BaiThi(id, ktId, maDe, tsId, anhChinh, anhTen, anhLop, diem));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return danhSach;
+    }
 }

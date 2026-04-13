@@ -73,7 +73,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
         MenuItem addItem = menu.add(Menu.NONE, 1001, Menu.NONE, "Thêm Lớp");
         addItem.setIcon(R.drawable.group_add);
         addItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-        
+
         // Bắt sự kiện click trực tiếp trên MenuItem để đảm bảo phản hồi nhanh và chính xác
         addItem.setOnMenuItemClickListener(item -> {
             hienThiMenuChonCachThemLop();
@@ -188,6 +188,8 @@ public class Fragment_ChiTietKyThi extends Fragment {
                 bundle.putString("TEN_LOP", lop.getTenLop());
                 bundle.putString("EXAM_NAME", examName);
                 bundle.putInt("LOP_ID", lop.getLopId());
+                bundle.putInt("KYTHI_ID", kyThiId); // Thêm dòng này
+
                 fragmentItemLop.setArguments(bundle);
 
                 getParentFragmentManager().beginTransaction()
@@ -206,13 +208,13 @@ public class Fragment_ChiTietKyThi extends Fragment {
                                 danhSachLop.remove(position);
                                 lopAdapter.notifyItemRemoved(position);
                                 lopAdapter.notifyItemRangeChanged(position, danhSachLop.size());
-                                
+
                                 // Cập nhật Spinner
                                 if (listTenLop.size() > position + 1) {
                                     listTenLop.remove(position + 1);
                                     spinnerAdapter.notifyDataSetChanged();
                                 }
-                                
+
                                 Toast.makeText(getContext(), "Đã gỡ lớp " + lop.getTenLop() + " khỏi kỳ thi", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(getContext(), "Lỗi khi gỡ lớp!", Toast.LENGTH_SHORT).show();
@@ -446,7 +448,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
                         getParentFragmentManager().popBackStack();
                     }
                 });
-                
+
                 // Quan trọng: Làm mới Menu để hiển thị nút "Thêm Lớp"
                 activity.invalidateOptionsMenu();
             }
