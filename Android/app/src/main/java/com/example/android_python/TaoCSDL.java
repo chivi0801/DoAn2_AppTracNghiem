@@ -353,4 +353,17 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cursor.close();
         return list;
     }
+    public boolean capNhatThiSinh(String idCu, String idMoi, String tenMoi) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put("ThiSinh_ID", idMoi);
+        values.put("HoTen", tenMoi);
+
+        // Cập nhật dữ liệu tại dòng có ThiSinh_ID bằng với idCu
+        int rowsAffected = db.update("ThiSinh", values, "ThiSinh_ID = ?", new String[]{idCu});
+
+        // Nếu rowsAffected > 0 nghĩa là đã cập nhật thành công ít nhất 1 dòng
+        return rowsAffected > 0;
+    }
 }
