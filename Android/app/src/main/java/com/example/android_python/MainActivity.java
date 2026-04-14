@@ -87,10 +87,10 @@ public class MainActivity extends AppCompatActivity {
         TextView tvUserId = headerView.findViewById(R.id.tv_user_id);
 
         android.content.SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
-        String hoTen = sharedPreferences.getString("HO_TEN", "Giảng Viên");
+        String hoTen = sharedPreferences.getString("HO_TEN", "N/A");
         int gvId = sharedPreferences.getInt("GV_ID", -1);
 
-        tvUsername.setText(hoTen);
+        tvUsername.setText("Giảng Viên: " + hoTen);
         tvUserId.setText("ID: " + (gvId != -1 ? gvId : "N/A"));
     }
 

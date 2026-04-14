@@ -113,6 +113,17 @@ public class TaoCSDL extends SQLiteOpenHelper{
             return -1;
         }
     }
+    public String layHoTenGiangVien(int gvId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT HoTenGV FROM GiangVien WHERE GV_ID=?", new String[]{String.valueOf(gvId)});
+        if (cursor.moveToFirst()) {
+            String name = cursor.getString(0);
+            cursor.close();
+            return name;
+        }
+        cursor.close();
+        return "N/A";
+    }
     public boolean themKyThi(int gvId, String tenKyThi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();

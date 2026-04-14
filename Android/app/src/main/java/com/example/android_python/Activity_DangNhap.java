@@ -51,9 +51,13 @@ public class Activity_DangNhap extends AppCompatActivity {
             if (gvId != -1) { // Nếu tìm thấy (gvId khác -1)
                 Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
 
+                // Lấy họ tên giảng viên để lưu vào Session
+                String hoTen = dbHelper.layHoTenGiangVien(gvId);
+
                 SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putInt("GV_ID", gvId); // Lưu GV_ID lại
+                editor.putString("HO_TEN", hoTen); // Lưu Họ Tên lại
                 editor.apply(); // Xác nhận lưu
 
                 // Chuyển sang màn hình chính (MainActivity)
