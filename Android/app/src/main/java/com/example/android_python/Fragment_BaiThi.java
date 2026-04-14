@@ -23,7 +23,7 @@ public class Fragment_BaiThi extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_baithi, container, false);
+        View view = inflater.inflate(R.layout.fragment_ds_baithi, container, false);
 
         if (getArguments() != null) {
             kyThiId = getArguments().getInt("KYTHI_ID", -1);

@@ -491,4 +491,22 @@ public class TaoCSDL extends SQLiteOpenHelper{
         cursor.close();
         return danhSach;
     }
+
+    public boolean xoaBaiThi(int baiThiId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            // 1. Xóa chi tiết bài thi trước
+            db.delete("ChiTietBaiThi", "BaiThi_ID = ?", new String[]{String.valueOf(baiThiId)});
+            // 2. Xóa bài thi
+            int result = db.delete("BaiThi", "BaiThi_ID = ?", new String[]{String.valueOf(baiThiId)});
+            db.setTransactionSuccessful();
+            return result > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            db.endTransaction();
+        }
+    }
 }

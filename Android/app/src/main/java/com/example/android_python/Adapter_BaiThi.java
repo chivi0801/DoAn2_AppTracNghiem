@@ -4,10 +4,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -45,6 +48,37 @@ public class Adapter_BaiThi extends RecyclerView.Adapter<Adapter_BaiThi.ViewHold
             Bitmap bitmap = BitmapFactory.decodeFile(baiThi.getAnhBaiLamLop());
             holder.imgLop.setImageBitmap(bitmap);
         }
+
+        holder.ivMoreOptions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPopupMenu(v, position);
+            }
+        });
+    }
+
+    private void showPopupMenu(View view, int position) {
+        PopupMenu popup = new PopupMenu(context, view);
+        popup.getMenu().add("Xóa");
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                if (item.getTitle().equals("Xóa")) {
+                    BaiThi baiThi = list.get(position);
+                    TaoCSDL db = new TaoCSDL(context);
+                    if (db.xoaBaiThi(baiThi.getBaiThiId())) {
+                        list.remove(position);
+                        notifyItemRemoved(position);
+                        notifyItemRangeChanged(position, list.size());
+                        Toast.makeText(context, "Đã xóa bài thi", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Lỗi khi xóa dữ liệu", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                return true;
+            }
+        });
+        popup.show();
     }
 
     @Override
@@ -53,13 +87,14 @@ public class Adapter_BaiThi extends RecyclerView.Adapter<Adapter_BaiThi.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgTen, imgLop;
+        ImageView imgTen, imgLop, ivMoreOptions;
         TextView tvSBD, tvMaDe, tvDiem;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             imgTen = itemView.findViewById(R.id.tenThiSinh_ROI);
             imgLop = itemView.findViewById(R.id.LopThiSinh_ROI);
+            ivMoreOptions = itemView.findViewById(R.id.iv_MoreOptions);
             tvSBD = itemView.findViewById(R.id.tv_SBD);
             tvMaDe = itemView.findViewById(R.id.tv_MaDe);
             tvDiem = itemView.findViewById(R.id.tv_Diem);

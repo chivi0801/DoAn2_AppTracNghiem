@@ -9,16 +9,6 @@
 
     <!-- Container này ép tỉ lệ 3:4 (dọc) -->
 
-    <TextView
-        android:id="@+id/lop_dangChamBai"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="12A5"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        tools:layout_editor_absoluteX="177dp"
-        tools:layout_editor_absoluteY="16dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cameraContainer"

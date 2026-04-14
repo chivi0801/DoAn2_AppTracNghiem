@@ -409,15 +409,17 @@ public class Fragment_ChiTietKyThi extends Fragment {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Chọn lớp để chấm điểm")
                 .setItems(names, (dialog, which) -> {
-                    openGradeFragment(danhSachLop.get(which).getLopId());
+                    Lop selectedLop = danhSachLop.get(which);
+                    openGradeFragment(selectedLop.getLopId(), selectedLop.getTenLop());
                 })
                 .show();
     }
 
-    private void openGradeFragment(int lopId) {
+    private void openGradeFragment(int lopId, String tenLop) {
         Intent intent = new Intent(getContext(), Activity_Camera.class);
         intent.putExtra("KYTHI_ID", kyThiId);
         intent.putExtra("LOP_ID", lopId);
+        intent.putExtra("TEN_LOP", tenLop);
         intent.putExtra("EXAM_NAME", examName);
         intent.putExtra("QUESTION_COUNT", questionCount);
         startActivity(intent);
