@@ -4,8 +4,6 @@ public class KyThi {
     private int examId;
     private String subject, date, sheetType;
 
-//    private int questionCount;
-
     public KyThi(int examId, String subject, String date, String sheetType) {
         this.examId = examId;
         this.subject = subject;
@@ -19,7 +17,7 @@ public class KyThi {
     public String getDate() { return date; }
     public String getSheetType() { return sheetType; }
 
-//    public int getQuestionCount() {
-//        return questionCount;
-//    }
+    // Setters
+    public void setSubject(String subject) { this.subject = subject; }
+    public void setSheetType(String sheetType) { this.sheetType = sheetType; }
 }

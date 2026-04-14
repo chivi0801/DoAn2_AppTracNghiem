@@ -13,4 +13,12 @@ public class Lop {
     public int getLopId() { return lopId; }
     public String getTenLop() { return tenLop; }
     public String getNienKhoa() { return nienKhoa; }
+
+    public void setTenLop(String tenLop) {
+        this.tenLop = tenLop;
+    }
+
+    public void setNienKhoa(String nienKhoa) {
+        this.nienKhoa = nienKhoa;
+    }
 }

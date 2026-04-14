@@ -31,7 +31,7 @@ public class Fragment_DsKyThi extends Fragment {
     private Adapter_KyThi adapter;
     private List<KyThi> examList = new ArrayList<>();
     private TaoCSDL dbHelper;
-    private int currentGvId; // Biến lưu ID giảng viên hiện tại
+    private int currentGvId;
 
     @Nullable
     @Override
@@ -39,7 +39,6 @@ public class Fragment_DsKyThi extends Fragment {
         View view = inflater.inflate(R.layout.fragment_ds_kythi, container, false);
         dbHelper = new TaoCSDL(getContext());
 
-        // LẤY GV_ID TỪ SHAREDPREFERENCES
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserSession", Context.MODE_PRIVATE);
         currentGvId = sharedPreferences.getInt("GV_ID", -1);
 
@@ -48,8 +47,6 @@ public class Fragment_DsKyThi extends Fragment {
         rvExams = view.findViewById(R.id.rvExams);
         rvExams.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // TẢI DỮ LIỆU THEO GV_ID
-        // TẢI DỮ LIỆU THEO GV_ID
         loadExamsFromDatabase();
 
         // CẬP NHẬT LẠI ADAPTER VỚI LISTENER MỚI
@@ -81,6 +78,11 @@ public class Fragment_DsKyThi extends Fragment {
             public void onDeleteClick(KyThi exam, int position) {
                 // GỌI HÀM XÁC NHẬN XÓA
                 xacnhanXoa(exam, position);
+            }
+
+            @Override
+            public void onEditClick(KyThi exam, int position) {
+                showEditExamDialog(exam, position);
             }
         });
         rvExams.setAdapter(adapter);
@@ -180,6 +182,57 @@ public class Fragment_DsKyThi extends Fragment {
         });
         dialog.show();
     }
+
+    private void showEditExamDialog(KyThi exam, int position) {
+        Dialog dialog = new Dialog(getContext());
+        dialog.setContentView(R.layout.dialog_tao_kythi);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView tvTitle = dialog.findViewById(R.id.tvDialogTitle);
+        if (tvTitle != null) tvTitle.setText("Chỉnh sửa kỳ thi");
+
+        EditText edtSubject = dialog.findViewById(R.id.edtSubject);
+        Spinner spnSheet = dialog.findViewById(R.id.spnSheet);
+
+        // Đổ dữ liệu cũ
+        edtSubject.setText(exam.getSubject());
+
+        String[] sheets = {"30", "40", "50"};
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, sheets);
+        spnSheet.setAdapter(spinnerAdapter);
+
+        // Chọn lại loại phiếu cũ trong spinner
+        for (int i = 0; i < sheets.length; i++) {
+            if (sheets[i].equals(exam.getSheetType())) {
+                spnSheet.setSelection(i);
+                break;
+            }
+        }
+
+        dialog.findViewById(R.id.btnConfirmCreate).setOnClickListener(v -> {
+            String subject = edtSubject.getText().toString().trim();
+            String loaiPhieu = spnSheet.getSelectedItem().toString();
+
+            if (subject.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng nhập đủ thông tin!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (dbHelper.capNhatKyThi(exam.getExamId(), subject, loaiPhieu)) {
+                exam.setSubject(subject);
+                exam.setSheetType(loaiPhieu);
+                adapter.notifyItemChanged(position);
+                dialog.dismiss();
+                Toast.makeText(getContext(), "Cập nhật kỳ thi thành công!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Lỗi khi cập nhật!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        dialog.show();
+    }
+
     private void xacnhanXoa(KyThi item, int position) {
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Xác nhận xóa kỳ thi")

@@ -548,4 +548,22 @@ public class TaoCSDL extends SQLiteOpenHelper{
             db.endTransaction();
         }
     }
+
+    public boolean capNhatLop(int lopId, String tenLop, String nienKhoa) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("TenLop", tenLop);
+        values.put("NienKhoa", nienKhoa);
+        int rows = db.update("Lop", values, "Lop_ID = ?", new String[]{String.valueOf(lopId)});
+        return rows > 0;
+    }
+
+    public boolean capNhatKyThi(int kyThiId, String subject, String loaiPhieu) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("TenKyThi", subject);
+        values.put("LoaiPhieu", loaiPhieu);
+        int rows = db.update("KyThi", values, "KyThi_ID = ?", new String[]{String.valueOf(kyThiId)});
+        return rows > 0;
+    }
 }

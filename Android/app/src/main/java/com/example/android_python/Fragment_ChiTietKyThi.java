@@ -223,6 +223,11 @@ public class Fragment_ChiTietKyThi extends Fragment {
                         .setNegativeButton("Hủy", null)
                         .show();
             }
+
+            @Override
+            public void onEditClick(Lop lop, int position) {
+                showEditLopDialog(lop, position);
+            }
         });
 
         return v;
@@ -423,6 +428,55 @@ public class Fragment_ChiTietKyThi extends Fragment {
         intent.putExtra("EXAM_NAME", examName);
         intent.putExtra("QUESTION_COUNT", questionCount);
         startActivity(intent);
+    }
+
+    private void showEditLopDialog(Lop lop, int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Chỉnh sửa lớp");
+
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(40, 20, 40, 10);
+
+        final EditText inputTenLop = new EditText(getContext());
+        inputTenLop.setHint("Tên lớp");
+        inputTenLop.setText(lop.getTenLop());
+        layout.addView(inputTenLop);
+
+        final EditText inputNienKhoa = new EditText(getContext());
+        inputNienKhoa.setHint("Niên khóa");
+        inputNienKhoa.setText(lop.getNienKhoa());
+        layout.addView(inputNienKhoa);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Cập nhật", (dialog, which) -> {
+            String tenLop = inputTenLop.getText().toString().trim();
+            String nienKhoa = inputNienKhoa.getText().toString().trim();
+
+            if (!tenLop.isEmpty()) {
+                if (dbHelper.capNhatLop(lop.getLopId(), tenLop, nienKhoa)) {
+                    // Cập nhật list data
+                    lop.setTenLop(tenLop);
+                    lop.setNienKhoa(nienKhoa);
+                    lopAdapter.notifyItemChanged(position);
+
+                    // Cập nhật luôn Spinner nếu đang hiển thị
+                    if (listTenLop.size() > position + 1) {
+                        listTenLop.set(position + 1, tenLop + " (" + nienKhoa + ")");
+                        spinnerAdapter.notifyDataSetChanged();
+                    }
+
+                    Toast.makeText(getContext(), "Đã cập nhật lớp " + tenLop, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Lỗi khi cập nhật!", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(getContext(), "Vui lòng nhập tên lớp!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Hủy", null);
+        builder.show();
     }
 
     private void setupToolbar(View v) {

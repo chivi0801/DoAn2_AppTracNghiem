@@ -18,8 +18,9 @@ public class Adapter_Lop extends RecyclerView.Adapter<Adapter_Lop.ViewHolder> {
 
     // 1. Gộp cả 2 sự kiện: Click chuyển trang và Click xóa
     public interface OnItemClickListener {
-        void onItemClick(Lop lop); // Thêm cái này
+        void onItemClick(Lop lop);
         void onDeleteClick(Lop lop, int position);
+        void onEditClick(Lop lop, int position);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -50,16 +51,18 @@ public class Adapter_Lop extends RecyclerView.Adapter<Adapter_Lop.ViewHolder> {
             }
         });
 
-        // 3. Xử lý sự kiện click vào nút 3 chấm để Xóa
+        // 3. Xử lý sự kiện click vào nút 3 chấm
         holder.ivMoreOptions.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(v.getContext(), holder.ivMoreOptions);
-            popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Xóa Lớp");
+            popup.getMenu().add(Menu.NONE, 1, Menu.NONE, "Chỉnh sửa");
+            popup.getMenu().add(Menu.NONE, 2, Menu.NONE, "Xóa Lớp");
 
             popup.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == 1) {
-                    if (listener != null) {
-                        listener.onDeleteClick(lop, position);
-                    }
+                    if (listener != null) listener.onEditClick(lop, position);
+                    return true;
+                } else if (item.getItemId() == 2) {
+                    if (listener != null) listener.onDeleteClick(lop, position);
                     return true;
                 }
                 return false;

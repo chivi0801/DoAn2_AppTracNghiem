@@ -5,7 +5,14 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tạo Kỳ Thi Mới" android:textColor="#000" android:textSize="18sp" android:textStyle="bold" />
+    <TextView
+        android:id="@+id/tvDialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tạo Kỳ Thi Mới"
+        android:textColor="#000"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <TableLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:stretchColumns="1">
         <TableRow android:layout_marginBottom="10dp">
@@ -22,5 +29,14 @@
         </TableRow>
     </TableLayout>
 
-    <Button android:id="@+id/btnConfirmCreate" android:layout_width="100dp" android:layout_height="wrap_content" android:layout_gravity="end" android:layout_marginTop="20dp" android:backgroundTint="#00CCFF" android:text="Tạo" android:textAllCaps="false" android:textColor="#FFF" />
+    <Button
+        android:id="@+id/btnConfirmCreate"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="#00CCFF"
+        android:text="Xác nhận"
+        android:textAllCaps="false"
+        android:textColor="#FFF" />
 </LinearLayout>

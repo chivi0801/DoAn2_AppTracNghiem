@@ -15,10 +15,11 @@ public class Adapter_KyThi extends RecyclerView.Adapter<Adapter_KyThi.ExamViewHo
     private List<KyThi> examList;
     private OnExamActionListener listener;
 
-    // 1. CẬP NHẬT INTERFACE: Có cả click chọn và click xóa
+    // 1. CẬP NHẬT INTERFACE: Có click chọn, click xóa và click sửa
     public interface OnExamActionListener {
         void onItemClick(KyThi exam);
         void onDeleteClick(KyThi exam, int position);
+        void onEditClick(KyThi exam, int position);
     }
 
     public Adapter_KyThi(List<KyThi> examList, OnExamActionListener listener) {
@@ -45,13 +46,14 @@ public class Adapter_KyThi extends RecyclerView.Adapter<Adapter_KyThi.ExamViewHo
         // 2. XỬ LÝ CLICK VÀO NÚT 3 CHẤM
         holder.btnMore.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
+            popupMenu.getMenu().add("Chỉnh sửa");
             popupMenu.getMenu().add("Xóa");
 
             popupMenu.setOnMenuItemClickListener(menuItem -> {
-                if (menuItem.getTitle().equals("Xóa")) {
-                    if (listener != null) {
-                        listener.onDeleteClick(exam, position);
-                    }
+                if (menuItem.getTitle().equals("Chỉnh sửa")) {
+                    if (listener != null) listener.onEditClick(exam, position);
+                } else if (menuItem.getTitle().equals("Xóa")) {
+                    if (listener != null) listener.onDeleteClick(exam, position);
                 }
                 return true;
             });
