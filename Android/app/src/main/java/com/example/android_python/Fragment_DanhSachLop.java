@@ -178,7 +178,54 @@ public class Fragment_DanhSachLop extends Fragment {
         dialog.show();
     }
     private void showDialogSuaThiSinh(ThiSinh thiSinhCanSua, int position) {
-        // ... giữ nguyên code cũ ...
+        Dialog dialog = new Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_them_thi_sinh);
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        // Ánh xạ
+        EditText edtThiSinhID = dialog.findViewById(R.id.edt_ThiSinh_ID);
+        EditText edtHoTen = dialog.findViewById(R.id.edt_HoTen);
+        Button btnHuy = dialog.findViewById(R.id.btn_Huy);
+        Button btnLuu = dialog.findViewById(R.id.btn_Luu);
+
+        // 1. ĐỔ DỮ LIỆU CŨ VÀO Ô NHẬP LÝ
+        edtThiSinhID.setText(thiSinhCanSua.getThiSinhId());
+        edtHoTen.setText(thiSinhCanSua.getHoTen());
+
+        btnHuy.setOnClickListener(v -> dialog.dismiss());
+
+        // 2. XỬ LÝ KHI BẤM LƯU
+        btnLuu.setOnClickListener(v -> {
+            String maMoi = edtThiSinhID.getText().toString().trim();
+            String tenMoi = edtHoTen.getText().toString().trim();
+
+            if (maMoi.isEmpty() || tenMoi.isEmpty()) {
+                Toast.makeText(requireContext(), "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Lấy ID cũ trước khi nó bị ghi đè
+            String idCu = thiSinhCanSua.getThiSinhId();
+
+            // Gọi hàm cập nhật DB
+            boolean isUpdated = dbHelper.capNhatThiSinh(idCu, maMoi, tenMoi);
+
+            if (isUpdated) {
+                // Cập nhật lại Object Thí Sinh trong danh sách hiện tại
+                thiSinhCanSua.setThiSinhId(maMoi);
+                thiSinhCanSua.setHoTen(tenMoi);
+
+                // Báo cho Adapter biết vị trí này đã thay đổi để nó vẽ lại giao diện
+                thiSinhAdapter.notifyItemChanged(position);
+
+                Toast.makeText(requireContext(), "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            } else {
+                Toast.makeText(requireContext(), "Lỗi! Mã thí sinh mới có thể bị trùng với người khác.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
     }
 
     private void setupToolbar() {
