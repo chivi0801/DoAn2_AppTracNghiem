@@ -66,7 +66,7 @@ def TienXuLyBanDau(image): # chủ yếu để khoanh vùng và chấm điểm
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
         81,
-        30,
+        20,
     )
     return thresh
 
