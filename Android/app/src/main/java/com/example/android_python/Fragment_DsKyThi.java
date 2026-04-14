@@ -61,6 +61,15 @@ public class Fragment_DsKyThi extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putString("EXAM_NAME", exam.getSubject());
                 bundle.putInt("KYTHI_ID", exam.getExamId());
+                
+                // Trích xuất số câu từ loại phiếu (VD: "Phiếu: 40" -> 40)
+                int qCount = 40;
+                try {
+                    String sheet = exam.getSheetType(); // "40"
+                    qCount = Integer.parseInt(sheet);
+                } catch (Exception e) {}
+                
+                bundle.putInt("QUESTION_COUNT", qCount);
                 detailFragment.setArguments(bundle);
 
                 getParentFragmentManager().beginTransaction()
