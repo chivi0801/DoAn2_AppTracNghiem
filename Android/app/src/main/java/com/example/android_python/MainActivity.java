@@ -98,8 +98,61 @@ public class MainActivity extends AppCompatActivity {
      * Hàm dùng để chuyển đổi giữa các Fragment (Ví dụ: từ Danh sách sang Quét ảnh)
      */
     public void loadFragment(Fragment fragment) {
+        // Với các màn hình chính từ Sidebar, ta không add vào BackStack để tránh quay vòng quẩn
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
+        
+        // Hiện nút Menu, ẩn nút Back vì đây là màn hình chính
+        showMenuIcon(true);
+    }
+
+    public void loadFragmentWithBackStack(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
+        
+        // Ẩn nút Menu, hiện nút Back vì đây là màn hình con
+        showMenuIcon(false);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+            
+            // Sau khi pop, kiểm tra nếu về lại màn hình chính thì hiện lại icon Menu
+            getSupportFragmentManager().addOnBackStackChangedListener(new androidx.fragment.app.FragmentManager.OnBackStackChangedListener() {
+                @Override
+                public void onBackStackChanged() {
+                    if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+                        showMenuIcon(true);
+                    }
+                    getSupportFragmentManager().removeOnBackStackChangedListener(this);
+                }
+            });
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    public void showMenuIcon(boolean show) {
+        ImageView iconMenu = findViewById(R.id.icon_Menu);
+        if (iconMenu != null) {
+            iconMenu.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+        
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            if (show) {
+                toolbar.setNavigationIcon(null);
+            } else {
+                toolbar.setNavigationIcon(R.drawable.ic_back_white);
+                toolbar.setNavigationOnClickListener(v -> onBackPressed());
+            }
+        }
     }
 }

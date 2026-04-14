@@ -28,6 +28,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
     private LinearLayout layoutHeaderLabels;
 
     private int questionCount = 40;
+    private int kyThiId = -1; // Thêm biến lưu ID kỳ thi
     private boolean isMaDeMode = true;
     private int editingPosition = -1;
 
@@ -35,12 +36,12 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
     private String existingMaDe = "";
     private String existingDapAn = "";
 
+    // Database helper
+    private TaoCSDL dbHelper;
+
     // 2 Adapter chuẩn mực mới
     private Adapter_MaDe maDeAdapter;
     private Adapter_Bubble bubbleAdapter;
-
-    private TaoCSDL dbHelper;
-    private int kyThiId = -1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,7 +50,7 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
 
         if (getArguments() != null) {
             questionCount = getArguments().getInt("QUESTION_COUNT", 40);
-            kyThiId = getArguments().getInt("KYTHI_ID", -1);
+            kyThiId = getArguments().getInt("KY_THI_ID", -1); // Nhận kyThiId từ Fragment trước
 
             // Lấy dữ liệu cũ nếu đang ở chế độ CHỈNH SỬA
             if (getArguments().containsKey("EXISTING_KEY")) {
@@ -87,14 +88,18 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         btnTabMaDe.setOnClickListener(view -> { isMaDeMode = true; updateUI(); });
         btnTabDapAn.setOnClickListener(view -> {
             String chuoiMaDe = maDeAdapter.layChuoiMaDe().trim();
-            
-            // Nếu đang tạo mới (không phải chỉnh sửa) và mã đề đã tồn tại trong CSDL
-            if (editingPosition == -1 && !chuoiMaDe.contains("X") && dbHelper.kiemTraMaDeTonTai(kyThiId, chuoiMaDe)) {
-                Toast.makeText(getContext(), "Mã đề " + chuoiMaDe + " đã tồn tại trong kỳ thi này!", Toast.LENGTH_SHORT).show();
-                isMaDeMode = true; // Ở lại tab Mã Đề
-            } else {
-                isMaDeMode = false;
+
+            // Nếu đang thêm mới (editingPosition == -1) và mã đề đã nhập đủ (không chứa X)
+            if (editingPosition == -1 && !chuoiMaDe.contains("X")) {
+                if (dbHelper.kiemTraMaDeTonTai(kyThiId, chuoiMaDe)) {
+                    Toast.makeText(getContext(), "Mã đề " + chuoiMaDe + " đã tồn tại trong kỳ thi này!", Toast.LENGTH_SHORT).show();
+                    isMaDeMode = true;
+                    updateUI();
+                    return;
+                }
             }
+
+            isMaDeMode = false;
             updateUI();
         });
 

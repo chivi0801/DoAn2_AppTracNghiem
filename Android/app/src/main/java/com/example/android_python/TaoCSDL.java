@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class TaoCSDL extends SQLiteOpenHelper{
     private static final String DATABASE_NAME = "AppChamThi.db";
-    private static final int DATABASE_VERSION = 2; // Tăng version để cập nhật bảng
+    private static final int DATABASE_VERSION = 3; // Tăng version để thêm cột NgayTao
     SQLiteOpenHelper dbHelper;
     public TaoCSDL(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -41,7 +41,7 @@ public class TaoCSDL extends SQLiteOpenHelper{
         // 4. Bảng KyThi
         db.execSQL("CREATE TABLE KyThi (" +
                 "KyThi_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "GV_ID INTEGER, TenKyThi TEXT, LoaiPhieu TEXT, " +
+                "GV_ID INTEGER, TenKyThi TEXT, LoaiPhieu TEXT, NgayTao TEXT, " +
                 "FOREIGN KEY(GV_ID) REFERENCES GiangVien(GV_ID))");
 
         // 5. Bảng KyThi_Lop (Quan hệ n-n)
@@ -135,12 +135,21 @@ public class TaoCSDL extends SQLiteOpenHelper{
 
         if (cursor.moveToFirst()) {
             do {
-                int kyThiId = cursor.getInt(0);         // KyThi_ID
-                String tenKyThi = cursor.getString(2);  // TenKyThi
-                String loaiPhieu = cursor.getString(3); // LoaiPhieu
+                int kyThiId = cursor.getInt(cursor.getColumnIndexOrThrow("KyThi_ID"));
+                String tenKyThi = cursor.getString(cursor.getColumnIndexOrThrow("TenKyThi"));
+                String loaiPhieu = cursor.getString(cursor.getColumnIndexOrThrow("LoaiPhieu"));
+                
+                String date = "";
+                try {
+                    date = cursor.getString(cursor.getColumnIndexOrThrow("NgayTao"));
+                } catch (Exception e) {
+                    date = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                            .format(java.util.Calendar.getInstance().getTime());
+                }
 
-                String date = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
-                        .format(java.util.Calendar.getInstance().getTime());
+                if (date == null || date.isEmpty()) {
+                    date = "Chưa có ngày";
+                }
 
                 // Đưa ID vào đối tượng KyThi (Đã bỏ soCau)
                 danhSach.add(new KyThi(kyThiId, tenKyThi, date, loaiPhieu));
@@ -172,9 +181,12 @@ public class TaoCSDL extends SQLiteOpenHelper{
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
+        String currentDate = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(new java.util.Date());
+
         cv.put("GV_ID", gvId);
         cv.put("TenKyThi", tenKyThi);
         cv.put("LoaiPhieu", loaiPhieu);
+        cv.put("NgayTao", currentDate);
 
         long result = db.insert("KyThi", null, cv);
         return result != -1;

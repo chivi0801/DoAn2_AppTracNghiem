@@ -154,7 +154,7 @@ public class Fragment_Ds_MaDe extends Fragment {
         Fragment_ChiTiet_DapAn fragment = new Fragment_ChiTiet_DapAn();
         Bundle b = new Bundle();
         b.putInt("QUESTION_COUNT", questionCount);
-        b.putInt("KYTHI_ID", kyThiId); // TRUYỀN THÊM KYTHI_ID
+        b.putInt("KY_THI_ID", kyThiId); // Thêm dòng này để truyền kyThiId sang Fragment_ChiTiet_DapAn
         if (item != null) {
             b.putSerializable("EXISTING_KEY", item);
             b.putInt("EDIT_POSITION", pos);
