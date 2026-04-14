@@ -12,6 +12,7 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -48,6 +49,20 @@ public class Adapter_BaiThi extends RecyclerView.Adapter<Adapter_BaiThi.ViewHold
             Bitmap bitmap = BitmapFactory.decodeFile(baiThi.getAnhBaiLamLop());
             holder.imgLop.setImageBitmap(bitmap);
         }
+
+        // Sự kiện click vào item để xem ảnh bài làm
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (context instanceof AppCompatActivity) {
+                    Fragment_Anh_BaiLam_ThiSinh fragment = Fragment_Anh_BaiLam_ThiSinh.newInstance(baiThi.getAnhBaiLam());
+                    ((AppCompatActivity) context).getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .addToBackStack(null)
+                            .commit();
+                }
+            }
+        });
 
         holder.ivMoreOptions.setOnClickListener(new View.OnClickListener() {
             @Override
