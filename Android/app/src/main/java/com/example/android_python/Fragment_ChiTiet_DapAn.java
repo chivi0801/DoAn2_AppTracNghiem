@@ -39,13 +39,17 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
     private Adapter_MaDe maDeAdapter;
     private Adapter_Bubble bubbleAdapter;
 
+    private TaoCSDL dbHelper;
+    private int kyThiId = -1;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // ĐÃ XÓA: setHasOptionsMenu(true); -> Không dùng Menu Toolbar nữa cho đỡ lỗi
+        dbHelper = new TaoCSDL(getContext());
 
         if (getArguments() != null) {
             questionCount = getArguments().getInt("QUESTION_COUNT", 40);
+            kyThiId = getArguments().getInt("KYTHI_ID", -1);
 
             // Lấy dữ liệu cũ nếu đang ở chế độ CHỈNH SỬA
             if (getArguments().containsKey("EXISTING_KEY")) {
@@ -81,7 +85,18 @@ public class Fragment_ChiTiet_DapAn extends Fragment {
         rvChoices.setLayoutManager(new LinearLayoutManager(getContext()));
 
         btnTabMaDe.setOnClickListener(view -> { isMaDeMode = true; updateUI(); });
-        btnTabDapAn.setOnClickListener(view -> { isMaDeMode = false; updateUI(); });
+        btnTabDapAn.setOnClickListener(view -> {
+            String chuoiMaDe = maDeAdapter.layChuoiMaDe().trim();
+            
+            // Nếu đang tạo mới (không phải chỉnh sửa) và mã đề đã tồn tại trong CSDL
+            if (editingPosition == -1 && !chuoiMaDe.contains("X") && dbHelper.kiemTraMaDeTonTai(kyThiId, chuoiMaDe)) {
+                Toast.makeText(getContext(), "Mã đề " + chuoiMaDe + " đã tồn tại trong kỳ thi này!", Toast.LENGTH_SHORT).show();
+                isMaDeMode = true; // Ở lại tab Mã Đề
+            } else {
+                isMaDeMode = false;
+            }
+            updateUI();
+        });
 
         // Sự kiện khi bấm nút Lưu
         btnSave.setOnClickListener(view -> luuKetQua());
