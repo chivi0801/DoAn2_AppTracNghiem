@@ -181,13 +181,29 @@ public class TaoCSDL extends SQLiteOpenHelper{
     }
     public long themLop(int gvId, String tenLop, String nienKhoa) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
 
+        // Tìm ID nhỏ nhất còn trống
+        int smallestAvailableId = 1;
+        Cursor cursor = db.rawQuery("SELECT Lop_ID FROM Lop ORDER BY Lop_ID ASC", null);
+        if (cursor.moveToFirst()) {
+            do {
+                int currentId = cursor.getInt(0);
+                if (currentId == smallestAvailableId) {
+                    smallestAvailableId++;
+                } else if (currentId > smallestAvailableId) {
+                    break; // Tìm thấy khoảng trống
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+
+        ContentValues cv = new ContentValues();
+        cv.put("Lop_ID", smallestAvailableId); // Chèn thủ công ID tìm được
         cv.put("GV_ID", gvId);
         cv.put("TenLop", tenLop);
         cv.put("NienKhoa", nienKhoa);
 
-        return db.insert("Lop", null, cv); // Trả về ID của dòng vừa chèn hoặc -1 nếu lỗi
+        return db.insert("Lop", null, cv);
     }
 
     public boolean themKyThiLop(int kyThiId, int lopId) {
