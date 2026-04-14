@@ -232,15 +232,15 @@ public class Fragment_ChiTietKyThi extends Fragment {
         // Lấy dữ liệu thực tế từ CSDL
         ArrayList<Double> listDiem = dbHelper.layDanhSachDiemTheoLop(kyThiId, lopId);
 
-        int duoi4 = 0;
-        int tu4den6 = 0;
-        int tu6den8 = 0;
+        int duoi5 = 0;
+        int tu5den65 = 0;
+        int tu65den8 = 0;
         int tren8 = 0;
 
         for (Double diem : listDiem) {
-            if (diem < 4) duoi4++;
-            else if (diem < 6) tu4den6++;
-            else if (diem < 8) tu6den8++;
+            if (diem < 5) duoi5++;
+            else if (diem < 6.5) tu5den65++;
+            else if (diem < 8) tu65den8++;
             else tren8++;
         }
 
@@ -255,14 +255,14 @@ public class Fragment_ChiTietKyThi extends Fragment {
             return;
         }
 
-        tvCountYeu.setText(String.valueOf(duoi4));
-        tvCountTB.setText(String.valueOf(tu4den6));
-        tvCountKha.setText(String.valueOf(tu6den8));
+        tvCountYeu.setText(String.valueOf(duoi5));
+        tvCountTB.setText(String.valueOf(tu5den65));
+        tvCountKha.setText(String.valueOf(tu65den8));
         tvCountGioi.setText(String.valueOf(tren8));
 
-        float ptYeu = ((float) duoi4 / tongSoHocSinh) * 100;
-        float ptTB = ((float) tu4den6 / tongSoHocSinh) * 100;
-        float ptKha = ((float) tu6den8 / tongSoHocSinh) * 100;
+        float ptYeu = ((float) duoi5 / tongSoHocSinh) * 100;
+        float ptTB = ((float) tu5den65 / tongSoHocSinh) * 100;
+        float ptKha = ((float) tu65den8 / tongSoHocSinh) * 100;
         float ptGioi = ((float) tren8 / tongSoHocSinh) * 100;
 
         // GỌI HÀM MỚI Ở ĐÂY
