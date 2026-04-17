@@ -549,6 +549,36 @@ public class TaoCSDL extends SQLiteOpenHelper{
         }
     }
 
+    public String layTenLop(int lopId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT TenLop FROM Lop WHERE Lop_ID = ?", new String[]{String.valueOf(lopId)});
+        String tenLop = "Không xác định";
+        if (cursor.moveToFirst()) {
+            tenLop = cursor.getString(0);
+        }
+        cursor.close();
+        return tenLop;
+    }
+
+    public int layLopIDCuaThiSinh(String thiSinhId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT Lop_ID FROM ThiSinh WHERE ThiSinh_ID = ?", new String[]{thiSinhId});
+        int lopId = -1;
+        if (cursor.moveToFirst()) {
+            lopId = cursor.getInt(0);
+        }
+        cursor.close();
+        return lopId;
+    }
+
+    public boolean capNhatLopChoThiSinh(String thiSinhId, int lopIdMoi) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("Lop_ID", lopIdMoi);
+        int rows = db.update("ThiSinh", values, "ThiSinh_ID = ?", new String[]{thiSinhId});
+        return rows > 0;
+    }
+
     public boolean capNhatLop(int lopId, String tenLop, String nienKhoa) {
         SQLiteDatabase db = this.getWritableDatabase();
         android.content.ContentValues values = new android.content.ContentValues();

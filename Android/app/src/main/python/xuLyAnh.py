@@ -66,7 +66,7 @@ def TienXuLyBanDau(image): # chủ yếu để khoanh vùng và chấm điểm
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
         81,
-        25,
+        20,
     )
     return thresh
 
@@ -600,7 +600,7 @@ def XuLySOBAODANH(cacMocNho, warped):
     print("SBD (chuoi):", sbd_str)
     print("")
 
-    cv2.putText(warped, f"SBD: {sbd_str}", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+    cv2.putText(warped, f"SBD: {sbd_str}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,255,255), 2)
 
     return sbd_str, warped
 
@@ -694,7 +694,7 @@ def XuLyMADE(cacMocNho, warped):
     print("MA DE (chuoi):", made_str)
     print("")
 
-    cv2.putText(warped, f"MA DE: {made_str}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 0), 2)
+    cv2.putText(warped, f"MA DE: {made_str}", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 2)
 
     return made_str, warped
 
@@ -849,19 +849,19 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = False, cau11_20
     if cau1_10 == True:
         dap_an_dung_nhom = dapAnDung_list[0:10] #lấy đáp án của 10 câu đầu
         #gọi hàm chấm điểm mỗi 10 câu
-        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom) #chấm điểm 10 câu
+        diemThiSinh, soCauDung = ChamDiem(DAPAN, dap_an_dung_nhom) #chấm điểm 10 câu
 
     elif cau11_20 == True:
         dap_an_dung_nhom = dapAnDung_list[10:20]
-        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
+        diemThiSinh, soCauDung = ChamDiem(DAPAN, dap_an_dung_nhom)
 
     elif cau21_30 == True:
         dap_an_dung_nhom = dapAnDung_list[20:30]
-        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
+        diemThiSinh, soCauDung = ChamDiem(DAPAN, dap_an_dung_nhom)
 
     elif cau31_40 == True:
         dap_an_dung_nhom = dapAnDung_list[30:40]
-        diemThiSinh = ChamDiem(DAPAN, dap_an_dung_nhom)
+        diemThiSinh, soCauDung = ChamDiem(DAPAN, dap_an_dung_nhom)
 
     print(
         f"Nhom cau {cau_bat_dau}-{cau_bat_dau + 9} | "
@@ -901,21 +901,20 @@ def XuLyDAPAN(cacMocNho, warped, MaDeThiSinh, BoDapAn, cau1_10 = False, cau11_20
         dap_an_dung=dap_an_dung_nhom,
     )
 
-    return diemThiSinh, warped, chi_tiet_10_cau
+    return diemThiSinh, soCauDung, warped, chi_tiet_10_cau
 
 #Hàm chấm điểm mỗi 10 câu, so sánh đáp án thí sinh với đáp án đúng để tính điểm
 def ChamDiem(dapAn_ThiSinh_10cau, list_dap_an_dung):
     score = 0
-
+    soCauDung = 0
     for i in range(len(dapAn_ThiSinh_10cau)):
         if dapAn_ThiSinh_10cau[i] == list_dap_an_dung[i]:
             score += 0.25
-
-
+            soCauDung += 1
 
     print(f"Diem: {score}/10")
 
-    return score
+    return score, soCauDung
 
 def lay_HoTen_Lop(warped):
     copy = warped.copy()
@@ -1009,10 +1008,10 @@ def XuLyAnh(img_path, BoDapAn):
     ThiSinhID, warped= XuLySOBAODANH(cacMocNho, warped)
     made_str, warped= XuLyMADE(cacMocNho, warped)
 
-    diem1_10,  warped, chi_tiet_1_10 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau1_10=True)
-    diem11_20, warped, chi_tiet_11_20 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau11_20 =True)
-    diem21_30, warped, chi_tiet_21_30 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau21_30 =True)
-    diem31_40, warped, chi_tiet_31_40 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau31_40 =True)
+    diem1_10, soCauDung1_10,  warped, chi_tiet_1_10 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau1_10=True)
+    diem11_20, soCauDung11_20, warped, chi_tiet_11_20 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau11_20 =True)
+    diem21_30, soCauDung21_30, warped, chi_tiet_21_30 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau21_30 =True)
+    diem31_40, soCauDung31_40, warped, chi_tiet_31_40 = XuLyDAPAN(cacMocNho, warped, made_str, BoDapAn, cau31_40 =True)
 
     # NOTE: Noi 4 nhom thanh du lieu day du 40 cau, sau do moi doi sang JSON de tra ve cho Java.
     chi_tiet_40_cau = chi_tiet_1_10 + chi_tiet_11_20 + chi_tiet_21_30 + chi_tiet_31_40
@@ -1020,11 +1019,15 @@ def XuLyAnh(img_path, BoDapAn):
 
     Ten_ROI, Lop_LOP, warped = lay_HoTen_Lop(warped)
 
+
+    # Tính câu đúng
+    SOCAUDUNG = soCauDung1_10 + soCauDung11_20 + soCauDung21_30 + soCauDung31_40
+    cv2.putText(warped, f"Dung: {SOCAUDUNG}/40", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
+
     #Tính điểm
     TongDiem = diem1_10 + diem11_20 + diem21_30 + diem31_40
     print (f"Tong diem: {TongDiem}/10")
-
-    cv2.putText(warped, f"Tong diem: {TongDiem}/10", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
+    cv2.putText(warped, f"Tong diem: {TongDiem}/10", (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
 
     # cv2.imshow("DAP AN", resize_keep_ratio(hoten_roi, width=750, height=200))
     # cv2.waitKey(0)
