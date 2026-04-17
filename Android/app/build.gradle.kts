@@ -96,7 +96,7 @@ chaquopy {
     defaultConfig {
 //        version = "3.10"
 
-        pip {
+        pip {   
             install("numpy==1.26.2")
             install("opencv-python-headless==4.5.1.48")
 //            install("imutils==0.5.4")

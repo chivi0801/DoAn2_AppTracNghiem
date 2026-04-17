@@ -66,7 +66,7 @@ def TienXuLyBanDau(image): # chủ yếu để khoanh vùng và chấm điểm
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY_INV,
         81,
-        20,
+        25,
     )
     return thresh
 
@@ -290,7 +290,7 @@ def tinh_score_o(cell):
     return score
 
 
-def PhanLoaiCotTo(score_theo_hang, nguong_khong_to=400, nguong_to_nhieu=500):
+def PhanLoaiCotTo(score_theo_hang, nguong_khong_to=800, nguong_to_nhieu=700):
     """
     Phan loai 1 cot SBD / Ma de.
 
@@ -316,7 +316,7 @@ def PhanLoaiCotTo(score_theo_hang, nguong_khong_to=400, nguong_to_nhieu=500):
     chi_so_hang = score_theo_hang.index(max1)
     return "single", chi_so_hang
 
-def PhanLoaiHangTo_DapAn(score_theo_cot, nguong_khong_to=600, nguong_to_nhieu=700):
+def PhanLoaiHangTo_DapAn(score_theo_cot, nguong_khong_to=800, nguong_to_nhieu=700):
     """
     Phan loai 1 cot SBD / Ma de.
 
@@ -350,8 +350,8 @@ def Debug_SBD_MaDe(
         roi_x1,
         roi_y1,
         ds_score_theo_cot,
-        nguong_khong_to=500,
-        nguong_to_nhieu=400,
+        nguong_khong_to=800,
+        nguong_to_nhieu=700,
 ):
     """
     Ve debug cho vung SBD / Ma de len anh warped.
@@ -419,8 +419,8 @@ def Debug_DapAn(
         ds_score_theo_hang,
         dap_an_thi_sinh=None,
         dap_an_dung=None,
-        nguong_khong_to=500,
-        nguong_to_nhieu=400,
+        nguong_khong_to=800,
+        nguong_to_nhieu=700,
 ):
     """
     Ve debug cho vung Dap An len anh warped.
@@ -580,7 +580,7 @@ def XuLySOBAODANH(cacMocNho, warped):
 
         if trang_thai == "multi":
             print(f"COT {j+1} ==> CO 2 O DUOC TO, CAN XET TIEP")
-            SBD.append("N")
+            SBD.append("X")
             continue
 
         SBD.append(chi_so_hang)
@@ -913,7 +913,6 @@ def ChamDiem(dapAn_ThiSinh_10cau, list_dap_an_dung):
 
 
 
-
     print(f"Diem: {score}/10")
 
     return score
@@ -1050,4 +1049,3 @@ def XuLyAnh(img_path, BoDapAn):
 
 
 # print(Json_DapAnThiSinh)
-
