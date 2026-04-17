@@ -27,6 +27,7 @@ public class Fragment_DanhSachLop extends Fragment {
 
     private RecyclerView rvDanhSachThiSinh;
     private FloatingActionButton fabAddThiSinh;
+    private android.widget.TextView tvSoLuongThiSinh;
 
     private ThiSinhAdapter thiSinhAdapter;
     private ArrayList<ThiSinh> danhSachThiSinh;
@@ -52,6 +53,7 @@ public class Fragment_DanhSachLop extends Fragment {
         dbHelper = new TaoCSDL(requireContext());
         rvDanhSachThiSinh = view.findViewById(R.id.rvDanhSachThiSinh);
         fabAddThiSinh = view.findViewById(R.id.fabAddThiSinh);
+        tvSoLuongThiSinh = view.findViewById(R.id.tv_soLuongThiSinh);
 
         rvDanhSachThiSinh.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -73,6 +75,7 @@ public class Fragment_DanhSachLop extends Fragment {
     private void loadDanhSachThiSinh() {
         danhSachThiSinh = dbHelper.layDanhSachThiSinhTheoLop(currentLopID);
         thiSinhAdapter = new ThiSinhAdapter(danhSachThiSinh);
+        updateSoLuongThiSinh();
 
         // GỌI SỰ KIỆN CLICK Ở ĐÂY
         thiSinhAdapter.setOnItemClickListener(new ThiSinhAdapter.OnItemClickListener() {
@@ -121,6 +124,7 @@ public class Fragment_DanhSachLop extends Fragment {
                                 thiSinhAdapter.notifyItemRemoved(position);
                                 // Cập nhật lại các vị trí còn lại để tránh lỗi Index
                                 thiSinhAdapter.notifyItemRangeChanged(position, danhSachThiSinh.size());
+                                updateSoLuongThiSinh();
 
                                 Toast.makeText(requireContext(), "Đã xóa vĩnh viễn thí sinh", Toast.LENGTH_SHORT).show();
                             } else {
@@ -167,6 +171,7 @@ public class Fragment_DanhSachLop extends Fragment {
                 thiSinhAdapter.notifyItemInserted(danhSachThiSinh.size() - 1);
                 // Cuộn xuống cuối danh sách để thấy người vừa thêm
                 rvDanhSachThiSinh.scrollToPosition(danhSachThiSinh.size() - 1);
+                updateSoLuongThiSinh();
 
                 Toast.makeText(requireContext(), "Thêm thành công", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
@@ -236,6 +241,12 @@ public class Fragment_DanhSachLop extends Fragment {
                 title.setText(tenLop.isEmpty() ? "Danh Sách Thí Sinh" : tenLop);
             }
             // Không cần xử lý NavigationIcon ở đây nữa vì đã có MainActivity lo
+        }
+    }
+
+    private void updateSoLuongThiSinh() {
+        if (tvSoLuongThiSinh != null && danhSachThiSinh != null) {
+            tvSoLuongThiSinh.setText(danhSachThiSinh.size() + " thí sinh");
         }
     }
 

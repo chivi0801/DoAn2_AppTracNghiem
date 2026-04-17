@@ -43,7 +43,7 @@ public class Activity_Camera extends AppCompatActivity {
     
     private PreviewView previewView;
     private ImageCapture imageCapture;
-    private Button btnChup;
+    private Button btnDung;
     private volatile boolean isProcessing = false;
     private volatile boolean stopScanning = false;
 
@@ -70,7 +70,7 @@ public class Activity_Camera extends AppCompatActivity {
         loadBoDapAn();
 
         previewView = findViewById(R.id.previewView);
-        btnChup = findViewById(R.id.btn_chupVaCham);
+        btnDung = findViewById(R.id.btn_dungChamDiem);
 
         previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
 
@@ -80,7 +80,11 @@ public class Activity_Camera extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
 
-        btnChup.setOnClickListener(v -> takePhoto()); // nút chụp
+
+        btnDung.setOnClickListener(v -> {
+            stopScanning = true; // Dừng quét
+            finish();            // Quay lại trang trước đó
+        });
     }
 
     private void loadBoDapAn() {

@@ -37,6 +37,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
     private RecyclerView rvThongKeList;
     private Adapter_Lop lopAdapter;
+    private TextView tv_soLuongLop;
 
     private TaoCSDL dbHelper;
     private ArrayList<Lop> danhSachLop;
@@ -115,6 +116,8 @@ public class Fragment_ChiTietKyThi extends Fragment {
         tvCountKha = v.findViewById(R.id.tvCountKha);
         tvCountGioi = v.findViewById(R.id.tvCountGioi);
 
+        tv_soLuongLop = v.findViewById(R.id.tv_soLuongLop);
+
         v.findViewById(R.id.cardAnswers).setOnClickListener(view -> {
             Fragment_Ds_MaDe fragment = new Fragment_Ds_MaDe();
             Bundle b = new Bundle();
@@ -141,6 +144,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
         });
 
         danhSachLop = dbHelper.layDanhSachLopTheoKyThi(kyThiId);
+        tv_soLuongLop.setText(danhSachLop.size() + " lớp");
 
         spinnerThongKe = v.findViewById(R.id.spinnerThongKe);
         listTenLop = new ArrayList<>();
@@ -208,6 +212,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
                                 danhSachLop.remove(position);
                                 lopAdapter.notifyItemRemoved(position);
                                 lopAdapter.notifyItemRangeChanged(position, danhSachLop.size());
+                                tv_soLuongLop.setText(danhSachLop.size() + " lớp");
 
                                 // Cập nhật Spinner
                                 if (listTenLop.size() > position + 1) {
@@ -392,6 +397,7 @@ public class Fragment_ChiTietKyThi extends Fragment {
         danhSachLop.clear();
         danhSachLop.addAll(dbHelper.layDanhSachLopTheoKyThi(kyThiId));
         lopAdapter.notifyDataSetChanged();
+        tv_soLuongLop.setText(danhSachLop.size() + " lớp");
 
         listTenLop.clear();
         listTenLop.add("Thống kê");

@@ -72,7 +72,7 @@ public class Activity_KetQuaChamXong extends AppCompatActivity {
 
                 // 2. Lưu vào CSDL
                 TaoCSDL db = new TaoCSDL(this);
-                
+
                 // Ép kiểu ID về int, mặc định là -1 nếu không có
                 int kId = -1;
                 int lId = -1;
@@ -86,7 +86,7 @@ public class Activity_KetQuaChamXong extends AppCompatActivity {
                 } catch (NumberFormatException e) {
                     Log.e("SAVE_ERROR", "Lỗi định dạng ID: " + kyThiID + ", " + lopID);
                 }
-                
+
                 if (kId == -1 || lId == -1) {
                     Toast.makeText(this, "Lỗi: Không xác định được Kỳ thi hoặc Lớp ID", Toast.LENGTH_SHORT).show();
                     return;
@@ -99,7 +99,7 @@ public class Activity_KetQuaChamXong extends AppCompatActivity {
                         Log.d("SAVE_INFO", "Đã tự động thêm thí sinh mới: " + thiSinhID);
                     }
                 }
-                
+
                 long baiThiId = db.luuBaiThi(kId, maDe, thiSinhID, permanentChinhPath, permanentTenPath, permanentLopPath, tongDiem);
 
                 if (baiThiId != -1) {

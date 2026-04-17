@@ -39,11 +39,11 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button
-        android:id="@+id/btn_chupVaCham"
+        android:id="@+id/btn_dungChamDiem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
-        android:text="CHỤP VÀ CHẤM"
+        android:text="Dừng Chấm Điểm"
         android:textSize="24sp"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
