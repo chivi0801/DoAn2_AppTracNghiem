@@ -1,7 +1,9 @@
 package com.example.android_python;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,10 +24,19 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,11 +82,19 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        // Icon Xuất Excel
+        MenuItem printItem = menu.add(Menu.NONE, 1002, Menu.NONE, "Xuất Excel");
+        printItem.setIcon(R.drawable.file_export);
+        printItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        printItem.setOnMenuItemClickListener(item -> {
+            hienThiDialogChonLopXuatExcel();
+            return true;
+        });
+
+        // Icon Thêm Lớp
         MenuItem addItem = menu.add(Menu.NONE, 1001, Menu.NONE, "Thêm Lớp");
         addItem.setIcon(R.drawable.group_add);
         addItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-        // Bắt sự kiện click trực tiếp trên MenuItem để đảm bảo phản hồi nhanh và chính xác
         addItem.setOnMenuItemClickListener(item -> {
             hienThiMenuChonCachThemLop();
             return true;
@@ -87,6 +106,9 @@ public class Fragment_ChiTietKyThi extends Fragment {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == 1001) {
             hienThiMenuChonCachThemLop();
+            return true;
+        } else if (item.getItemId() == 1002) {
+            hienThiDialogChonLopXuatExcel();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -483,6 +505,101 @@ public class Fragment_ChiTietKyThi extends Fragment {
         });
         builder.setNegativeButton("Hủy", null);
         builder.show();
+    }
+
+    private void hienThiDialogChonLopXuatExcel() {
+        if (danhSachLop.isEmpty()) {
+            Toast.makeText(getContext(), "Kỳ thi này chưa có lớp nào!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] names = new String[danhSachLop.size()];
+        for (int i = 0; i < danhSachLop.size(); i++) {
+            names[i] = danhSachLop.get(i).getTenLop();
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Chọn lớp để xuất Excel")
+                .setItems(names, (dialog, which) -> {
+                    Lop selectedLop = danhSachLop.get(which);
+                    exportToExcel(selectedLop);
+                })
+                .show();
+    }
+
+    private void exportToExcel(Lop lop) {
+        // Lấy danh sách bài thi của lớp trong kỳ thi này
+        ArrayList<BaiThi> listBaiThi = dbHelper.layDanhSachBaiThi(kyThiId, lop.getLopId());
+        
+        if (listBaiThi.isEmpty()) {
+            Toast.makeText(getContext(), "Lớp này chưa có dữ liệu bài thi để xuất!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Kết quả thi");
+
+        // Tạo Header
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("STT");
+        headerRow.createCell(1).setCellValue("SBD");
+        headerRow.createCell(2).setCellValue("Họ và Tên");
+        headerRow.createCell(3).setCellValue("Số câu đúng");
+        headerRow.createCell(4).setCellValue("Điểm");
+
+        // Đổ dữ liệu
+        for (int i = 0; i < listBaiThi.size(); i++) {
+            BaiThi bt = listBaiThi.get(i);
+            // Tìm tên thí sinh từ ID (Do class BaiThi chỉ chứa ID)
+            String hoTen = "N/A";
+            ArrayList<ThiSinh> listTS = dbHelper.layDanhSachThiSinhTheoLop(lop.getLopId());
+            for(ThiSinh ts : listTS) {
+                if(ts.getThiSinhId().equals(bt.getThiSinhId())) {
+                    hoTen = ts.getHoTen();
+                    break;
+                }
+            }
+
+            // Tính số câu đúng từ điểm (Giả sử: điểm = (số câu đúng / tổng câu) * 10)
+            // Số câu đúng = (điểm * tổng câu) / 10
+            int soCauDung = (int) Math.round((bt.getTongDiem() /0.25));
+
+            Row row = sheet.createRow(i + 1);
+            row.createCell(0).setCellValue(i + 1);
+            row.createCell(1).setCellValue(bt.getThiSinhId());
+            row.createCell(2).setCellValue(hoTen);
+            row.createCell(3).setCellValue(soCauDung+"/40");
+            row.createCell(4).setCellValue(bt.getTongDiem());
+        }
+
+        // Lưu file
+        String fileName = "KetQua_" + examName.replace(" ", "_") + "_" + lop.getTenLop().replace(" ", "_") + ".xlsx";
+        File file = new File(requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName);
+
+        try (FileOutputStream fileOut = new FileOutputStream(file)) {
+            workbook.write(fileOut);
+            workbook.close();
+            
+            Toast.makeText(getContext(), "Đã xuất file: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+            
+            // Mở file sau khi xuất thành công
+            openFile(file);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Lỗi xuất file!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openFile(File file) {
+        Uri path = FileProvider.getUriForFile(requireContext(), "com.example.android_python.fileprovider", file);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(path, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Không có ứng dụng nào để mở file Excel!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupToolbar(View v) {

@@ -23,6 +23,18 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 public class Fragment_DanhSachLop extends Fragment {
 
     private RecyclerView rvDanhSachThiSinh;
@@ -35,6 +47,18 @@ public class Fragment_DanhSachLop extends Fragment {
 
     private int currentLopID = -1; // Biến lưu ID của lớp hiện tại
     private String tenLop = ""; // Biến lưu tên lớp
+
+    private ActivityResultLauncher<String[]> excelPickerLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        excelPickerLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri != null) {
+                importThiSinhFromExcel(uri);
+            }
+        });
+    }
 
     @Nullable
     @Override
@@ -148,8 +172,14 @@ public class Fragment_DanhSachLop extends Fragment {
 
         EditText edtThiSinhID = dialog.findViewById(R.id.edt_ThiSinh_ID);
         EditText edtHoTen = dialog.findViewById(R.id.edt_HoTen);
+        Button btnHanhDongThem = dialog.findViewById(R.id.btn_HanhDongThem);
         Button btnHuy = dialog.findViewById(R.id.btn_Huy);
         Button btnLuu = dialog.findViewById(R.id.btn_Luu);
+
+        btnHanhDongThem.setOnClickListener(v -> {
+            excelPickerLauncher.launch(new String[]{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"});
+            dialog.dismiss();
+        });
 
         btnHuy.setOnClickListener(v -> dialog.dismiss());
 
@@ -259,5 +289,52 @@ public class Fragment_DanhSachLop extends Fragment {
         values.put("HoTen", hoTen);
 
         return db.insert("ThiSinh", null, values);
+    }
+
+    private void importThiSinhFromExcel(android.net.Uri uri) {
+        try {
+            InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+            Workbook workbook = new XSSFWorkbook(inputStream);
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rowIterator = sheet.iterator();
+
+            int count = 0;
+            if (rowIterator.hasNext()) rowIterator.next(); // Bỏ qua header
+
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                String sbd = "";
+                String hoTen = "";
+
+                if (row.getCell(0) != null) {
+                    // Xử lý SBD có thể là số hoặc chuỗi
+                    if (row.getCell(0).getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
+                        sbd = String.valueOf((int) row.getCell(0).getNumericCellValue());
+                    } else {
+                        sbd = row.getCell(0).getStringCellValue();
+                    }
+                }
+
+                if (row.getCell(1) != null) {
+                    hoTen = row.getCell(1).getStringCellValue();
+                }
+
+                if (!sbd.isEmpty() && !hoTen.isEmpty()) {
+                    if (themThiSinhVaoDB(sbd, currentLopID, hoTen) != -1) {
+                        count++;
+                    }
+                }
+            }
+            workbook.close();
+            if (count > 0) {
+                Toast.makeText(requireContext(), "Đã nhập thành công " + count + " thí sinh", Toast.LENGTH_SHORT).show();
+                loadDanhSachThiSinh(); // Load lại danh sách
+            } else {
+                Toast.makeText(requireContext(), "Không tìm thấy dữ liệu hợp lệ trong file", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(requireContext(), "Lỗi khi đọc file Excel: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }

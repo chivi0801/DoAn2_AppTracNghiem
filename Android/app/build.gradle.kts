@@ -43,6 +43,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/DEPENDENCIES"
+        }
+    }
 }
 
 dependencies {
@@ -89,6 +95,10 @@ dependencies {
     implementation("androidx.camera:camera-video:$cameraXVersion")
     implementation("androidx.camera:camera-view:$cameraXVersion")
     implementation("androidx.camera:camera-extensions:$cameraXVersion")
+
+    // Apache POI for Excel export
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
 }
 
 //mới thêm
