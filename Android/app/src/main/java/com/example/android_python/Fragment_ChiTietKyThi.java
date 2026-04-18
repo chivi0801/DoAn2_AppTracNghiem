@@ -543,8 +543,9 @@ public class Fragment_ChiTietKyThi extends Fragment {
         headerRow.createCell(0).setCellValue("STT");
         headerRow.createCell(1).setCellValue("SBD");
         headerRow.createCell(2).setCellValue("Họ và Tên");
-        headerRow.createCell(3).setCellValue("Số câu đúng");
-        headerRow.createCell(4).setCellValue("Điểm");
+        headerRow.createCell(3).setCellValue("Mã đề");
+        headerRow.createCell(4).setCellValue("Số câu đúng");
+        headerRow.createCell(5).setCellValue("Điểm");
 
         // Đổ dữ liệu
         for (int i = 0; i < listBaiThi.size(); i++) {
@@ -561,14 +562,15 @@ public class Fragment_ChiTietKyThi extends Fragment {
 
             // Tính số câu đúng từ điểm (Giả sử: điểm = (số câu đúng / tổng câu) * 10)
             // Số câu đúng = (điểm * tổng câu) / 10
-            int soCauDung = (int) Math.round((bt.getTongDiem() /0.25));
+            int soCauDung = (int) Math.round((bt.getTongDiem() / 0.25));
 
             Row row = sheet.createRow(i + 1);
             row.createCell(0).setCellValue(i + 1);
             row.createCell(1).setCellValue(bt.getThiSinhId());
             row.createCell(2).setCellValue(hoTen);
-            row.createCell(3).setCellValue(soCauDung+"/40");
-            row.createCell(4).setCellValue(bt.getTongDiem());
+            row.createCell(3).setCellValue(bt.getMaDe());
+            row.createCell(4).setCellValue(soCauDung + "/40");
+            row.createCell(5).setCellValue(bt.getTongDiem());
         }
 
         // Lưu file
@@ -627,8 +629,6 @@ public class Fragment_ChiTietKyThi extends Fragment {
                         getParentFragmentManager().popBackStack();
                     }
                 });
-
-                // Quan trọng: Làm mới Menu để hiển thị nút "Thêm Lớp"
                 activity.invalidateOptionsMenu();
             }
         }
