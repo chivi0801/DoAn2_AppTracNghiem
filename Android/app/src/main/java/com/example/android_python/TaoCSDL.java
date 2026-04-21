@@ -571,7 +571,19 @@ public class TaoCSDL extends SQLiteOpenHelper{
         return lopId;
     }
 
-    public boolean capNhatLopChoThiSinh(String thiSinhId, int lopIdMoi) {
+    public int layBaiThiIdCu(int kyThiId, String thiSinhId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT BaiThi_ID FROM BaiThi WHERE KyThi_ID = ? AND ThiSinh_ID = ?",
+                new String[]{String.valueOf(kyThiId), thiSinhId});
+        int id = -1;
+        if (cursor.moveToFirst()) {
+            id = cursor.getInt(0);
+        }
+        cursor.close();
+        return id;
+    }
+
+        public boolean capNhatLopChoThiSinh(String thiSinhId, int lopIdMoi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("Lop_ID", lopIdMoi);

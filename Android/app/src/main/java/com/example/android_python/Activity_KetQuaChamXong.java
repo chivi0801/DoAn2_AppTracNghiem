@@ -77,17 +77,45 @@ public class Activity_KetQuaChamXong extends AppCompatActivity {
                 String tenLopCu = db.layTenLop(lopIdCuaSbd);
                 new AlertDialog.Builder(this)
                         .setTitle("Lưu ý!")
-                        .setMessage("SBD " + thiSinhID + " đã tồn tại ở lớp [" + tenLopCu + "]. Bạn có muốn chuyển thí sinh này sang lớp hiện tại và lưu điểm không?")
-                        .setPositiveButton("Chuyển và Lưu", (dialog, which) -> {
+                        .setMessage("SBD " + thiSinhID + " đã tồn tại ở lớp [" + tenLopCu + "]. Bạn có muốn chuyển thí sinh này sang lớp hiện tại và tiếp tục không?")
+                        .setPositiveButton("Chuyển và Tiếp tục", (dialog, which) -> {
                             db.capNhatLopChoThiSinh(thiSinhID, currentLopId);
-                            thucHienLuuBaiThi(db, imagePath, tenPath, lopPath, kyThiID, lopID, thiSinhID, maDe, tongDiem, jsonDapAn);
+                            kiemTraTrungLapVaLuu(db, imagePath, tenPath, lopPath, kyThiID, lopID, thiSinhID, maDe, tongDiem, jsonDapAn);
                         })
                         .setNegativeButton("Hủy", null)
                         .show();
             } else {
-                thucHienLuuBaiThi(db, imagePath, tenPath, lopPath, kyThiID, lopID, thiSinhID, maDe, tongDiem, jsonDapAn);
+                kiemTraTrungLapVaLuu(db, imagePath, tenPath, lopPath, kyThiID, lopID, thiSinhID, maDe, tongDiem, jsonDapAn);
             }
         });
+    }
+
+    private void kiemTraTrungLapVaLuu(TaoCSDL db, String imagePath, String tenPath, String lopPath, String kyThiID, String lopID, String thiSinhID, String maDe, double tongDiem, String jsonDapAn) {
+        int kId = -1;
+        try {
+            if (kyThiID != null) kId = Integer.parseInt(kyThiID);
+        } catch (Exception e) {}
+
+        int baiThiIdCu = db.layBaiThiIdCu(kId, thiSinhID);
+
+        if (baiThiIdCu != -1) {
+            // Nếu đã tồn tại bài thi của thí sinh này trong kỳ thi
+            new AlertDialog.Builder(this)
+                    .setTitle("Bài thi đã tồn tại!")
+                    .setMessage("Thí sinh " + thiSinhID + " đã có kết quả trong kỳ thi này. Bạn muốn làm gì?")
+                    .setPositiveButton("Ghi đè", (dialog, which) -> {
+                        db.xoaBaiThi(baiThiIdCu); // Xóa bản cũ
+                        thucHienLuuBaiThi(db, imagePath, tenPath, lopPath, kyThiID, lopID, thiSinhID, maDe, tongDiem, jsonDapAn);
+                    })
+                    .setNeutralButton("Thêm bản mới", (dialog, which) -> {
+                        thucHienLuuBaiThi(db, imagePath, tenPath, lopPath, kyThiID, lopID, thiSinhID, maDe, tongDiem, jsonDapAn);
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        } else {
+            // Chưa có thì lưu bình thường
+            thucHienLuuBaiThi(db, imagePath, tenPath, lopPath, kyThiID, lopID, thiSinhID, maDe, tongDiem, jsonDapAn);
+        }
     }
 
     private void thucHienLuuBaiThi(TaoCSDL db, String imagePath, String tenPath, String lopPath, String kyThiID, String lopID, String thiSinhID, String maDe, double tongDiem, String jsonDapAn) {
